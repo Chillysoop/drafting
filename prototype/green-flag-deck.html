@@ -1707,7 +1707,7 @@ function startRace(){
  showScreen('race');$('#gauges').innerHTML='';$('#res').innerHTML='';renderRes.prev=null;resize();renderHand();renderFilters();renderGauges();
  flag('GREEN FLAG IN 5','#e9b52f','#241a00',4.5);
 }
-function rollObjectives(){return shuffle([...OBJECTIVES]).slice(0,2).map(o=>o.id);}
+function rollObjectives(){return shuffle(OBJECTIVES.filter(o=>!o.v)).slice(0,2).map(o=>o.id);}
 
 /* ================= helpers used by cards ================= */
 const meCar=()=>race.cars.find(c=>c.isMe);
