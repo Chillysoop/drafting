@@ -1256,7 +1256,7 @@ function tuneFx(u){u=u||tuneOf();const out=[];const pct=x=>(x>=1?'+':'−')+Math
    Rules: 10 to 15 cards, a minimum of one family for each track, and slot caps that your car tune moves:
    Attack (Passing + High risk) 6 + Handling, Defense (Defending + Car) 6 − Handling, Drafting 5 + Aero; the combo focus adds 1 slot to its group.
    A minimum or the size floor relaxes when your collection can't meet it. */
-const DECK_MIN=10,DECK_MAX=15,DECK_AUTO=12;
+const DECK_MIN=10,DECK_MAX=15,DECK_AUTO=15; // harness: a full 15-card auto deck beat a 12-card one by ~0.8 places
 const SLOT={attack:{n:'Attack',fams:['pass','risk'],base:6},defense:{n:'Defense',fams:['defend','car'],base:6},draft:{n:'Drafting',fams:['draft'],base:5}};
 const FOCUS_SLOT={draft:'draft',bumper:'attack',longrun:'defense'};
 const TRACK_MIN={mill:{defend:2},carver:{car:2},talon:{draft:3},pine:{pass:2},ridge:{car:2}};
@@ -2954,7 +2954,7 @@ function famStrip(deck){return `<div class="famstrip">${FAM_ORDER.map(f=>{const 
 function rulesList(t,deck){return `<div class="drules">${deckRules(t,deck).map(r=>`<div class="${r.ok?'ok':'bad'}"><b>${r.ok?'✓':'✗'}</b><span>${esc(r.txt)}</span><span class="mono">${r.have}${r.k==='cap'?' / '+r.need:''}</span></div>`).join('')}</div>`;}
 function deckPanel(t){const ok=deckOk(t);
  return `<div class="panel grid" style="gap:8px;${ok?'':'border-color:var(--red)'}"><div class="row" style="justify-content:space-between"><h3>Race deck (${G.deck.length} of ${G.coll.length} cards owned)</h3><button class="btn small primary" id="g-deck">Build race deck</button></div>
-  <p class="muted" style="font-size:13px">You keep every card in your collection. Before each race you pick the cards you take. Fewer cards means your best ones come up more often. Your tune sets the slot limits.</p>
+  <p class="muted" style="font-size:13px">You keep every card in your collection. Before each race you pick up to 15 to take. The track sets a minimum, and your tune sets how many attack, defense and drafting cards fit.</p>
   ${G.deckNote?`<p style="color:var(--amber);font-size:13px">${esc(G.deckNote)}</p>`:''}
   ${famStrip(G.deck)}${rulesList(t,G.deck)}${ok?'':'<div class="row"><button class="btn small" id="g-fix">Fix it for me</button></div>'}</div>`;}
 
