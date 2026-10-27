@@ -672,6 +672,10 @@ body.aiming.aimout .gauge .gplay{background:var(--panel3);color:var(--muted);ani
 @media (max-width:700px){#pitgame{top:calc(env(safe-area-inset-top,0px) + 44px);padding:14px 9px 9px;max-height:calc(100% - 60px);overflow:auto}#pitgame .pg-hand{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}#pitgame .pgc{min-height:66px}#pitgame .pg-go,#pitgame .pg-rel{min-width:110px}}
 .sudial{display:flex;flex-wrap:wrap;gap:4px}.sudial .chip{font-size:13px;padding:4px 10px}
 .sufx{display:grid;gap:3px;font-size:13px;background:var(--panel3);padding:8px 10px;border-radius:4px}.sufx b{display:inline-block;min-width:78px;color:var(--amber)}
+.famstrip{display:flex;flex-wrap:wrap;gap:10px;font-size:13px}
+.drules{display:grid;gap:3px;font-size:13px}.drules>div{display:grid;grid-template-columns:16px 1fr auto;gap:6px}.dbtable [data-in],.dbtable [data-out]{font-size:16px;min-width:30px;line-height:1}.drules .ok b{color:#2fb36a}.drules .bad{color:#ff7b7f}
+.dbgrid{grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:12px}@media(max-width:900px){.dbgrid{grid-template-columns:1fr}}
+.dbtable tr.in td{background:rgba(47,179,106,.10)}.dbtable td{vertical-align:top}
 .sufit{font-size:12px;font-family:var(--mono);padding:2px 8px;border-radius:2px;background:var(--panel3)}.sufit.good{color:#2fb36a}.sufit.bad{color:#ff7b7f}
 .personas{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 
@@ -839,6 +843,7 @@ body.look-tv .ctl,body.look-tv .btn,body.look-tv .chip{background:linear-gradien
 <div id="title" class="screen page" hidden></div>
 <div id="garage" class="screen page" hidden></div>
 <div id="reward" class="screen page" hidden></div>
+<div id="deckb" class="screen page" hidden></div>
 <div id="race" class="screen" hidden>
   <canvas id="cv"></canvas><div id="crt"></div>
   <div id="pylon" class="bug"></div>
@@ -973,29 +978,16 @@ function saveSeason(){if(!G||(typeof window!=='undefined'&&window.__gfdHeadless)
 function readSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&s.G&&s.G.cars?s:null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 // your car's stats object is G.stats itself; JSON restores break that link
-function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;}
+function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();}
 function continueSeason(){
  const s=readSave();if(!s)return false;G=s.G;relinkG();
  if(G.inRace){
-  // the page closed mid-race: go back to the state at the green flag
-  const snap=G.snap,live=G.inRace;G=JSON.parse(snap);G.snap=snap;relinkG();
-  if(G.stakes==='standard'){G.notice='Your last race was cut off when the page closed, so it starts over from here.';showGarage();return true;}
-  abandonRace(live);return true;
+  // the page closed mid-race: go back to the state at the green flag and run the race again, on every Stakes setting (board Q48: no)
+  const snap=G.snap;G=JSON.parse(snap);G.snap=snap;relinkG();
+  G.notice='Your last race was cut off when the page closed, so it starts over from here.';showGarage();return true;
  }
  if(G.reward)showReward();else showGarage();
  return true;
-}
-// Ironman/Permadeath: results stand, so quitting mid-race counts as a DNF
-function abandonRace(live){
- const t=TRACKS[arcTi(G.raceIdx)];
- const ai=G.cars.filter(c=>!c.isMe).map(c=>({c,q:carRating(c)+gauss()*0.003})).sort((a,b)=>b.q-a.q).map(o=>o.c);
- const fo=[...ai,me()];
- const res={info:G.info,track:t.name,start:live.start,finish:fo.length,expected:live.expected,dnf:true,crits:0,succ:0,plays:0,bestPos:live.start,beatMate:false,beatRival:false,rival:'',order:fo.map(c=>({id:c.id,dnf:c.isMe})),
-  tier:'rough',mul:1,purse:0,bonus:0,objs:[],log:[],total:0,abandoned:true};
- G.results.push(res);stakesPenalty(res,true);scoreRace(res,fo);
- fo.forEach((c,i)=>{c.career.starts++;if(i===0)c.career.wins++;if(i<5)c.career.top5++;c.career.best=Math.min(c.career.best,i+1);});
- G.reward={res,cardOffer:[],cardRerolls:0,picked:'abandoned',relicOffer:null,relicRerolls:0,relicPicked:false};
- showReward();
 }
 function arcTi(i){if(typeof window!=='undefined'&&window.__gfdHeadless)return i;const S=SCHED[(G&&G.sched)||'ovals'],id=S&&S.ids[i],k=id?TRACKS.findIndex(t=>t.id===id):-1;return k>=0?k:i;}
 
@@ -1260,6 +1252,52 @@ function tuneFx(u){u=u||tuneOf();const out=[];const pct=x=>(x>=1?'+':'−')+Math
  if(FOCUS[u.focus])out.push(['Combo focus',FOCUS[u.focus].txt+(FOCUS[u.focus].freeze?'':` Other chains −${TUNE_OFF} s.`)]);
  return out;}
 
+/* Collection and race deck (step 15b, board Q19). G.coll keeps every card you own; G.deck is the race deck you build from it before each race.
+   Rules: 10 to 15 cards, a minimum of one family for each track, and slot caps that your car tune moves:
+   Attack (Passing + High risk) 6 + Handling, Defense (Defending + Car) 6 − Handling, Drafting 5 + Aero; the combo focus adds 1 slot to its group.
+   A minimum or the size floor relaxes when your collection can't meet it. */
+const DECK_MIN=10,DECK_MAX=15,DECK_AUTO=12;
+const SLOT={attack:{n:'Attack',fams:['pass','risk'],base:6},defense:{n:'Defense',fams:['defend','car'],base:6},draft:{n:'Drafting',fams:['draft'],base:5}};
+const FOCUS_SLOT={draft:'draft',bumper:'attack',longrun:'defense'};
+const TRACK_MIN={mill:{defend:2},carver:{car:2},talon:{draft:3},pine:{pass:2},ridge:{car:2}};
+const slotOf=f=>Object.keys(SLOT).find(k=>SLOT[k].fams.includes(f))||null;
+const cnt=(arr,id)=>arr.reduce((n,x)=>n+(x===id),0);
+const famCount=(arr,f)=>arr.reduce((n,id)=>n+(CARDS[id].fam===f),0);
+function slotCaps(u){u=u||(G&&G.tune)||{hand:0,aero:0,focus:null};const c={attack:SLOT.attack.base+u.hand,defense:SLOT.defense.base-u.hand,draft:SLOT.draft.base+u.aero};if(FOCUS_SLOT[u.focus])c[FOCUS_SLOT[u.focus]]++;return c;}
+const slotUsed=(deck,k)=>deck.reduce((n,id)=>n+(SLOT[k].fams.includes(CARDS[id].fam)),0);
+function deckRules(t,deck,u){deck=deck||G.deck;const caps=slotCaps(u),coll=G.coll||G.deck,out=[];
+ const reach=Object.keys(SLOT).reduce((n,k)=>n+Math.min(caps[k],coll.filter(id=>SLOT[k].fams.includes(CARDS[id].fam)).length),0)+coll.filter(id=>!slotOf(CARDS[id].fam)).length;
+ const lo=Math.min(DECK_MIN,reach);
+ out.push({k:'size',ok:deck.length>=lo&&deck.length<=DECK_MAX,txt:`Size ${lo}–${DECK_MAX}`,have:deck.length,need:lo});
+ for(const [f,n] of Object.entries(TRACK_MIN[t.id]||{})){const need=Math.min(n,famCount(coll,f));out.push({k:'min',f,ok:famCount(deck,f)>=need,txt:`${t.short}: at least ${need} ${FAM[f].n}${need<n?` (you own ${need})`:''}`,have:famCount(deck,f),need});}
+ for(const k of Object.keys(SLOT))out.push({k:'cap',slot:k,ok:slotUsed(deck,k)<=caps[k],txt:`${SLOT[k].n} slots (${SLOT[k].fams.map(f=>FAM[f].n).join(' + ')})`,have:slotUsed(deck,k),need:caps[k]});
+ return out;}
+const deckOk=(t,deck,u)=>deckRules(t,deck,u).every(r=>r.ok);
+// why a card can't go in (null = it can)
+function addBlock(id,t,deck,u){deck=deck||G.deck;if(cnt(deck,id)>=cnt(G.coll,id))return 'All your copies are in the deck';if(deck.length>=DECK_MAX)return `The deck is full (${DECK_MAX})`;
+ const s=slotOf(CARDS[id].fam);if(s&&slotUsed(deck,s)>=slotCaps(u)[s])return `${SLOT[s].n} slots are full. Change your tune for more.`;return null;}
+// how good a card is for this track and tune: rarity, track minimum, track shape, tune draw weight, your own success with it
+function cardScore(id,t,u){const cd=CARDS[id],f=cd.fam,h=G.hist[id];let s={common:1,uncommon:1.6,rare:2.2,special:1.8}[cd.rar]||1;
+ if((TRACK_MIN[t.id]||{})[f])s+=0.8;if(f==='draft')s+=t.draftBias;if(f==='defend')s+=0.8*(t.contact-1);if(f==='car')s+=0.8*(t.wear-0.9);if(f==='pass')s+=0.5*(t.handlingW-1)*0.5;
+ s+=0.6*(tuneDraw(f,u||G.tune)-1);if(ARCH[G.arch].add.includes(id))s+=0.3;if(h&&h.plays>=3)s+=(h.succ/h.plays-0.5);return s;}
+function byScore(ids,t,u){return [...ids].sort((a,b)=>cardScore(b,t,u)-cardScore(a,t,u)||a.localeCompare(b));}
+// keep what you have where it's legal, then meet the minimums, then fill to size
+function fixDeck(t,deck,u,target){deck=[...(deck||G.deck)].filter(id=>CARDS[id]);const caps=slotCaps(u);
+ for(const id of [...new Set(deck)])while(cnt(deck,id)>cnt(G.coll,id))deck.splice(deck.lastIndexOf(id),1);
+ for(const k of Object.keys(SLOT))while(slotUsed(deck,k)>caps[k]){const w=byScore(deck.filter(id=>SLOT[k].fams.includes(CARDS[id].fam)),t,u).pop();deck.splice(deck.lastIndexOf(w),1);}
+ const spare=()=>byScore(G.coll.filter((id,i)=>G.coll.indexOf(id)===i).flatMap(id=>Array(Math.max(0,cnt(G.coll,id)-cnt(deck,id))).fill(id)),t,u);
+ const rules=()=>deckRules(t,deck,u);
+ for(const r of rules().filter(r=>r.k==='min'))while(famCount(deck,r.f)<r.need){let c=spare().find(id=>CARDS[id].fam===r.f&&!addBlock(id,t,deck,u));
+  if(!c){const s=slotOf(r.f),w=s&&byScore(deck.filter(id=>SLOT[s].fams.includes(CARDS[id].fam)&&CARDS[id].fam!==r.f),t,u).pop();if(!w)break;deck.splice(deck.lastIndexOf(w),1);continue;}deck.push(c);}
+ const lo=rules()[0].need,want=Math.max(lo,Math.min(DECK_MAX,target||lo));
+ while(deck.length<want){const c=spare().find(id=>!addBlock(id,t,deck,u));if(!c)break;deck.push(c);}
+ const mins=TRACK_MIN[t.id]||{};
+ while(deck.length>DECK_MAX){const w=byScore(deck.filter(id=>!(mins[CARDS[id].fam]&&famCount(deck,CARDS[id].fam)<=mins[CARDS[id].fam])),t,u).pop();deck.splice(deck.lastIndexOf(w),1);}
+ return deck;}
+function autoDeck(t,u){return fixDeck(t,[],u,DECK_AUTO);}
+// old saves and new careers: everything in the deck is in the collection
+function ensureColl(){if(G&&!G.coll)G.coll=[...G.deck];if(G&&!G.trackDecks)G.trackDecks={};}
+
 /* Three separate dials. AI skill sets how good the field is, Information sets what the cards tell you, Stakes sets what a wreck costs. Presets are just named combos. */
 const DIFF={
  easy:{n:'Easy',ai:0.994,me:1.005,vsMe:-12,auto:12,aggr:0.8,aiBlock:0.05,purse:1.25,reroll:1000,wreck:0.7,wear:0.85,desc:'Slower AI that rarely defends. Bigger purses, cheap rerolls, softer wrecks.'},
@@ -1320,6 +1358,7 @@ function newCareer(){
   deck:[...BASE_DECK,...a.add],relics:[a.relic],equipped:{engine:null,aero:null,chassis:null,tires:null,crew:null},
   stats:{power:3,handling:3,aero:3,durability:4,racecraft:4,defense:4,consistency:4,tireMgmt:4,crewChief:3,engineer:3,spotter:3},
   hist:{},sched:titleSel.sched||'mixed',cars:[],pts:{},inRace:null,relicShop:null,shopRerolls:0,tune:Object.assign({},a.tune||{hand:0,aero:0,focus:null})};
+ G.coll=[...G.deck];G.trackDecks={};
  G.equipped[RELICS[a.relic].slot]=a.relic;
  for(const k in a.bonus)G.stats[k]+=a.bonus[k];
  buildField();
@@ -1368,6 +1407,7 @@ function segOf(dist){
 function startRace(){
  if(typeof document!=='undefined'){const pb=document.getElementById('pitbox');if(pb)pb.hidden=true;}
  const t=TRACKS[G._pti!=null?G._pti:arcTi(G.raceIdx)];
+ if(G.trackDecks&&G._pti==null)G.trackDecks[t.id]=[...G.deck];
  const P=perim(t);
  race={tune:Object.assign({},G.tune||{hand:0,aero:0,focus:null}),track:t,P,minGap:(CAR_L*1.18)/(t.path?Math.max(TG(t).vmin,0.62)*TG(t).Tt:P),t:0,phase:'start',phaseT:0,speed:1,paused:false,cam:'auto',
   cars:[],order:[],hand:[],pile:shuffle([...G.deck]),discard:[],nextDraw:BAL.beat?99999:BAL.drawEvery,nextBeat:BAL.beat?5+BAL.beat*0.5:0,beats:0,lastPlayAt:0,focusMeter:1,lastBeatU:null,slow:false,momentum:relicSum('startMom')||0,heat:0,heatAt:0,
@@ -2803,7 +2843,7 @@ function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includ
 const rerollCost=k=>DIFF[G.diff].reroll+k*1000;
 
 /* ================= screens ================= */
-function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race'])$('#'+s).hidden=s!==id;}
+function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb'])$('#'+s).hidden=s!==id;}
 function famDot(f){return `<i class="famdot" style="background:${FAM[f].c}"></i>`;}
 function miniCard(id,extra=''){const cd=CARDS[id];const cost=cd.cost.tire?`${cd.cost.tire}% tire`:cd.cost.mom?`${cd.cost.mom} Momentum`:'Free';
  return `<div class="minicard ${extra}" data-card="${id}" style="--fc:${FAM[cd.fam].c}"><div class="fl"><span>${FAM[cd.fam].n}</span><span>${cd.rar}</span></div><div class="nm">${esc(cd.n)}</div><p>${esc(cd.txt)}</p><div class="rl">${esc(cd.real)}</div><div class="fl"><span>${cost}</span><span>${cd.wreck?'Can wreck':cd.noFail?'Never fails':'Safe'}</span></div></div>`;}
@@ -2852,14 +2892,15 @@ const SHOP=[
 ];
 function showGarage(){
  const t=TRACKS[arcTi(G.raceIdx)];if(!G.relicShop)G.relicShop=rollRelics(1)[0]||null;
- const el=$('#garage');
+ ensureColl();if(G.deckFor!==G.raceIdx){G.deckFor=G.raceIdx;if(!deckOk(t)){const was=[...G.deck];G.deck=fixDeck(t);G.deckNote=deckDiff(was,G.deck,t);}else G.deckNote=null;}
+ const el=$('#garage');$('#deckb').innerHTML='';
  const objs=(G.nextObjectives||[]).map(id=>OBJECTIVES.find(o=>o.id===id));
  el.innerHTML=`<div class="page-in">
   <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · before race ${G.raceIdx+1} of ${SEASON_LEN} · P${myRank()} in points</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
   ${G.notice?`<div class="panel" style="border-color:var(--amber)"><p>${esc(G.notice)}</p></div>`:''}
   <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
    <div><b>Sponsor objectives:</b> ${objs.map(o=>`${esc(o.n)} (${money(o.pay)})`).join(' · ')}</div>
-   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px">Go racing</button></div></div>
+   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
   <div class="grid g2">
    <div class="panel grid" style="gap:6px"><h3>Season calendar</h3>${calendarHTML()}</div>
    <div class="panel grid" style="gap:6px"><h3>Points standings</h3>${G.results.length?standingsTable(10):'<p class="muted">No races yet. 40 points for a win, 35 for 2nd, then one less per place.</p>'}</div>
@@ -2869,19 +2910,21 @@ function showGarage(){
    <div class="panel grid" style="gap:10px"><h3>Shop upgrades</h3>${SHOP.map(([grp,keys,cost])=>`<div class="grid" style="gap:6px"><span class="eyebrow">${grp}</span>${keys.map(k=>{const l=G.stats[k],c=cost(l);return `<div class="row" style="justify-content:space-between"><span>${STAT_INFO[k][0]} <b class="mono">${l}</b> <span class="muted" style="font-size:12px">${esc(STAT_INFO[k][1])}</span></span><button class="btn small" data-buy="${k}" data-cost="${c}" ${l>=10||G.money<c?'disabled':''}>+1 · ${money(c)}</button></div>`;}).join('')}</div>`).join('')}</div>
    <div class="grid" style="gap:12px;align-content:start">
     <div class="panel grid" style="gap:8px"><h3>Parts dealer</h3>${G.relicShop?`<div class="slot full"><span class="sn">${RELICS[G.relicShop].slot}</span><b>${RELICS[G.relicShop].n}</b><p>${esc(RELICS[G.relicShop].txt)}</p></div><div class="row"><button class="btn small" id="g-relic" ${G.money<7000?'disabled':''}>Buy · ${money(7000)}</button><button class="btn small" id="g-relic-rr" ${G.money<rerollCost(G.shopRerolls)?'disabled':''}>Reroll · ${money(rerollCost(G.shopRerolls))}</button></div>`:'<p class="muted">Sold out.</p>'}</div>
-    <div class="panel grid" style="gap:8px"><h3>Deck (${G.deck.length} cards)</h3><p class="muted" style="font-size:13px">Remove a card for ${money(2000)} to make your best cards come up more often.</p>${deckTable(true)}</div>
+    ${deckPanel(t)}
    </div>
   </div>
  </div>`;
  el.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const c=+b.dataset.cost;if(G.money<c)return;G.money-=c;G.stats[b.dataset.buy]++;showGarage();});
- el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{if(G.money<2000||G.deck.length<=8)return;G.money-=2000;G.deck.splice(G.deck.indexOf(b.dataset.remove),1);showGarage();});
+ $('#g-deck').onclick=()=>showDeckBuilder();
+ {const fx=$('#g-fix');if(fx)fx.onclick=()=>{G.deck=fixDeck(t);showGarage();};}
  const rb=$('#g-relic');if(rb)rb.onclick=()=>{if(G.money<7000)return;G.money-=7000;addRelic(G.relicShop);G.relicShop=null;showGarage();};
  const rr=$('#g-relic-rr');if(rr)rr.onclick=()=>{const c=rerollCost(G.shopRerolls);if(G.money<c)return;G.money-=c;G.shopRerolls++;G.relicShop=rollRelics(1)[0]||null;showGarage();};
  el.querySelectorAll('[data-su]').forEach(b=>b.onclick=()=>{const k=b.dataset.su,v=b.dataset.v;setTune({[k]:k==='focus'?v:+v});showGarage();});
  {const rs=$('#su-reset');if(rs)rs.onclick=()=>{G.tune=Object.assign({},ARCH[G.arch].tune);showGarage();};}
  $('#g-sheet').onclick=()=>openSheet(me().id);
  $('#g-quit').onclick=()=>{saveSeason();G=null;renderTitle();};
- $('#g-go').onclick=()=>{G.notice=null;G.snap=null;G.inRace=null;G.snap=JSON.stringify(G);startRace();markInRace();};
+ $('#g-deck2').onclick=()=>showDeckBuilder();
+ $('#g-go').onclick=()=>{if(!deckOk(t))return;G.notice=null;G.snap=null;G.inRace=null;G.snap=JSON.stringify(G);startRace();markInRace();};
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -2895,12 +2938,68 @@ function tunePanel(t){const u=G.tune||{hand:0,aero:0,focus:null},a=ARCH[G.arch];
   <div class="grid" style="gap:4px"><span class="eyebrow">Combo focus</span><div class="sudial">${Object.entries(FOCUS).map(([k,p])=>`<button class="chip${u.focus===k?' on':''}" data-su="focus" data-v="${k}" title="${esc(p.txt)}">${esc(p.n)}</button>`).join('')}</div></div>
   <div class="sufx">${tuneFx(u).map(([k,v])=>`<div><b>${k}</b> ${esc(v)}</div>`).join('')}</div></div>`;}
 function addRelic(id){if(!G.relics.includes(id))G.relics.push(id);const s=RELICS[id].slot;if(!G.equipped[s])G.equipped[s]=id;}
-function deckTable(removable){
+function deckTable(){
  const counts={};for(const id of G.deck)counts[id]=(counts[id]||0)+1;
  const ids=Object.keys(counts).sort((a,b)=>FAM_ORDER.indexOf(CARDS[a].fam)-FAM_ORDER.indexOf(CARDS[b].fam)||CARDS[a].n.localeCompare(CARDS[b].n));
- let lastF=null;
- return `<div class="tw"><table><thead><tr><th>Card</th><th>Family</th><th>Rarity</th><th>Cost</th><th>Your success</th><th>Wrecks</th><th>#</th>${removable?'<th></th>':''}</tr></thead><tbody>${ids.map(id=>{const cd=CARDS[id],h=G.hist[id];const cost=cd.cost.tire?cd.cost.tire+'% tire':cd.cost.mom?cd.cost.mom+' Mom':'free';
-  return `<tr><td>${famDot(cd.fam)}${esc(cd.n)}</td><td>${FAM[cd.fam].n}</td><td>${cd.rar}</td><td class="num">${cost}</td><td class="num">${h&&h.plays?Math.round(h.succ/h.plays*100)+'% of '+h.plays:'—'}</td><td class="num">${h?h.wrecks:0}</td><td class="num">${counts[id]}</td>${removable?`<td><button class="btn small" data-remove="${id}" ${G.money<2000||G.deck.length<=8?'disabled':''}>Remove</button></td>`:''}</tr>`;}).join('')}</tbody></table></div>`;
+ return `<div class="tw"><table><thead><tr><th>Card</th><th>Family</th><th>Rarity</th><th>Cost</th><th>Your success</th><th>Wrecks</th><th>#</th></tr></thead><tbody>${ids.map(id=>{const cd=CARDS[id],h=G.hist[id];
+  return `<tr><td>${famDot(cd.fam)}${esc(cd.n)}</td><td>${FAM[cd.fam].n}</td><td>${cd.rar}</td><td class="num">${cardCost(cd)}</td><td class="num">${succTxt(id)}</td><td class="num">${h?h.wrecks:0}</td><td class="num">${counts[id]}</td></tr>`;}).join('')}</tbody></table></div>`;
+}
+const cardCost=cd=>cd.cost.tire?cd.cost.tire+'% tire':cd.cost.mom?cd.cost.mom+' Mom':'free';
+const succTxt=id=>{const h=G.hist[id];return h&&h.plays?Math.round(h.succ/h.plays*100)+'% of '+h.plays:'—';};
+// what the garage changed when it fixed your deck for a new track
+function deckDiff(was,now,t){const add=[],out=[];const a={},b={};for(const id of was)a[id]=(a[id]||0)+1;for(const id of now)b[id]=(b[id]||0)+1;
+ for(const id in b)for(let k=a[id]||0;k<b[id];k++)add.push(CARDS[id].n);for(const id in a)for(let k=b[id]||0;k<a[id];k++)out.push(CARDS[id].n);
+ if(!add.length&&!out.length)return null;return `Your race deck broke a ${t.short} rule, so the crew fixed it${add.length?`: added ${add.join(', ')}`:''}${out.length?`${add.length?';':':'} took out ${out.join(', ')}`:''}. Change it in the deck builder.`;}
+function famStrip(deck){return `<div class="famstrip">${FAM_ORDER.map(f=>{const n=famCount(deck,f);return n?`<span title="${FAM[f].n}">${famDot(f)}${FAM[f].n} <b class="mono">${n}</b></span>`:'';}).join('')}</div>`;}
+function rulesList(t,deck){return `<div class="drules">${deckRules(t,deck).map(r=>`<div class="${r.ok?'ok':'bad'}"><b>${r.ok?'✓':'✗'}</b><span>${esc(r.txt)}</span><span class="mono">${r.have}${r.k==='cap'?' / '+r.need:''}</span></div>`).join('')}</div>`;}
+function deckPanel(t){const ok=deckOk(t);
+ return `<div class="panel grid" style="gap:8px;${ok?'':'border-color:var(--red)'}"><div class="row" style="justify-content:space-between"><h3>Race deck (${G.deck.length} of ${G.coll.length} cards owned)</h3><button class="btn small primary" id="g-deck">Build race deck</button></div>
+  <p class="muted" style="font-size:13px">You keep every card in your collection. Before each race you pick the cards you take. Fewer cards means your best ones come up more often. Your tune sets the slot limits.</p>
+  ${G.deckNote?`<p style="color:var(--amber);font-size:13px">${esc(G.deckNote)}</p>`:''}
+  ${famStrip(G.deck)}${rulesList(t,G.deck)}${ok?'':'<div class="row"><button class="btn small" id="g-fix">Fix it for me</button></div>'}</div>`;}
+
+/* deck builder: the collection by family on the left, the race deck and its rules on the right, tune dials under them */
+const DB={tab:'all',sort:'fam'};
+function showDeckBuilder(){
+ ensureColl();const t=TRACKS[arcTi(G.raceIdx)],el=$('#deckb');$('#garage').innerHTML=''; // the garage has the same tune dials
+ const own={};for(const id of G.coll)own[id]=(own[id]||0)+1;
+ const rarN={common:0,uncommon:1,rare:2,special:3};
+ const rate=id=>{const h=G.hist[id];return h&&h.plays?h.succ/h.plays:-1;};
+ let ids=Object.keys(own).filter(id=>DB.tab==='all'||CARDS[id].fam===DB.tab);
+ const S={fam:(a,b)=>FAM_ORDER.indexOf(CARDS[a].fam)-FAM_ORDER.indexOf(CARDS[b].fam)||CARDS[a].n.localeCompare(CARDS[b].n),
+  fit:(a,b)=>cardScore(b,t)-cardScore(a,t),succ:(a,b)=>rate(b)-rate(a),rar:(a,b)=>rarN[CARDS[b].rar]-rarN[CARDS[a].rar],name:(a,b)=>CARDS[a].n.localeCompare(CARDS[b].n)};
+ ids.sort((a,b)=>S[DB.sort](a,b)||S.fam(a,b));
+ const famsOwned=FAM_ORDER.filter(f=>G.coll.some(id=>CARDS[id].fam===f));
+ const last=G.trackDecks&&G.trackDecks[t.id];
+ el.innerHTML=`<div class="page-in">
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Deck builder · race ${G.raceIdx+1} of ${SEASON_LEN}</span><h2>Race deck for ${esc(t.name)}</h2><span class="muted" style="font-size:13px">${t.type}. ${esc(t.blurb)}</span></div>
+   <div class="row"><button class="btn primary" id="d-done" ${deckOk(t)?'':'disabled'}>Done</button></div></div>
+  <div class="grid dbgrid">
+   <div class="panel grid" style="gap:8px;align-content:start"><div class="row" style="justify-content:space-between"><h3>Collection (${G.coll.length})</h3>
+     <span class="row" style="gap:4px"><span class="eyebrow">Sort</span>${[['fam','Family'],['fit','Best here'],['succ','Your success'],['rar','Rarity'],['name','Name']].map(([k,n])=>`<button class="chip${DB.sort===k?' on':''}" data-sort="${k}">${n}</button>`).join('')}</span></div>
+    <div class="tabs">${[['all','All',G.coll.length],...famsOwned.map(f=>[f,FAM[f].n,famCount(G.coll,f)])].map(([k,n,c])=>`<button class="chip${DB.tab===k?' on':''}" data-tab="${k}">${k!=='all'?famDot(k):''}${n} ${c}</button>`).join('')}</div>
+    <div class="tw"><table class="dbtable"><thead><tr><th>Card</th><th>Family</th><th>Rarity</th><th>Cost</th><th>Your success</th><th class="num">Owned</th><th class="num">In deck</th><th></th></tr></thead><tbody>${ids.map(id=>{const cd=CARDS[id],inD=cnt(G.deck,id),why=addBlock(id,t);
+     return `<tr class="${inD?'in':''}"><td>${famDot(cd.fam)}<b>${esc(cd.n)}</b><div class="muted" style="font-size:12px">${esc(cd.txt)}</div></td><td>${FAM[cd.fam].n}</td><td>${cd.rar}</td><td class="num">${cardCost(cd)}</td><td class="num">${succTxt(id)}</td><td class="num">${own[id]}</td><td class="num"><b>${inD}</b></td>
+      <td><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn small" data-out="${id}" ${inD?'':'disabled'} title="Take one out">−</button><button class="btn small" data-in="${id}" ${why?`disabled title="${esc(why)}"`:'title="Add one"'}>+</button></span></td></tr>`;}).join('')}</tbody></table></div></div>
+   <div class="grid" style="gap:12px;align-content:start">
+    <div class="panel grid" style="gap:8px;${deckOk(t)?'':'border-color:var(--red)'}"><h3>Race deck · ${G.deck.length} cards</h3>${famStrip(G.deck)}${rulesList(t,G.deck)}
+     <div class="row" style="gap:6px"><button class="btn small" id="d-auto" title="Picks the cards that fit this track and your tune best">Auto-build for ${esc(t.short)}</button>${deckOk(t)?'':'<button class="btn small" id="d-fix">Fix rules</button>'}${last?`<button class="btn small" id="d-last" title="The deck you raced here last time">Last ${esc(t.short)} deck</button>`:''}<button class="btn small" id="d-all">Add all I can</button><button class="btn small" id="d-clear">Clear</button></div></div>
+    ${tunePanel(t)}
+   </div></div></div>`;
+ const re=()=>showDeckBuilder();
+ el.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{DB.sort=b.dataset.sort;re();});
+ el.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{DB.tab=b.dataset.tab;re();});
+ el.querySelectorAll('[data-in]').forEach(b=>b.onclick=()=>{if(addBlock(b.dataset.in,t))return;G.deck.push(b.dataset.in);re();});
+ el.querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{const i=G.deck.lastIndexOf(b.dataset.out);if(i>=0)G.deck.splice(i,1);re();});
+ el.querySelectorAll('[data-su]').forEach(b=>b.onclick=()=>{const k=b.dataset.su,v=b.dataset.v;setTune({[k]:k==='focus'?v:+v});re();});
+ {const rs=$('#su-reset');if(rs)rs.onclick=()=>{G.tune=Object.assign({},ARCH[G.arch].tune);re();};}
+ $('#d-auto').onclick=()=>{G.deck=autoDeck(t);re();};
+ {const f=$('#d-fix');if(f)f.onclick=()=>{G.deck=fixDeck(t);re();};}
+ {const l=$('#d-last');if(l)l.onclick=()=>{G.deck=fixDeck(t,last);re();};}
+ $('#d-all').onclick=()=>{G.deck=fixDeck(t,G.deck,null,DECK_MAX);re();};
+ $('#d-clear').onclick=()=>{G.deck=[];re();};
+ $('#d-done').onclick=()=>{if(!deckOk(t))return;G.deckNote=null;showGarage();};
+ showScreen('deckb');
 }
 
 function showReward(){
@@ -2925,13 +3024,13 @@ function showReward(){
   <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Points standings</h3>${res.pts!=null?`<span class="mono">+${res.pts} pts · P${res.rank}${res.rankBefore&&G.results.length>1&&res.rankBefore!==res.rank?` <b style="color:${res.rank<res.rankBefore?'var(--green)':'var(--red)'}">${res.rank<res.rankBefore?'▲':'▼'}${Math.abs(res.rankBefore-res.rank)}</b>`:''}</span>`:''}</div>${standingsTable(10)}</div>
   ${res.penalty==='survive'?`<div class="panel" style="border-color:var(--amber)"><h3 style="color:var(--amber)">Survive token used</h3><p>The DNF would have ended your run. Your token saved it, but it still cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}. No tokens left.</p></div>`:res.penalty==='ironman'?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Ironman penalty</h3><p>The DNF cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}.</p></div>`:''}
   ${res.log&&res.log.length?`<div class="panel grid" style="gap:8px"><h3>Your calls</h3><p class="muted" style="font-size:13px">Every card you played, the real odds at that moment, and what moved them. Use it to learn what a good moment looks like.</p><div class="tw"><table><thead><tr><th>Lap</th><th>Card</th><th>Odds</th><th>Result</th><th>What moved it</th></tr></thead><tbody>${res.log.map(l=>`<tr><td class="num">${l.lap}</td><td>${esc(l.n)}</td><td class="num">${Math.round(l.succ*100)}%</td><td><i class="famdot ${TIER_CLS[l.tier]}"></i>${TIER_NAME[l.tier]}</td><td style="font-size:12px">${l.tags.map(([v,t])=>`<span style="color:${v>0?'#58d68d':'#ff7b7f'}">${v>0?'▲':'▼'} ${esc(t)} ${v>0?'+':''}${v}</span>`).join(' · ')||'—'}</td></tr>`).join('')}</tbody></table></div></div>`:''}
-  <div class="panel grid" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>${R.picked==='abandoned'?'No card':R.picked?'Card added':'Pick a card for your deck'}</h3>${R.picked?'':`<div class="row"><button class="btn small" id="w-rr" ${G.money<rerollCost(R.cardRerolls)?'disabled':''}>Reroll · ${money(rerollCost(R.cardRerolls))}</button><button class="btn small" id="w-skip">Skip · +${money(1000)}</button></div>`}</div>
-   ${R.picked?`<p class="muted">${R.picked==='abandoned'?'No card after an abandoned race.':R.picked==='skip'?'You skipped the card and took $1,000.':esc(CARDS[R.picked].n)+' is in your deck.'}</p>`:`<div class="grid g4">${R.cardOffer.map(id=>miniCard(id,'pickable')).join('')}</div>`}</div>
+  <div class="panel grid" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>${R.picked==='abandoned'?'No card':R.picked?'Card added':'Pick a card for your collection'}</h3>${R.picked?'':`<div class="row"><button class="btn small" id="w-rr" ${G.money<rerollCost(R.cardRerolls)?'disabled':''}>Reroll · ${money(rerollCost(R.cardRerolls))}</button><button class="btn small" id="w-skip">Skip · +${money(1000)}</button></div>`}</div>
+   ${R.picked?`<p class="muted">${R.picked==='abandoned'?'No card after an abandoned race.':R.picked==='skip'?'You skipped the card and took $1,000.':esc(CARDS[R.picked].n)+(R.inDeck?' is in your collection and your race deck.':' is in your collection. Your race deck had no room, so add it in the deck builder.')}</p>`:`<div class="grid g4">${R.cardOffer.map(id=>miniCard(id,'pickable')).join('')}</div>`}</div>
   ${R.relicOffer?`<div class="panel grid" style="gap:10px;border-color:var(--amber)"><div class="row" style="justify-content:space-between"><h3>${R.relicPicked?'Part installed':'Strong run bonus: pick a part'}</h3>${R.relicPicked?'':`<button class="btn small" id="w-rrr" ${G.money<rerollCost(R.relicRerolls)?'disabled':''}>Reroll · ${money(rerollCost(R.relicRerolls))}</button>`}</div>
    ${R.relicPicked?`<p class="muted">${esc(RELICS[R.relicPicked].n)} added to your inventory.</p>`:`<div class="grid g2">${R.relicOffer.map(id=>`<button class="slot full sel" data-relic="${id}"><span class="sn">${RELICS[id].slot}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`).join('')}</div>`}</div>`:''}
   <div class="row"><button class="btn primary" id="w-go" style="font-size:18px">${res.penalty==='dead'?'See how the run ended':last?'Finish the season':'Back to the garage'}</button>${G.stakes==='standard'&&G.snap?'<button class="btn" id="w-retry">Retry this race</button>':''}</div>
  </div>`;
- el.querySelectorAll('.minicard.pickable').forEach(b=>b.onclick=()=>{G.deck.push(b.dataset.card);R.picked=b.dataset.card;showReward();});
+ el.querySelectorAll('.minicard.pickable').forEach(b=>b.onclick=()=>{const id=b.dataset.card;G.coll.push(id);R.inDeck=!addBlock(id,TRACKS[arcTi(G.raceIdx)]);if(R.inDeck)G.deck.push(id);R.picked=id;showReward();});
  const rr=$('#w-rr');if(rr)rr.onclick=()=>{const c=rerollCost(R.cardRerolls);if(G.money<c)return;G.money-=c;R.cardRerolls++;R.cardOffer=rollCards(res.tier);showReward();};
  const sk=$('#w-skip');if(sk)sk.onclick=()=>{G.money+=1000;R.picked='skip';showReward();};
  el.querySelectorAll('[data-relic]').forEach(b=>b.onclick=()=>{addRelic(b.dataset.relic);R.relicPicked=b.dataset.relic;showReward();});
@@ -2971,7 +3070,7 @@ function renderSheet(car){
   $('#s-close').onclick=closeSheet;return;
  }
  const canEquip=!race;
- const tabs=[['car','Car & driver'],['gear','Equipment'],['deck','Deck']];
+ const tabs=[['car','Car & driver'],['gear','Equipment'],['deck','Race deck']];
  let body='';
  if(sheetTab==='car')body=`<div class="grid g2"><div class="panel grid" style="gap:10px"><h3>Driver</h3>${['racecraft','defense','consistency','tireMgmt'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Car</h3>${['power','handling','aero','durability'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Crew</h3>${['crewChief','engineer','spotter'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:6px"><h3>Persona</h3><b>${esc(ARCH[G.arch].n)}</b><p class="muted">${esc(ARCH[G.arch].desc)}</p><p class="muted" style="font-size:13px">Upgrade stats in the garage shop between races.</p></div></div>`;
  if(sheetTab==='gear'){const inv=G.relics.filter(id=>!Object.values(G.equipped).includes(id));
@@ -3822,7 +3921,7 @@ Object.assign(GLOSS,{
 });
 
 setLook(LOOK);
-window.__gfd={get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
+window.__gfd={autoDeck,fixDeck,deckRules,deckOk,slotCaps,showDeckBuilder,TRACK_MIN,DECK_MIN,DECK_MAX,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
 /* ===== Garage tune x pit Setups (step 7b): a pit adjustment nudges this race's tune one notch. ===== */
 const TUNE_NUDGE={trackbar:['hand',-1,'tighter'],spring:['hand',1,'looser'],wedge:['aero',1,'less drag']};
 const _setupInstall7b=setupInstall;

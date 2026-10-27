@@ -1,5 +1,5 @@
 // season-smoke.js /abs/slice.html [shotDir] : plays a 10-race season through the real screens (races fast-forwarded),
-// reloads the page mid-season and mid-race to check save/continue, and checks the Ironman abandoned-race rule.
+// reloads the page mid-season and mid-race to check save/continue, and checks that Ironman also restarts a race cut off mid-way (Q48).
 const {chromium}=require('playwright');
 const html=process.argv[2],shots=process.argv[3]||null;
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1280,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -54,14 +54,13 @@ const html=process.argv[2],shots=process.argv[3]||null;
  // every race hands out the same points total (40+35+34+...+17)
  const per=40+Array.from({length:19},(_,i)=>35-i).reduce((a,b)=>a+b,0);if(end.pts!==per*10)fail('points total '+end.pts+' != '+per*10);
  console.log('season ok:',end.txt.split('\n').slice(0,4).join(' | '));
- // Ironman: closing mid-race counts as a DNF
+ // Ironman: closing mid-race starts the race over too (board Q48: no), with no DNF and no penalty
  await click('#e-new');await p.evaluate(()=>{window.__gfd.titleSel.stakes='ironman';window.__gfd.titleSel.diff='normal';});
- await p.evaluate(()=>{});await click('#t-go');const m0=await p.evaluate(()=>window.__gfd.G.money);
+ await click('#t-go');const m0=await p.evaluate(()=>window.__gfd.G.money);
  await click('#g-go');await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<200;k++)g.update(0.05);});
  await load();await click('#t-cont');
- const ab=await p.evaluate(()=>{const G=window.__gfd.G,r=G.results[0];return {n:G.results.length,dnf:r&&r.dnf,ab:r&&r.abandoned,fin:r&&r.finish,money:G.money,pen:r&&r.penalty,inRace:G.inRace};});
- if(ab.n!==1||!ab.dnf||!ab.ab||ab.fin!==20||ab.pen!=='ironman'||ab.money!==Math.max(0,m0-3000)||ab.inRace)fail('ironman abandon '+JSON.stringify(ab));
- await shot('ironman-abandoned');
- await click('#w-go');if(await p.evaluate(()=>document.getElementById('garage').hidden||window.__gfd.G.raceIdx!==1))fail('after abandon, not in garage for race 2');
- console.log('ironman abandon ok:',JSON.stringify(ab));
+ const ab=await p.evaluate(()=>{const G=window.__gfd.G;return {n:G.results.length,idx:G.raceIdx,money:G.money,inRace:G.inRace,garage:!document.getElementById('garage').hidden,notice:!!G.notice};});
+ if(ab.n!==0||ab.idx!==0||ab.money!==m0||ab.inRace||!ab.garage||!ab.notice)fail('ironman mid-race continue '+JSON.stringify(ab));
+ await shot('ironman-restart');
+ console.log('ironman restart ok:',JSON.stringify(ab));
  console.log('pageerrors',errs.length,errs.slice(0,3));if(errs.length)process.exitCode=1;await b.close();})();
