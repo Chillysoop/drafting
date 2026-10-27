@@ -31,3 +31,5 @@ jobs:
         run: node prototype/harness/hud-smoke.js "$PWD/prototype/green-flag-deck.html"
       - name: Qualifying check (real screens and keys)
         run: node prototype/harness/quali-smoke.js "$PWD/prototype/green-flag-deck.html"
+      - name: Sponsors and race objectives check
+        run: node prototype/harness/sponsor-smoke.js "$PWD/prototype/green-flag-deck.html"

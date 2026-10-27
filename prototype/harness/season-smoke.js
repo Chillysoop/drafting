@@ -17,7 +17,11 @@ const html=process.argv[2],shots=process.argv[3]||null;
  await load();await p.evaluate(()=>localStorage.clear());await load();
  if(await p.$('#t-cont'))fail('continue shown with no save');
  await click('#t-go');
+ // step 17: Go racing waits for a sponsor contract
+ if(!(await p.$eval('#g-go',e=>e.disabled)))fail('go racing allowed before signing a sponsor');
+ await click('#g-spons [data-sign]');
  if(!(await p.evaluate(()=>!!window.__gfd.readSave())))fail('no save on the garage screen');
+ let pre=null;
  for(let i=0;i<10;i++){
   await goRace();
   if(i===1){ // close the page mid-race (standard stakes): continue restarts the race from the garage
@@ -38,6 +42,9 @@ const html=process.argv[2],shots=process.argv[3]||null;
    if(await p.evaluate(()=>document.getElementById('reward').hidden))fail('continue did not reopen the reward screen');
    if(await p.evaluate(()=>window.__gfd.me&&0))0;
   }
+  if(i===0){const o=await p.evaluate(()=>{const G=window.__gfd.G,res=G.results[0];return {box:!!document.getElementById('w-objs'),n:res.objs.length,ask:res.objs.filter(o=>o.ask).length,ret:res.retainer,tot:res.total===res.purse+res.bonus+res.retainer+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0)};});
+   if(!o.box||o.n!==3||o.ask!==1||!o.ret||!o.tot)fail('reward objectives/sponsor '+JSON.stringify(o));}
+  if(i===9)pre=await p.evaluate(()=>({pts:window.__gfd.standings().reduce((s,x)=>s+x.pts,0),money:window.__gfd.G.money,sp:window.__gfd.G.sponsor.id}));
   await click('#w-go');
   if(i===6){ // garage upgrade, reload, check your car still uses the bought stat
    await p.evaluate(()=>{window.__gfd.G.money+=5000;});await p.evaluate(()=>window.__gfd.showGarage());
@@ -48,17 +55,28 @@ const html=process.argv[2],shots=process.argv[3]||null;
   }
   if(i===3){await p.evaluate(()=>{const e=document.getElementById('garage');e.scrollTop=e.scrollHeight;});await shot('garage-calendar');}
  }
- const end=await p.evaluate(()=>({txt:document.getElementById('reward').innerText.slice(0,400),save:!!window.__gfd.readSave(),n:window.__gfd.G.results.length,pts:window.__gfd.standings().reduce((s,x)=>s+x.pts,0)}));
+ const end=await p.evaluate(()=>{const G=window.__gfd.G,s=window.__gfd.readSave();return {txt:document.getElementById('reward').innerText.slice(0,400),review:(document.getElementById('e-spons')||{}).innerText||'',save:!!s&&s.G.season===2,n:G.results.length,season:G.season,past:G.past,offers:G.sponsorOffers,money:G.money};});
  await shot('season-end');
  if(!/Season complete/i.test(end.txt))fail('no season end screen');
- if(end.save)fail('save not cleared at season end');
- if(end.n!==10)fail('results '+end.n);
+ // step 17: the career carries on into season 2, saved; the sponsor renews (goal met: bonus paid, renewal offer) or walks (not offered again)
+ if(!end.save||end.season!==2||end.n!==0)fail('season 2 not set up '+JSON.stringify({save:end.save,season:end.season,n:end.n}));
+ const met=end.past[0].met;
+ if(!/renews|walks/i.test(end.review))fail('no sponsor review');
+ if(met&&(!end.offers[0].renew||end.offers[0].id!==pre.sp||end.money<=pre.money))fail('renewal '+JSON.stringify(end.offers));
+ if(!met&&(end.offers.some(o=>o.id===pre.sp)||end.money!==pre.money))fail('walk '+JSON.stringify(end.offers));
+ if(end.past[0].rank<1)fail('past season');
  // every race hands out the same points total (40+35+34+...+17)
- const per=40+Array.from({length:19},(_,i)=>35-i).reduce((a,b)=>a+b,0);if(end.pts!==per*10)fail('points total '+end.pts+' != '+per*10);
- console.log('season ok:',end.txt.split('\n').slice(0,4).join(' | '));
+ const per=40+Array.from({length:19},(_,i)=>35-i).reduce((a,b)=>a+b,0);if(pre.pts!==per*10)fail('points total '+pre.pts+' != '+per*10);
+ console.log('season ok:',end.txt.split('\n').slice(0,4).join(' | '),'| sponsor',met?'renews':'walks');
+ await click('#e-next');
+ const s2=await p.evaluate(()=>({g:!document.getElementById('garage').hidden,lbl:/season 2/i.test(document.getElementById('garage').innerText),offers:document.querySelectorAll('#g-spons [data-sign]').length,go:document.getElementById('g-go').disabled}));
+ if(!s2.g||!s2.lbl||s2.offers<2||!s2.go)fail('season 2 garage '+JSON.stringify(s2));
+ await shot('season2-offers');
+ await click('#g-spons [data-sign]');if(await p.$eval('#g-go',e=>e.disabled))fail('season 2 sign');
+ await load();if(!(await p.$('#t-cont')))fail('no continue for season 2');
  // Ironman: closing mid-race starts the race over too (board Q48: no), with no DNF and no penalty
- await click('#e-new');await p.evaluate(()=>{window.__gfd.titleSel.stakes='ironman';window.__gfd.titleSel.diff='normal';});
- await click('#t-go');const m0=await p.evaluate(()=>window.__gfd.G.money);
+ await p.evaluate(()=>{window.__gfd.titleSel.stakes='ironman';window.__gfd.titleSel.diff='normal';});
+ await click('#t-go');await click('#t-go');await click('#g-spons [data-sign]');const m0=await p.evaluate(()=>window.__gfd.G.money);
  await goRace();await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<200;k++)g.update(0.05);});
  await load();await click('#t-cont');
  const ab=await p.evaluate(()=>{const G=window.__gfd.G;return {n:G.results.length,idx:G.raceIdx,money:G.money,inRace:G.inRace,garage:!document.getElementById('garage').hidden,notice:!!G.notice};});

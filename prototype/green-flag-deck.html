@@ -1155,7 +1155,7 @@ const SCHED={ovals:{n:'Ovals',ids:['mill','carver','talon','mill','carver','talo
 const EVENT_NAMES=['Season Opener','Spring Sprint','Memorial 200','Summer Showdown','Midseason 300','Night Race','Harvest Cup','Fall Classic','Cutoff Race','Season Finale'];
 // points for each finishing spot (index 0 = winner): 40 for a win, 35 for 2nd, then one less per place (17 for 20th)
 const PTS=i=>i===0?40:Math.max(1,36-i);
-function standings(g){g=g||G;const P=g.pts||{};return g.cars.map(c=>({c,pts:P[c.id]||0,wins:c.career.wins,best:c.career.best})).sort((a,b)=>b.pts-a.pts||b.wins-a.wins||a.best-b.best||a.c.id-b.c.id);}
+function standings(g){g=g||G;const P=g.pts||{};return g.cars.map(c=>({c,pts:P[c.id]||0,wins:c.career.swins!=null?c.career.swins:c.career.wins,best:c.career.best})).sort((a,b)=>b.pts-a.pts||b.wins-a.wins||a.best-b.best||a.c.id-b.c.id);}
 function myRank(g){return standings(g).findIndex(s=>s.c.isMe)+1;}
 function scoreRace(res,fo){const before=myRank();G.pts=G.pts||{};fo.forEach((c,i)=>{G.pts[c.id]=(G.pts[c.id]||0)+PTS(i);});res.pts=PTS(res.finish-1);res.rankBefore=before;res.rank=myRank();res.ptsTotal=G.pts[me().id];}
 /* save/continue in browser storage: saved on the garage and reward screens and at the green flag */
@@ -1515,15 +1515,89 @@ const PRESETS={
  legend:{n:'Legend',diff:'brutal',info:'feel',stakes:'permadeath'}
 };
 
+/* Race objectives (step 17). Targets scale with your car (tuned on the harness human bot, which beats them ~80-90% of the time): e = expected finish from car ratings (expFinish()).
+   v:17 marks objectives added in step 17; rollObjectives() leaves them out so seeded harness runs stay byte-identical. */
 const OBJECTIVES=[
- {id:'top15',n:'Finish 15th or better',pay:3000,test:r=>r.finish<=15},
+ {id:'top15',n:e=>`Finish P${finTop(e)} or better`,pay:3000,test:r=>!r.dnf&&r.finish<=finTop(r.objE||r.expected)},
  {id:'gain5',n:'Finish 5+ spots ahead of where you started',pay:2500,test:r=>r.start-r.finish>=5},
- {id:'top10',n:'Run in the top 10 at any point',pay:2000,test:r=>r.bestPos<=10},
+ {id:'top10',n:e=>`Run in the top ${runTop(e)} at any point`,pay:2000,test:r=>r.bestPos<=runTop(r.objE||r.expected)},
  {id:'clean',n:'No critical failures',pay:2000,test:r=>r.crits===0},
- {id:'land4',n:'Land 4 successful cards',pay:2000,test:r=>r.succ>=4},
+ {id:'land4',n:'Land 12 successful cards',pay:2000,test:r=>r.succ>=12},
  {id:'mate',n:'Finish ahead of your teammate',pay:1500,test:r=>r.beatMate},
- {id:'rival',n:'Finish ahead of your rival',pay:2500,test:r=>r.beatRival}
+ {id:'rival',n:'Finish ahead of your rival',pay:2500,test:r=>r.beatRival},
+ {id:'combo3',n:'Land a ×4 combo',pay:2500,test:r=>(r.bestChain||0)>=4,v:17}
 ];
+// targets: finish 3 spots better than the car's expected spot; run inside the top (expected - 8) at some point
+const finTop=e=>Math.max(1,e-3),runTop=e=>Math.max(3,e-8);
+const objOf=id=>OBJECTIVES.find(o=>o.id===id);
+const objName=(o,e)=>typeof o.n==='function'?o.n(e):o.n;
+// your expected finish from car ratings alone (ties go your way); race objectives use it so the garage and the race agree
+function expFinish(){const m=G&&G.cars&&G.cars.find(c=>c.isMe);if(!m)return 10;const ms=carRating(m);return 1+G.cars.filter(c=>!c.isMe&&carRating(c)>ms).length;}
+// old saves store objective ids; step 17 stores {id,ask}
+const normObjs=l=>(l||[]).map(x=>typeof x==='string'?{id:x}:x).filter(x=>objOf(x.id));
+
+/* Sponsors (step 17): one contract per season. per = paid every race, goal = season goal, bonus = paid at season end if met,
+   asks = the race objective they add each week (pays ASK_MUL). need = last season's points finish needed for an offer (99 = anyone).
+   Hit the goal and they renew with a RENEW_RAISE raise; miss it and they walk. */
+const ASK_MUL=1.5,RENEW_RAISE=1.2;
+const SGOALS={
+ dnf2:{n:'No more than 2 DNFs all season',cnt:R=>R.filter(r=>r.dnf).length,max:2},
+ beat6:{n:'Finish 3+ spots ahead of your expected spot in 6 races',cnt:R=>R.filter(r=>!r.dnf&&r.finish<=r.expected-3).length,need:6},
+ gain50:{n:'Gain 50 spots over the season, start to finish',cnt:R=>R.reduce((s,r)=>s+r.start-r.finish,0),need:50,net:true},
+ top10x4:{n:'4 top-10 finishes',cnt:R=>R.filter(r=>!r.dnf&&r.finish<=10).length,need:4},
+ pts10:{n:'Finish the season top 10 in points',rank:10},
+ win1:{n:'Win a race',cnt:R=>R.filter(r=>r.finish===1).length,need:1},
+ pts5:{n:'Finish the season top 5 in points',rank:5}
+};
+const SPONSORS=[
+ {id:'pinecrest',n:'Pinecrest Feed & Seed',c:'#7fbf4d',blurb:'A family feed store. Wants the car home in one piece.',per:1000,bonus:6000,goal:'dnf2',asks:['clean','land4'],need:99},
+ {id:'cobalt',n:'Cobalt Insurance',c:'#4f8ff0',blurb:'Pays for results it can predict.',per:1500,bonus:9000,goal:'beat6',asks:['top15','clean'],need:99},
+ {id:'bolt',n:'Bolt Energy',c:'#f2c94c',blurb:'Loud can, loud driving. Wants passes on TV.',per:1800,bonus:10000,goal:'gain50',asks:['gain5','combo3'],need:99},
+ {id:'summit',n:'Summit Credit Union',c:'#2fb3a0',blurb:'Wants its name in the points table every week.',per:2000,bonus:11000,goal:'pts10',asks:['mate','top10'],need:99},
+ {id:'hitide',n:'Hi-Tide Motor Oil',c:'#ff6b5e',blurb:'Wants the car near the front of the TV shot.',per:2200,bonus:12000,goal:'top10x4',asks:['top10','rival'],need:99},
+ {id:'redmesa',n:'Red Mesa Trucking',c:'#d9824a',blurb:'Hauls for winners only. Talks to you after a top-12 season.',per:2800,bonus:15000,goal:'win1',asks:['rival','gain5'],need:12},
+ {id:'keystone',n:'Keystone Tire Co.',c:'#a99bff',blurb:'Title-sponsor money for a title run. Talks to you after a top-8 season.',per:3500,bonus:20000,goal:'pts5',asks:['top15','combo3'],need:8}
+];
+const sponsorOf=id=>SPONSORS.find(s=>s.id===id);
+const r100=n=>Math.round(n/100)*100;
+// where a season goal stands: st = met (locked in) | missed (can't happen now) | on (on track) | behind | open
+function goalState(gid,R,rank,left){const g=SGOALS[gid];
+ if(g.rank)return {prog:R.length?`P${rank} in points now`:'no races yet',st:!R.length?'open':rank<=g.rank?(left?'on':'met'):(left?'behind':'missed')};
+ const c=g.cnt(R);
+ if(g.max!=null)return {prog:`${c} of ${g.max} allowed`,st:c>g.max?'missed':left?'on':'met'};
+ if(g.net)return {prog:`${c>0?'+':''}${c} of +${g.need}`,st:c>=g.need?(left?'on':'met'):left?'open':'missed'};
+ return {prog:`${Math.min(c,g.need)} of ${g.need}`,st:c>=g.need?'met':left?'open':'missed'};}
+const GOAL_BADGE={met:['Met','var(--green)'],missed:['Missed','var(--red)'],on:['On track','var(--green)'],behind:['Behind','var(--amber)'],open:['Open','var(--muted)']};
+function rollSponsorOffers(lastRank,exclude){
+ const pool=shuffle(SPONSORS.filter(s=>(lastRank||99)<=s.need&&s.id!==exclude)).sort((a,b)=>a.need-b.need);
+ return pool.slice(0,3).map(s=>({id:s.id,per:s.per,bonus:s.bonus}));}
+// two general objectives, plus the sponsor's ask when you have one
+function rollRaceObjectives(){const sp=G&&G.sponsor&&sponsorOf(G.sponsor.id);if(!sp)return rollObjectives();
+ const ask=pick(sp.asks);return [...shuffle(OBJECTIVES.filter(o=>o.id!==ask)).slice(0,2).map(o=>({id:o.id})),{id:ask,ask:true}];}
+function sponsorCard(o,sign){const sp=sponsorOf(o.id),g=SGOALS[sp.goal],e=expFinish();
+ return `<div class="panel grid spcard" style="gap:6px;border-left:4px solid ${sp.c}"><div class="row" style="justify-content:space-between"><b style="font-size:17px;color:${sp.c}">${esc(sp.n)}</b>${o.renew?'<span class="tier t-strong">Renewal +20%</span>':''}</div>
+  <p class="muted" style="font-size:13px">${esc(sp.blurb)}</p>
+  <div class="row" style="justify-content:space-between"><span>Per race</span><b class="mono">${money(o.per)}</b></div>
+  <div><span class="eyebrow">Season goal</span><div><b>${esc(g.n)}</b> · bonus <b class="mono">${money(o.bonus)}</b></div></div>
+  <div style="font-size:13px"><span class="eyebrow">Race asks (pay ${ASK_MUL}×)</span><div>${sp.asks.map(id=>esc(objName(objOf(id),e))).join(' · ')}</div></div>
+  ${sign?`<button class="btn primary small" data-sign="${sp.id}">Sign ${esc(sp.n.split(' ')[0])}</button>`:''}</div>`;}
+function sponsorStrip(){const S=G.sponsor,sp=S&&sponsorOf(S.id);if(!sp)return '';const g=SGOALS[sp.goal],gs=goalState(sp.goal,G.results,myRank(),SEASON_LEN-G.results.length),b=GOAL_BADGE[gs.st];
+ return `<div class="row spstrip" style="gap:10px;border-left:4px solid ${sp.c};padding-left:10px"><b style="color:${sp.c}">${esc(sp.n)}</b><span class="mono">${money(S.per)}/race</span><span>Season goal: <b>${esc(g.n)}</b> · ${esc(gs.prog)} <b style="color:${b[1]}">${b[0]}</b> · bonus ${money(S.bonus)}</span></div>`;}
+function objLines(list,e,mul){return normObjs(list).map(x=>{const o=objOf(x.id);return `<div class="row objl" style="justify-content:space-between"><span>${x.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${esc(objName(o,e))}</span><b class="mono">${money(r100(o.pay*(x.ask?ASK_MUL:1)*(mul||1)))}</b></div>`;}).join('');}
+// season end: pay the goal bonus, renew or walk, and set up the next season (career, collection, car and money carry over)
+function seasonWrap(rk){
+ const season=G.season||1,S=G.sponsor,sp=S&&sponsorOf(S.id),out={season,rk};
+ if(sp){const gs=goalState(sp.goal,G.results,rk,0);out.sp=sp;out.prog=gs.prog;out.met=gs.st==='met';out.per=S.per;
+  if(out.met){G.money+=S.bonus;out.bonus=S.bonus;out.renewPer=r100(S.per*RENEW_RAISE);out.renewBonus=r100(S.bonus*RENEW_RAISE);}}
+ (G.past=G.past||[]).push({season,rank:rk,pts:(G.pts||{})[me().id]||0,sponsor:sp?sp.id:null,met:!!out.met});
+ const keep=out.met?[{id:sp.id,per:out.renewPer,bonus:out.renewBonus,renew:true}]:[];
+ G.sponsorOffers=[...keep,...rollSponsorOffers(rk,sp&&sp.id)].slice(0,3);
+ G.sponsor=null;G.season=season+1;G.raceIdx=0;G.results=[];G.pts={};G.deckFor=null;G.qual=null;G.inRace=null;G.reward=null;G.snap=null;G.relicShop=null;G.shopRerolls=0;
+ for(const c of G.cars)c.career.swins=0;
+ G.nextObjectives=rollRaceObjectives();
+ G.notice=`Season ${season} done: P${rk} in points.${sp?out.met?` ${sp.n} hit their goal, paid ${money(S.bonus)} and want to renew with a raise.`:` ${sp.n} walked: you missed "${SGOALS[sp.goal].n}".`:''} Sign a sponsor for season ${season+1}.`;
+ saveSeason();return out;}
+function armTap(b,label,fn){if(!b)return;const txt=b.innerHTML;b.onclick=()=>{if(b.dataset.armed){fn();return;}b.dataset.armed='1';b.innerHTML=label;b.classList.add('armed');setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.innerHTML=txt;b.classList.remove('armed');}},4000);};}
 
 /* Balance dials. Defaults match the Oct 26 slice; the 'beats' preset is the proposed flow.
    beat: seconds between draw beats (0 = old 30 s trickle). At each beat the race pauses and you draw beatDraw cards.
@@ -1623,7 +1697,7 @@ function startRace(){
  const rivalCands=exp.slice(Math.max(0,race.expected-5),race.expected-1).filter(c=>!c.isMe);
  race.rival=rivalCands.length?pick(rivalCands):exp[0];
  race.mate=race.cars.find(c=>c.team===mine.team&&!c.isMe);
- race.objectives=G.nextObjectives||rollObjectives();
+ race.objectives=normObjs(G.nextObjectives||rollObjectives());race.objE=expFinish();
  G.nextObjectives=null;
  for(let i=0;i<5;i++)draw(1,true);for(const h of race.hand)h.beat=0;
  race.window=true;
@@ -3002,19 +3076,23 @@ $('#pitmod').addEventListener('pointerdown',e=>{pitModClick(e);});
 function endRace(){
  const r=race;const fo=r.finalOrder.map(c=>c);
  const m=fo.find(c=>c.isMe);const finish=fo.indexOf(m)+1;
- const res={info:r.sawOdds?'full':G.info,track:r.track.name,start:r.stats.start,finish,expected:r.expected,dnf:m.dnf,crits:r.stats.crits,succ:r.stats.succ,plays:r.stats.plays,bestPos:r.stats.bestPos,
+ const res={info:r.sawOdds?'full':G.info,track:r.track.name,start:r.stats.start,finish,expected:r.expected,dnf:m.dnf,crits:r.stats.crits,succ:r.stats.succ,plays:r.stats.plays,bestPos:r.stats.bestPos,bestChain:r.stats.bestChain||0,objE:r.objE||r.expected,
   beatMate:fo.indexOf(m)<fo.indexOf(r.mate),beatRival:fo.indexOf(m)<fo.indexOf(r.rival),rival:r.rival.ref.name,order:fo.map(c=>({id:c.id,dnf:c.dnf}))};
  const diff=r.expected-finish;
  res.tier=m.dnf||finish>r.expected+3?'rough':finish===1||(finish<=3&&diff>=8)?'victory':diff>=4?'strong':'solid';
  const mul=DIFF[G.diff].purse*(1+INFO[res.info].bonus+STAKES[G.stakes].bonus);res.mul=mul;
  res.purse=Math.round((1500+(21-finish)*350)*mul);res.bonus=Math.round(Math.max(0,diff)*400*mul);
- res.objs=r.objectives.map(id=>{const o=OBJECTIVES.find(x=>x.id===id);return {n:o.n,pay:Math.round(o.pay*mul/100)*100,ok:o.test(res)};});
+ res.objs=normObjs(r.objectives).map(x=>{const o=objOf(x.id);return {id:x.id,n:objName(o,res.objE),ask:!!x.ask,pay:r100(o.pay*(x.ask?ASK_MUL:1)*mul),ok:!!o.test(res)};});
+ // step 17: meet every objective (and finish) and the rewards move up one tier
+ res.objMet=res.objs.filter(o=>o.ok).length;
+ if(res.objs.length>=2&&res.objMet===res.objs.length&&!m.dnf&&res.tier!=='victory'){res.tierFrom=res.tier;res.tier={rough:'solid',solid:'strong',strong:'victory'}[res.tier];}
+ if(G.sponsor&&sponsorOf(G.sponsor.id)){res.sponsor=G.sponsor.id;res.retainer=G.sponsor.per;}
  res.log=r.log;
- res.total=res.purse+res.bonus+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
+ res.total=res.purse+res.bonus+(res.retainer||0)+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
  G.money+=res.total;G.results.push(res);
  stakesPenalty(res,m.dnf);
  scoreRace(res,fo);G.inRace=null;G.notice=null;
- fo.forEach((c,i)=>{c.ref.career.starts++;if(i===0)c.ref.career.wins++;if(i<5)c.ref.career.top5++;c.ref.career.best=Math.min(c.ref.career.best,i+1);});
+ fo.forEach((c,i)=>{c.ref.career.starts++;if(i===0){c.ref.career.wins++;c.ref.career.swins=(c.ref.career.swins||0)+1;}if(i<5)c.ref.career.top5++;c.ref.career.best=Math.min(c.ref.career.best,i+1);});
  // the AI field grows a little between races
  for(const c of G.cars)if(!c.isMe&&Math.random()<0.3){const k=pick(['power','handling','racecraft','defense']);c.stats[k]=clamp(c.stats[k]+1,1,10);}
  G.reward={res,cardOffer:rollCards(res.tier),cardRerolls:0,picked:false,relicOffer:(res.tier==='strong'||res.tier==='victory')?rollRelics(2):null,relicRerolls:0,relicPicked:false};
@@ -3077,8 +3155,8 @@ function renderTitle(){
  // two-tap confirm in the page: window.confirm() is blocked in sandboxed frames (the artifact viewer), where it returns false
  const arm=(b,label,fn)=>{if(!b)return;const txt=b.innerHTML;b.onclick=()=>{if(b.dataset.armed){fn();return;}b.dataset.armed='1';b.innerHTML=label;b.classList.add('armed');setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.innerHTML=txt;b.classList.remove('armed');}},4000);};};
  const hasSave=!!readSave();
- const goTut=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();startTutorial();};
- const goNew=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();showGarage();};
+ const goTut=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollRaceObjectives();startTutorial();};
+ const goNew=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollRaceObjectives();showGarage();};
  {const c=$('#t-cont');if(c)c.onclick=()=>{continueSeason();};arm($('#t-del'),'Tap again to delete',()=>{clearSave();titleSel.name=$('#t-name').value;renderTitle();});}
  if(hasSave){arm($('#t-tut'),'Tap again: replaces your saved season',goTut);arm($('#t-go'),'Tap again: replaces your saved season',goNew);}
  else{$('#t-tut').onclick=goTut;$('#t-go').onclick=goNew;}
@@ -3094,13 +3172,16 @@ function showGarage(){
  const t=TRACKS[arcTi(G.raceIdx)];if(!G.relicShop)G.relicShop=rollRelics(1)[0]||null;
  ensureColl();if(G.deckFor!==G.raceIdx){G.deckFor=G.raceIdx;if(!deckOk(t)){const was=[...G.deck];G.deck=fixDeck(t);G.deckNote=deckDiff(was,G.deck,t);}else G.deckNote=null;}
  const el=$('#garage');$('#deckb').innerHTML='';
- const objs=(G.nextObjectives||[]).map(id=>OBJECTIVES.find(o=>o.id===id));
+ if(!G.sponsor&&!G.sponsorOffers)G.sponsorOffers=rollSponsorOffers((G.past&&G.past.length)?G.past[G.past.length-1].rank:99);
+ const sel=G.sponsor?null:G.sponsorOffers;
  el.innerHTML=`<div class="page-in">
-  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · before race ${G.raceIdx+1} of ${SEASON_LEN} · P${myRank()} in points</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN} · ${G.results.length?`P${myRank()} in points`:'no points yet'}</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
   ${G.notice?`<div class="panel" style="border-color:var(--amber)"><p>${esc(G.notice)}</p></div>`:''}
+  ${sel?`<div class="panel grid" id="g-spons" style="gap:10px;border-color:var(--amber)"><div class="grid" style="gap:2px"><span class="eyebrow">Season ${G.season||1} · sponsor offers</span><h3>Sign a sponsor for the season</h3><p class="muted" style="font-size:13px">One contract for the whole season: money every race, a season goal with a bonus, and one race objective of their choosing each week that pays ${ASK_MUL}×. Hit the goal and they renew with a raise. Miss it and they walk.</p></div><div class="grid g4">${sel.map(o=>sponsorCard(o,true)).join('')}</div></div>`:''}
   <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
-   <div><b>Sponsor objectives:</b> ${objs.map(o=>`${esc(o.n)} (${money(o.pay)})`).join(' · ')}</div>
-   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
+   ${sponsorStrip()}
+   <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish())}</div>
+   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
   <div class="grid g2">
    <div class="panel grid" style="gap:6px"><h3>Season calendar</h3>${calendarHTML()}</div>
    <div class="panel grid" style="gap:6px"><h3>Points standings</h3>${G.results.length?standingsTable(10):'<p class="muted">No races yet. 40 points for a win, 35 for 2nd, then one less per place.</p>'}</div>
@@ -3124,7 +3205,8 @@ function showGarage(){
  $('#g-sheet').onclick=()=>openSheet(me().id);
  $('#g-quit').onclick=()=>{saveSeason();G=null;renderTitle();};
  $('#g-deck2').onclick=()=>showDeckBuilder();
- $('#g-go').onclick=()=>{if(!deckOk(t))return;G.notice=null;showQuali();};
+ el.querySelectorAll('[data-sign]').forEach(b=>b.onclick=()=>{const o=G.sponsorOffers.find(x=>x.id===b.dataset.sign);G.sponsor={id:o.id,per:o.per,bonus:o.bonus,since:G.season||1,renew:!!o.renew};G.sponsorOffers=null;G.nextObjectives=rollRaceObjectives();showGarage();});
+ $('#g-go').onclick=()=>{if(!deckOk(t)||!G.sponsor)return;G.notice=null;showQuali();};
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -3221,21 +3303,27 @@ function showReward(){
  const R=G.reward,res=R.res,el=$('#reward');
  const fo=res.order.slice(0,10);const meIn=res.order.findIndex(o=>G.cars[o.id].isMe);
  const rows=[...fo.map((o,i)=>[i,o])];if(meIn>=10)rows.push([meIn,res.order[meIn]]);
- const tierTxt={rough:'Rough day',solid:'Solid run',strong:'Strong run',victory:'Victory lane'}[res.tier];
+ const tierName={rough:'Rough day',solid:'Solid run',strong:'Strong run',victory:'Victory lane'},tierTxt=tierName[res.tier];
+ const spR=res.sponsor&&sponsorOf(res.sponsor),objPay=res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
  const last=G.raceIdx>=SEASON_LEN-1;
  el.innerHTML=`<div class="page-in">
   <div class="grid" style="gap:6px"><span class="eyebrow">Race ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')} · ${esc(res.track)}</span><h1 style="font-size:clamp(40px,7vw,64px)">P${res.finish}${res.dnf?' · DNF':''}</h1>
-   <div class="row"><span class="tier t-${res.tier}">${tierTxt}</span><span class="muted">Started P${res.start} · expected P${res.expected} · ${res.succ} of ${res.plays} cards landed</span></div></div>
+   <div class="row"><span class="tier t-${res.tier}">${tierTxt}</span>${res.tierFrom?`<span style="color:var(--green);font-weight:700">▲ up from ${tierName[res.tierFrom]}: every objective met</span>`:''}<span class="muted">Started P${res.start} · expected P${res.expected} · ${res.succ} of ${res.plays} cards landed</span></div></div>
   ${res.abandoned?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Race abandoned</h3><p>The page closed during this race. On ${esc(STAKES[G.stakes].n)} results stand, so it counts as a DNF in last place: no purse and no card.</p></div>`:''}
   <div class="grid g2">
    <div class="panel grid" style="gap:8px"><h3>Payout</h3>
     <div class="row" style="justify-content:space-between"><span>Purse for P${res.finish}</span><b class="mono">${money(res.purse)}</b></div>
     <div class="row" style="justify-content:space-between"><span>Beat expectation by ${Math.max(0,res.expected-res.finish)}</span><b class="mono">${money(res.bonus)}</b></div>
-    ${res.objs.map(o=>`<div class="row" style="justify-content:space-between"><span>${o.ok?'✓':'✗'} ${esc(o.n)}</span><b class="mono" style="color:${o.ok?'var(--green)':'var(--muted)'}">${o.ok?money(o.pay):'—'}</b></div>`).join('')}
+    <div class="row" style="justify-content:space-between"><span>Objectives met (${res.objMet??res.objs.filter(o=>o.ok).length} of ${res.objs.length})</span><b class="mono">${money(objPay)}</b></div>
+    ${spR?`<div class="row" style="justify-content:space-between"><span>${esc(spR.n)} · per race</span><b class="mono">${money(res.retainer)}</b></div>`:''}
     <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><b>Total</b><span class="money">+${money(res.total)}</span></div>
     <div class="row" style="justify-content:space-between"><span class="muted">Bank</span><span class="money" style="font-size:18px">${money(G.money)}</span></div></div>
    <div class="panel"><h3>Top 10 this race</h3><div class="tw"><table><tbody>${rows.map(([i,o])=>{const c=G.cars[o.id];return `<tr style="${c.isMe?'background:rgba(47,179,106,.2)':''}"><td class="num">${i+1}</td><td><i class="famdot" style="background:${TEAMS[c.team].c}"></i>${esc(c.isMe?c.name+' (you)':c.name)}</td><td class="muted">${esc(TEAMS[c.team].name)}</td><td>${o.dnf?'DNF':''}</td></tr>`;}).join('')}</tbody></table></div></div>
   </div>
+  <div class="panel grid" id="w-objs" style="gap:8px;border-color:${res.objs.length&&res.objMet===res.objs.length?'var(--green)':'var(--line)'}"><div class="row" style="justify-content:space-between"><h3>Race objectives</h3><b class="mono">${res.objMet??res.objs.filter(o=>o.ok).length} of ${res.objs.length} met</b></div>
+   ${res.objs.map(o=>`<div class="row objl" style="justify-content:space-between"><span><b style="color:${o.ok?'var(--green)':'var(--red)'}">${o.ok?'✓':'✗'}</b> ${o.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${esc(o.n)}</span><b class="mono" style="color:${o.ok?'var(--green)':'var(--muted)'}">${o.ok?money(o.pay):'—'}</b></div>`).join('')}
+   <p class="muted" style="font-size:13px">${res.tierFrom?`Every objective met, so your rewards moved up from ${tierName[res.tierFrom]} to ${tierTxt}: ${res.tier==='victory'?'the best card odds and':'better card odds and'} ${res.tier==='strong'||res.tier==='victory'?'a part pick':'three cards to choose from'}.`:res.dnf?'A DNF never moves rewards up.':res.tier==='victory'?'Victory lane is the top reward tier.':'Meet every objective to move your rewards up one tier.'}</p>
+   ${spR&&G.sponsor&&G.sponsor.id===spR.id?sponsorStrip():''}</div>
   <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Points standings</h3>${res.pts!=null?`<span class="mono">+${res.pts} pts · P${res.rank}${res.rankBefore&&G.results.length>1&&res.rankBefore!==res.rank?` <b style="color:${res.rank<res.rankBefore?'var(--green)':'var(--red)'}">${res.rank<res.rankBefore?'▲':'▼'}${Math.abs(res.rankBefore-res.rank)}</b>`:''}</span>`:''}</div>${standingsTable(10)}</div>
   ${res.penalty==='survive'?`<div class="panel" style="border-color:var(--amber)"><h3 style="color:var(--amber)">Survive token used</h3><p>The DNF would have ended your run. Your token saved it, but it still cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}. No tokens left.</p></div>`:res.penalty==='ironman'?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Ironman penalty</h3><p>The DNF cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}.</p></div>`:''}
   ${res.log&&res.log.length?`<div class="panel grid" style="gap:8px"><h3>Your calls</h3><p class="muted" style="font-size:13px">Every card you played, the real odds at that moment, and what moved them. Use it to learn what a good moment looks like.</p><div class="tw"><table><thead><tr><th>Lap</th><th>Card</th><th>Odds</th><th>Result</th><th>What moved it</th></tr></thead><tbody>${res.log.map(l=>`<tr><td class="num">${l.lap}</td><td>${esc(l.n)}</td><td class="num">${Math.round(l.succ*100)}%</td><td><i class="famdot ${TIER_CLS[l.tier]}"></i>${TIER_NAME[l.tier]}</td><td style="font-size:12px">${l.tags.map(([v,t])=>`<span style="color:${v>0?'#58d68d':'#ff7b7f'}">${v>0?'▲':'▼'} ${esc(t)} ${v>0?'+':''}${v}</span>`).join(' · ')||'—'}</td></tr>`).join('')}</tbody></table></div></div>`:''}
@@ -3251,18 +3339,25 @@ function showReward(){
  el.querySelectorAll('[data-relic]').forEach(b=>b.onclick=()=>{addRelic(b.dataset.relic);R.relicPicked=b.dataset.relic;showReward();});
  const rrr=$('#w-rrr');if(rrr)rrr.onclick=()=>{const c=rerollCost(R.relicRerolls);if(G.money<c)return;G.money-=c;R.relicRerolls++;R.relicOffer=rollRelics(2);showReward();};
  const wr=$('#w-retry');if(wr)wr.onclick=()=>{const snap=G.snap;G=JSON.parse(snap);G.snap=snap;relinkG();startRace();markInRace();};
- $('#w-go').onclick=()=>{G.reward=null;if(last||res.penalty==='dead'){showEnd(res.penalty==='dead');}else{G.raceIdx++;G.relicShop=null;G.shopRerolls=0;G.nextObjectives=rollObjectives();showGarage();}};
+ $('#w-go').onclick=()=>{G.reward=null;if(last||res.penalty==='dead'){showEnd(res.penalty==='dead');}else{G.raceIdx++;G.relicShop=null;G.shopRerolls=0;G.nextObjectives=rollRaceObjectives();showGarage();}};
  showScreen('reward');el.scrollTop=0;saveSeason();
 }
 function showEnd(dead){
- clearSave();
+ if(dead)clearSave();
  const el=$('#reward');const avg=G.results.reduce((s,r)=>s+r.finish,0)/G.results.length;const st=standings(),rk=myRank(),champ=st[0].c;
+ const stTable=standingsTable(10),resRows=G.results.map((r,i)=>`<div class="row"><b class="mono">${i+1}</b><span>${esc(r.track)}</span><span>P${r.finish}${r.dnf?' (DNF)':''} from P${r.start}, expected P${r.expected}</span><span class="tier t-${r.tier}">${r.tier}</span></div>`).join(''),nRes=G.results.length,deckHTML=deckCards(G.deck);
+ const W=dead?null:seasonWrap(rk),sp=W&&W.sp;
+ const spHTML=sp?`<div class="panel grid" id="e-spons" style="gap:8px;border-color:${W.met?'var(--green)':'var(--red)'}"><span class="eyebrow">Sponsor review</span><h2 style="color:${sp.c}">${esc(sp.n)} ${W.met?'renews':'walks'}</h2>
+   <p>Season goal: <b>${esc(SGOALS[sp.goal].n)}</b> · ${esc(W.prog)} · <b style="color:${W.met?'var(--green)':'var(--red)'}">${W.met?'Met':'Missed'}</b></p>
+   <p class="muted">${W.met?`Goal bonus paid: <b class="mono">${money(W.bonus)}</b>. They offer to renew for season ${W.season+1} at ${money(W.renewPer)} per race with a ${money(W.renewBonus)} goal bonus. You can sign them again or take another offer in the garage.`:`No bonus. They won't sponsor you next season, so you'll pick from new offers in the garage.`}</p></div>`:'';
  el.innerHTML=`<div class="page-in"><span class="eyebrow">${dead?'Run over: permadeath':'Season complete'}</span><h1>${esc(G.name)}</h1><p class="muted">${esc(ARCH[G.arch].n)} · ${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n} · average finish P${avg.toFixed(1)}</p>
- <div class="panel grid" style="gap:8px;border-color:${rk===1?'var(--amber)':'var(--line)'}"><h2>${dead?`Out after ${G.results.length} of ${SEASON_LEN} races · P${rk} in points`:rk===1?'Champion!':`P${rk} in the final standings`}</h2><p class="muted">${dead?'':rk===1?`You win the title with ${st[0].pts} points.`:`${esc(champ.name)} (${esc(TEAMS[champ.team].name)}) wins the title with ${st[0].pts} points, ${st[0].pts-st[rk-1].pts} ahead of you.`}</p>${standingsTable(10)}</div>
- <div class="panel grid" style="gap:6px">${G.results.map((r,i)=>`<div class="row"><b class="mono">${i+1}</b><span>${esc(r.track)}</span><span>P${r.finish}${r.dnf?' (DNF)':''} from P${r.start}, expected P${r.expected}</span><span class="tier t-${r.tier}">${r.tier}</span></div>`).join('')}</div>
- <div class="panel grid" style="gap:10px"><h3>Final race deck</h3>${deckCards(G.deck)}</div>
- <div class="row"><button class="btn primary" id="e-new" style="font-size:18px">New season</button></div></div>`;
- $('#e-new').onclick=()=>{G=null;renderTitle();};
+ <div class="panel grid" style="gap:8px;border-color:${rk===1?'var(--amber)':'var(--line)'}"><h2>${dead?`Out after ${nRes} of ${SEASON_LEN} races · P${rk} in points`:rk===1?'Champion!':`P${rk} in the final standings`}</h2><p class="muted">${dead?'':rk===1?`You win the title with ${st[0].pts} points.`:`${esc(champ.name)} (${esc(TEAMS[champ.team].name)}) wins the title with ${st[0].pts} points, ${st[0].pts-st[rk-1].pts} ahead of you.`}</p>${stTable}</div>
+ ${spHTML}
+ <div class="panel grid" style="gap:6px">${resRows}</div>
+ <div class="panel grid" style="gap:10px"><h3>Final race deck</h3>${deckHTML}</div>
+ <div class="row">${dead?'<button class="btn primary" id="e-new" style="font-size:18px">New career</button>':`<button class="btn primary" id="e-next" style="font-size:18px">Start season ${G.season}</button><button class="btn" id="e-new">New career</button>`}</div>${dead?'':`<p class="muted" style="font-size:13px">Season ${G.season} keeps your car, money (${money(G.money)}), collection, parts and crew. Points start over.</p>`}</div>`;
+ const nx=$('#e-next');if(nx)nx.onclick=()=>showGarage();
+ if(dead)$('#e-new').onclick=()=>{G=null;renderTitle();};else armTap($('#e-new'),'Tap again: ends this career',()=>{clearSave();G=null;renderTitle();});
  showScreen('reward');el.scrollTop=0;
 }
 
@@ -4137,7 +4232,7 @@ Object.assign(GLOSS,{
 });
 
 setLook(LOOK);
-window.__gfd={autoDeck,fixDeck,deckRules,deckOk,slotCaps,deckSize,showDeckBuilder,TRACK_MIN,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
+window.__gfd={SPONSORS,SGOALS,OBJECTIVES,goalState,expFinish,rollRaceObjectives,seasonWrap,showEnd,showReward,autoDeck,fixDeck,deckRules,deckOk,slotCaps,deckSize,showDeckBuilder,TRACK_MIN,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
 /* ===== Garage tune x pit Setups (step 7b): a pit adjustment nudges this race's tune one notch. ===== */
 const TUNE_NUDGE={trackbar:['hand',-1,'tighter'],spring:['hand',1,'looser'],wedge:['aero',1,'less drag']};
 const _setupInstall7b=setupInstall;

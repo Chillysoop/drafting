@@ -10,7 +10,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const load=async()=>{await p.goto('file://'+html);await p.waitForTimeout(350);};
   const click=async sel=>{await p.click(sel);await p.waitForTimeout(80);};
   await load();await p.evaluate(()=>localStorage.clear());await load();
-  await click('#t-go');await click('#g-go');
+  await click('#t-go');await click('#g-spons [data-sign]');await click('#g-go');
   if(await p.evaluate(()=>document.getElementById('quali').hidden))fail(W+': Go racing did not open qualifying');
   const nc=await p.$$eval('#quali .qcard[data-qc]',e=>e.length);if(nc<3)fail(W+': card offer '+nc);
   await click('#quali .qcard[data-qc]:not(.qnone)');
