@@ -964,6 +964,11 @@ body.carddrag.overtoss #tossbin{transform:scale(1.07);background-color:#123056;b
 body.look-pixel .hcard::after{border-width:3px;border-top:0;border-radius:0}
 body.look-poly .hcard::after{border-radius:0}
 body.look-tv .hcard::after{display:none}
+/* the drag ghost's label is also ::after: keep it a small tag above the card, not stretched over it */
+.dragghost::after{right:auto;bottom:auto;border:0;border-radius:3px;display:block}
+body.look-tv .dragghost::after{display:block}
+/* tossing is drag-to-bin now, so the toss strip under each card is gone */
+.hcard .burn{display:none}
 /* ---- iconography: stronger family marks on cards, icons on keywords and HUD plates ---- */
 .hcard .fi{width:22px;height:22px;font-size:15px;border-radius:4px}
 .hcard .ct{min-height:22px}
@@ -4654,7 +4659,7 @@ dragEnd=function(e,cancel){
 (function(){const st=TUT_STEPS.find(s=>s.title==='Crew Board');
  if(st){st.t='#tossbin';st.html=()=>`<p>This is the toss bin. The dots are the ${K('Crew Board','crewboard')}: every card you ${K('toss','toss')} in here or let go back to the deck adds a charge. At ${BAL.board} charges your crew hands you a fresh card, so a dead card is never totally wasted.</p>`;}
  const te=TUT_STEPS.find(s=>s.title==='Toss effects');
- if(te){const h0=te.html;te.html=()=>h0().replace('shown by the icon on the <b>✕</b> button under each card','shown by the icon on the toss button under each card. Drag a card onto the toss bin (or tap that button) to toss it')
+ if(te){const h0=te.html;te.html=()=>h0().replace('shown by the icon on the <b>✕</b> button under each card','shown on the toss bin when you hover a card. Drag a card onto the toss bin to toss it').replace(/<li>A <b style="color:#9fd0ff">blue<\/b> toss button[^<]*<\/li>/,'<li>The bin lights up blue when the hovered card\'s toss does its thing right now.</li>')
   .replace('</ul>','<li>What a toss sets up waits above the Focus bar as a tile: a countdown while it lasts, or READY while it waits to fire. Hover a card and any tile it would use lights up.</li></ul>');}
  const cb=TUT_STEPS.find(s=>s.title==='Combos');
  if(cb){const h0=cb.html;cb.html=()=>h0().replace('This meter shows it:','The combo row under the Focus bar shows it:');}
