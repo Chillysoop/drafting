@@ -7,7 +7,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  for(const [W,H] of [[1600,900],[390,844]]){
   const p=await b.newPage({viewport:{width:W,height:H}});p.on('pageerror',e=>errs.push(e.message));
   await p.goto('file://'+html);await p.waitForTimeout(300);await p.evaluate(()=>localStorage.clear());await p.goto('file://'+html);await p.waitForTimeout(300);
-  await p.click('#t-go');await p.waitForTimeout(200);if(await p.isVisible('#g-go'))await p.click('#g-go');await p.waitForTimeout(300);
+  await p.click('#t-go');await p.waitForTimeout(200);if(await p.isVisible('#g-go')){await p.click('#g-go');await p.waitForTimeout(150);await p.click('#q-skip');await p.waitForTimeout(100);await p.click('#q-race');}await p.waitForTimeout(300);
   await p.evaluate(()=>{const g=window.__gfd,r=g.race;window.__gfdHeadless=true;let k=0;while(r.t<40&&k++<20000){if(r.paused){r.paused=false;r._beatPaused=false;}g.update(0.05);}window.__gfdHeadless=false;r.paused=true;
    r.hand=['side_draft','bump_draft','crossover','dive_bomb','tuck_in','save_tires'].map((id,i)=>({id,uid:'u'+i}));r.momentum=5;r.heat=5;r.buffs=[{v:6,fam:'draft',src:'Engineer call'}];renderHand();});
   await p.waitForTimeout(400);

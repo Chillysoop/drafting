@@ -865,6 +865,49 @@ body.look-tv .hcard .pc{font-style:italic}
 body.look-tv .hcard .nm{font-style:italic}
 body.look-tv .ctl,body.look-tv .btn,body.look-tv .chip{background:linear-gradient(180deg,#3a63bb,#14306e 50%,#0c1f50 51%,#14306e);border-color:#8fb0ff;font-style:italic}
 </style>
+<style id="quali-css">
+/* step 16: qualifying */
+#quali .q-how{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px;line-height:1.45}
+#quali .q-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+#quali .q-stats>div{background:var(--panel3);border-radius:5px;padding:8px 10px;display:grid;gap:2px}
+#quali .q-stats b{font-size:22px}#quali .q-stats small{color:var(--muted);font-size:12px}
+#quali .q-offer .qcard{min-height:200px}
+#quali .qcard.on{outline:3px solid var(--amber);outline-offset:2px}
+#quali .qcard .qpc{font-size:22px!important;align-items:center!important}#quali .qcard .qpc svg,#quali .qcard .qpc i{width:22px;height:22px}
+#quali .qcard .qcost{margin:0;font-size:11px;color:var(--card-muted)}
+#quali .qnone{display:grid;align-content:center;justify-items:center;text-align:center;background:var(--panel3);color:var(--ink)}
+#quali .qnone .nm{font-family:var(--display);font-size:20px;text-transform:uppercase}#quali .qnone .dtxt{color:var(--muted)}
+#quali .q-run{gap:14px;max-width:820px}
+#quali .q-cardtag{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--fc);border-radius:4px;padding:3px 9px;font-family:var(--display);text-transform:uppercase;font-weight:700}
+#quali .q-top{display:grid;grid-template-columns:1fr 200px;gap:14px}
+#quali .q-map{padding:12px 8px 6px;display:grid;place-items:center}#quali .q-map canvas{width:100%;max-width:420px;height:auto;display:block}
+#quali .q-side{display:grid;gap:14px;align-content:start}
+#quali .q-lcdm{padding:13px 10px 8px}
+#quali .q-lap,#quali .q-time{font-size:34px;padding:4px 10px;text-align:right}
+#quali .q-laps{display:grid;gap:1px;margin-top:5px;font-size:12px;color:var(--muted);font-family:var(--mono)}#quali .q-laps b{color:var(--ink)}
+#quali .q-chain{display:flex;gap:4px;align-items:center;height:22px}#quali .q-chain i{flex:1;height:12px;border-radius:2px;background:#26304a}#quali .q-chain i.on{background:#36c5ff;box-shadow:0 0 6px #36c5ff}#quali .q-chain b{margin-left:4px;color:#36c5ff}
+#quali .q-bar{padding:16px 12px 10px;display:grid;gap:10px}
+#quali .q-track{position:relative;height:46px;background:#0c1118;border-radius:5px;box-shadow:inset 0 2px 5px rgba(0,0,0,.8);overflow:visible}
+#quali .q-track>i{position:absolute;top:0;bottom:0}
+#quali .q-o{background:rgba(154,163,184,.22)}#quali .q-g{background:rgba(47,179,106,.75)}#quali .q-p{background:#f2c94c}
+#quali .q-track:not(.live) .q-o,#quali .q-track:not(.live) .q-g,#quali .q-track:not(.live) .q-p{opacity:.45}
+#quali .q-needle{width:4px!important;margin-left:-2px;top:-6px!important;bottom:-6px!important;background:#fff;border-radius:2px;box-shadow:0 0 8px #fff}
+#quali .q-track.slow{box-shadow:inset 0 2px 5px rgba(0,0,0,.8),0 0 0 2px #36c5ff}
+#quali .q-judge{position:absolute;top:-30px;transform:translateX(-50%);font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:20px;white-space:nowrap;pointer-events:none;text-shadow:0 2px 0 #000}
+#quali .q-judge.j-P{color:#f2c94c}#quali .q-judge.j-G{color:#2fb36a}#quali .q-judge.j-O{color:#c7cede}#quali .q-judge.j-E,#quali .q-judge.j-L{color:var(--red)}
+#quali .q-ctl{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+#quali .q-focus{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+#quali .q-fbar{height:12px;background:#26304a;border-radius:3px;overflow:hidden}#quali .q-fbar i{display:block;height:100%;background:#36c5ff}#quali .q-fbar i.over{background:linear-gradient(90deg,#36c5ff,#a98bff)}
+#quali .q-brake{min-width:200px;padding:10px 18px;border-radius:6px;border:2px solid #fff3c4;background:var(--amber);color:#241a00;display:grid;place-items:center;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+#quali .q-brake b{font-family:var(--display);font-size:28px;letter-spacing:.08em;line-height:1}#quali .q-brake small{font-size:11px;font-weight:700}
+#quali .q-brake:active{transform:translateY(2px)}
+#quali .q-pips{display:flex;gap:3px;flex-wrap:wrap}#quali .q-pips i{width:14px;height:6px;border-radius:2px;background:#26304a}
+#quali .q-pips i.j-P{background:#f2c94c}#quali .q-pips i.j-G{background:#2fb36a}#quali .q-pips i.j-O{background:#9aa3b8}#quali .q-pips i.j-E,#quali .q-pips i.j-L{background:var(--red)}
+#quali .q-grid{margin:0;padding:0;list-style:none;columns:2 260px;column-gap:18px;font-size:14px}
+#quali .q-grid li{display:grid;grid-template-columns:38px 10px 1fr auto;gap:8px;align-items:center;padding:3px 6px;border-radius:3px;break-inside:avoid}
+#quali .q-grid li.me{background:rgba(233,181,47,.18);outline:1px solid var(--amber);font-weight:700}
+@media (max-width:700px){#quali .q-top{grid-template-columns:1fr}#quali .q-side{grid-template-columns:repeat(3,1fr);gap:10px}#quali .q-lap,#quali .q-time{font-size:24px}#quali .q-ctl{grid-template-columns:1fr}#quali .q-brake{min-width:0;width:100%;padding:16px}}
+</style>
 <style id="hud3-css">
 /* ===== HUD round 3 (Conner, Oct 27): outline-only module states, unified Focus + combo console, toss tiles, toss bin, icons ===== */
 /* Momentum / Heat look like Position: dark panel, no color fill. Changes flash the outline; a full meter keeps a pulsing outline. */
@@ -986,6 +1029,7 @@ body.look-tv .dragghost::after{display:block}
 <div id="garage" class="screen page" hidden></div>
 <div id="reward" class="screen page" hidden></div>
 <div id="deckb" class="screen page" hidden></div>
+<div id="quali" class="screen page" hidden></div>
 <div id="race" class="screen" hidden>
   <canvas id="cv"></canvas><div id="crt"></div>
   <div id="pylon" class="bug"></div>
@@ -1565,10 +1609,13 @@ function startRace(){
   sort:'succ',famFilter:null,hideRisk:false,stats:{plays:0,succ:0,crits:0,passes:0,bestPos:99,start:0},finishedAt:null,
   camX:0,camZ:0,camK:0,lastPos:0,log:[],attempt:null,pops:[],watchPos:null,sawOdds:false,sel:null,sel2:null,gHist:{}};
  // qualifying
- const quali=[...G.cars].map(c=>({c,q:carRating(c)+gauss()*0.003+(c.isMe?-0.002:0)})).sort((a,b)=>b.q-a.q).map(o=>o.c);if(BAL.startPos){const mi=quali.findIndex(c=>c.isMe);const mc=quali.splice(mi,1)[0];quali.splice(BAL.startPos-1,0,mc);}
+ // step 16: a qualifying run (G.qual, from the mini-game or its Skip) sets the grid; without one the old roll-off stays
+ const qg=G.qual&&G._pti==null&&G.qual.ri===G.raceIdx&&G.qual.grid?G.qual.grid.map(id=>G.cars[id]):null;
+ const quali=qg||[...G.cars].map(c=>({c,q:carRating(c)+gauss()*0.003+(c.isMe?-0.002:0)})).sort((a,b)=>b.q-a.q).map(o=>o.c);if(BAL.startPos){const mi=quali.findIndex(c=>c.isMe);const mc=quali.splice(mi,1)[0];quali.splice(BAL.startPos-1,0,mc);}
  quali.forEach((c,i)=>{race.cars.push({ref:c,id:c.id,isMe:c.isMe,stats:c.stats,trait:c.trait,team:c.team,dist:-(i*race.minGap*1.4)-0.004,tires:100,damage:0,effects:[],noise:1,noiseAt:0,
   nextMove:rand(6,20),lane:0,laneVis:(i%2?0.5:-0.5),laneT:0,overtake:null,dnf:false,spin:0,spinning:0,passes:0,start:i+1,permPace:1,lastPitLap:0});});
  race.order=[...race.cars];pitInit();
+ if(qg&&G.qual.card){const k=race.pile.lastIndexOf(G.qual.card);if(k>=0){race.pile.splice(k,1);race.discard.push(G.qual.card);}}
  const mine=race.cars.find(c=>c.isMe);race.stats.start=mine.start;race.lastPos=mine.start;
  // expected finish
  const exp=[...race.cars].sort((a,b)=>carRating(b.ref)-carRating(a.ref));race.expected=exp.indexOf(mine)+1;
@@ -1581,7 +1628,7 @@ function startRace(){
  for(let i=0;i<5;i++)draw(1,true);for(const h of race.hand)h.beat=0;
  race.window=true;
  commentate(`Welcome to ${t.name}. ${t.laps} laps on the ${t.len} ${t.type.toLowerCase()}.`);
- commentate(`You roll off P${mine.start}. Your expected finish in this car is P${race.expected}.`);
+ commentate(qg?`You qualified P${mine.start}${G.qual.time?' with a '+G.qual.time.toFixed(3):''}. Your expected finish in this car is P${race.expected}.`:`You roll off P${mine.start}. Your expected finish in this car is P${race.expected}.`);
  $('#b-speed').textContent='1×';G.showOdds=G.info==='full';$('#b-odds').classList.toggle('on',G.showOdds);
  showScreen('race');$('#gauges').innerHTML='';$('#res').innerHTML='';renderRes.prev=null;resize();renderHand();renderFilters();renderGauges();
  flag('GREEN FLAG IN 5','#e9b52f','#241a00',4.5);
@@ -2992,7 +3039,7 @@ function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includ
 const rerollCost=k=>DIFF[G.diff].reroll+k*1000;
 
 /* ================= screens ================= */
-function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb'])$('#'+s).hidden=s!==id;}
+function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb','quali'])$('#'+s).hidden=s!==id;}
 function famDot(f){return `<i class="famdot" style="background:${FAM[f].c}"></i>`;}
 function miniCard(id,extra=''){const cd=CARDS[id];const cost=cd.cost.tire?`${cd.cost.tire}% tire`:cd.cost.mom?`${cd.cost.mom} Momentum`:'Free';
  return `<div class="minicard ${extra}" data-card="${id}" style="--fc:${FAM[cd.fam].c}"><div class="fl"><span>${FAM[cd.fam].n}</span><span>${cd.rar}</span></div><div class="nm">${esc(cd.n)}</div><p>${esc(cd.txt)}</p><div class="rl">${esc(cd.real)}</div><div class="fl"><span>${cost}</span><span>${cd.wreck?'Can wreck':cd.noFail?'Never fails':'Safe'}</span></div></div>`;}
@@ -3077,7 +3124,7 @@ function showGarage(){
  $('#g-sheet').onclick=()=>openSheet(me().id);
  $('#g-quit').onclick=()=>{saveSeason();G=null;renderTitle();};
  $('#g-deck2').onclick=()=>showDeckBuilder();
- $('#g-go').onclick=()=>{if(!deckOk(t))return;G.notice=null;G.snap=null;G.inRace=null;G.snap=JSON.stringify(G);startRace();markInRace();};
+ $('#g-go').onclick=()=>{if(!deckOk(t))return;G.notice=null;showQuali();};
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -4665,4 +4712,258 @@ dragEnd=function(e,cancel){
  if(cb){const h0=cb.html;cb.html=()=>h0().replace('This meter shows it:','The combo row under the Focus bar shows it:');}
 })();
 if(typeof race!=='undefined'&&race)layoutBugs();
+</script>
+<script id="quali-js">
+/* ================= Step 16: qualifying =================
+   A timed run of about a minute before each season race. Every corner is one timing check: a needle sweeps the brake
+   bar and you release Space (or the BRAKE button) inside the zone. Tap = release right away; hold = Focus slow-mo
+   (the same Focus bar as the race), release to brake. Perfect / Good / OK / Miss score points, clean corners in a row
+   build a chain (like a combo), and one card drawn from your race deck can trim the run (it then starts the race in
+   your discard pile). Power, Aero, Handling and Racecraft set your base lap (carRating, like the AI); Handling and
+   Consistency widen the Good zone; Racecraft widens Perfect. Skip = an average lap, the same odds as the old roll-off.
+   The result is G.qual = {ri, grid:[car ids], card, time, pos, skip}; startRace reads it. Everything below the UI is
+   pure and also runs headless (qualiAuto) so the harness can play it. */
+const QL={laps:2,roll:3.4,rollU:0.22,gapMax:2.2,statK:0.0009,runSec:44,sweep:{mill:1.45,carver:1.4,talon:1.2,pine:1.5,ridge:1.5},
+ slow:0.35,focusSec:3,perfFocus:0.05,pts:{P:1.6,G:1,O:0.25,E:-0.5,L:-1},chainStep:0.1,chainMax:4,
+ K:0.03,skipPts:1.15,skipQ:-0.002,noise:0.003,playNoise:0.0015};
+const QT={P:'Perfect',G:'Good',O:'OK',E:'Early',L:'Late'};
+const QCARD={
+ draft:{n:'Slipstream',txt:t=>t.draftBias>0.5?'+0.25 on every corner here: the tow is worth a lot on this track.':t.draftBias>0?'+0.15 on every corner: a little tow down the straights.':'+0.05 on every corner: there is barely any tow here.'},
+ pass:{n:'Attack the lap',txt:()=>'Perfect zone 60% wider.'},
+ defend:{n:'Tidy line',txt:()=>'Your first Miss each lap counts as OK.'},
+ car:{n:'Grip setup',txt:()=>'Good zone 30% wider.'},
+ risk:{n:'Send it',txt:()=>'Perfect and Good score 50% more, but a Miss costs double.'},
+ crew:{n:'Spotter count-in',txt:()=>'Start with 150% Focus.'},
+ restart:{n:'Hot launch',txt:()=>'Your chain starts at ×2.'},
+ pit:{n:'Fresh stickers',txt:()=>'Every zone 25% wider on the first lap.'}
+};
+const qcardOf=id=>id&&CARDS[id]?QCARD[CARDS[id].fam]:null;
+// the corners of one lap, in order from the start/finish line, as track fractions (worldPos u)
+function qualiCorners(t){
+ if(!t.path){const P=perim(t),S=t.S,T=Math.PI*t.R,ss=t.id==='talon';
+  return [{d:S,n:'Turn 1',a:ss?'Stay low':'Lift'},{d:S+T,n:'Turn 2',a:'Gas'},{d:2*S+T,n:'Turn 3',a:ss?'Stay low':'Lift'},{d:2*S+2*T,n:'Turn 4',a:'Gas'}].map(c=>({u:c.d/P,n:c.n,a:c.a,kind:'oval'}));}
+ const g=TG(t),out=[];let prevT=false;
+ for(const sg of g.segs){if(sg.k!=='t'){if(sg.len>0.05)prevT=false;continue;}if(prevT)continue;prevT=true;out.push({u:sg.brakeA/g.P,n:sg.nm,a:'Brake',kind:sg.kind});}
+ return out;
+}
+function qualiZones(stats,card,t){
+ const fam=card&&CARDS[card]?CARDS[card].fam:null;
+ let wg=clamp(0.05+0.009*(stats.handling-3)+0.009*(stats.consistency-4),0.035,0.16),wp=clamp(0.015+0.005*(stats.racecraft-4),0.01,0.05);
+ if(fam==='car')wg*=1.3;if(fam==='pass')wp*=1.6;wp=Math.min(wp,wg*0.8);
+ return {wp,wg,wo:wg+0.06,fam,draft:fam==='draft'?(t.draftBias>0.5?0.25:t.draftBias>0?0.15:0.05):0};
+}
+// a run: every check with its zone, timing and lap
+function qualiPlan(t,stats,card){
+ const laps=QL.laps,cs=qualiCorners(t),z=qualiZones(stats,card,t),sweep=QL.sweep[t.id]||1.45,n=laps*cs.length;
+ const gap=clamp(QL.runSec/n-sweep,0.75,QL.gapMax),u0=t.S!=null?(t.S/2)/perim(t):(TG(t).S/2)/TG(t).P;
+ const checks=[];let at=QL.roll,uPrev=u0;
+ for(let l=0;l<laps;l++)for(const c of cs){let u=c.u+l;while(u<=uPrev)u+=1;
+  const k=c.kind==='hairpin'?0.8:c.kind==='sweeper'?1.2:t.id==='talon'?1.25:1,w1=(card&&z.fam==='pit'&&l===0)?1.25:1;
+  checks.push({lap:l,n:c.n,a:c.a,u,u0:uPrev,t0:at,s0:at+gap,s1:at+gap+sweep,c:0.58+Math.random()*0.22,wp:z.wp*k*w1,wg:z.wg*k*w1,wo:z.wo*k*w1,res:null,x:null});
+  uPrev=u;at+=gap+sweep;}
+ return {t,laps,checks,sweep,gap,end:at+1.2,uEnd:Math.ceil(uPrev-u0+1e-9)+u0,u0,z,card,stats};
+}
+// judge a release at needle x (null = never released = late)
+function qualiJudge(ch,x){if(x==null)return 'L';const d=Math.abs(x-ch.c);return d<=ch.wp?'P':d<=ch.wg?'G':d<=ch.wo?'O':x<ch.c?'E':'L';}
+// score the run so far (also live): points per check with chain, card rules; returns totals and per-lap
+function qualiScore(pl){
+ const fam=pl.z.fam;let chain=fam==='restart'?2:1;const lapPts=[],lapN=[];let tot=0,n=0,best=chain;const missUsed={};
+ for(const ch of pl.checks){if(!ch.res)break;let r=ch.res;
+  if(fam==='defend'&&(r==='E'||r==='L')&&!missUsed[ch.lap]){missUsed[ch.lap]=1;r='O';ch.saved=1;}
+  let p=QL.pts[r];
+  if(r==='P'||r==='G'){p*=1+QL.chainStep*(chain-1);if(fam==='risk')p*=1.5;chain=Math.min(QL.chainMax,chain+1);}
+  else if(r==='O'){}
+  else{if(fam==='risk')p*=2;chain=1;}
+  p+=pl.z.draft;best=Math.max(best,chain);
+  ch.pts=p;ch.chain=chain;lapPts[ch.lap]=(lapPts[ch.lap]||0)+p;lapN[ch.lap]=(lapN[ch.lap]||0)+1;tot+=p;n++;}
+ return {tot,n,avg:n?tot/n:0,lapPts,lapN,chain,best};
+}
+// pace fraction (higher = faster) for my car from an average-points score
+const qualiDelta=avg=>QL.skipQ+QL.K*(avg-QL.skipPts);
+// upgrades: every car or driver point bought above the starting car adds qualifying pace on top of carRating (raceday pace is unchanged)
+const qualiUp=s=>QL.statK*Math.max(0,['power','aero','handling','racecraft','consistency'].reduce((a,k)=>a+(s[k]-(k==='consistency'||k==='racecraft'?4:3)),0)-((G&&ARCH[G.arch]&&ARCH[G.arch].bonus)?Object.entries(ARCH[G.arch].bonus).filter(([k])=>['power','aero','handling','racecraft','consistency'].includes(k)).reduce((a,[,v])=>a+v,0):0));
+const qualiLap=(t,q)=>t.lapTime*(1-q);
+const qBase=()=>carRating(me())+qualiUp(G.stats);
+// the full grid: AI as before (carRating + noise), me from my run (or the old roll-off when skipped)
+function qualiGrid(t,avg,skip){
+ const rows=G.cars.map(c=>{let q=carRating(c);if(c.isMe)q+=qualiUp(c.stats)+(skip?QL.skipQ+gauss()*QL.noise:qualiDelta(avg)+gauss()*QL.playNoise);else q+=gauss()*QL.noise;return {id:c.id,q};});
+ rows.sort((a,b)=>b.q-a.q);rows.forEach(r=>r.time=qualiLap(t,r.q));return rows;
+}
+function qualiFinish(t,pl,skip){
+ const sc=skip?null:qualiScore(pl),rows=qualiGrid(t,sc?sc.avg:0,skip),mi=rows.findIndex(r=>G.cars[r.id].isMe);
+ G.qual={ri:G.raceIdx,track:t.id,grid:rows.map(r=>r.id),times:rows.map(r=>+r.time.toFixed(3)),pos:mi+1,time:rows[mi].time,skip:!!skip,card:skip?null:(pl.card||null),
+  avg:sc?+sc.avg.toFixed(3):null,best:sc?sc.best:0,counts:sc?pl.checks.reduce((o,c)=>(o[c.res]=(o[c.res]||0)+1,o),{}):null};
+ return G.qual;
+}
+// three different cards from the race deck to pick from
+function qualiOffer(){const ids=[...new Set(shuffle([...G.deck]))];return ids.slice(0,3);}
+/* headless: play a run as a bot. prof: skip | poor | avg | good | great; card: null | 'best' | an id.
+   sigma = timing error in bar widths; the bot spends Focus (slow-mo) on the first checks it can afford. */
+const QBOT={poor:0.07,avg:0.045,good:0.028,great:0.018};
+function qualiAuto(prof,card){
+ const t=TRACKS[G._pti!=null?G._pti:arcTi(G.raceIdx)];
+ if(prof==='skip'||!QBOT[prof])return qualiFinish(t,null,true);
+ if(card==='best'){const off=qualiOffer();let bv=-1e9;card=null;for(const id of off){const v=qualiAutoRun(t,prof,id,true);if(v>bv){bv=v;card=id;}}const v0=qualiAutoRun(t,prof,null,true);if(v0>=bv)card=null;}
+ const pl=qualiAutoRun(t,prof,card);return qualiFinish(t,pl,false);
+}
+function qualiAutoRun(t,prof,card,est){
+ const reps=est?6:1;let sum=0,pl;
+ for(let r=0;r<reps;r++){pl=qualiPlan(t,G.stats,card);let focus=qcardOf(card)&&CARDS[card].fam==='crew'?1.5:1;
+  for(const ch of pl.checks){let sg=QBOT[prof];const cost=0.6/QL.focusSec;if(focus>=cost){focus-=cost;sg*=0.5;}
+   const x=ch.c+gauss()*sg;ch.x=x<0||x>1?null:x;ch.res=qualiJudge(ch,ch.x);if(ch.res==='P')focus+=QL.perfFocus;}
+  sum+=qualiScore(pl).avg;}
+ return est?sum/reps:pl;
+}
+
+/* ---------- UI ---------- */
+let QS=null;
+function showQuali(){
+ const t=TRACKS[arcTi(G.raceIdx)];
+ if(G.qual&&G.qual.ri===G.raceIdx&&G.qual.grid){QS={t,phase:'done'};renderQuali();showScreen('quali');return;}
+ QS={t,phase:'pick',offer:qualiOffer(),card:null};renderQuali();showScreen('quali');$('#quali').scrollTop=0;
+}
+function qStatLine(t){const s=G.stats,z=qualiZones(s,null,t);const base=qualiLap(t,qBase()+QL.skipQ);
+ return `<div class="q-stats">
+  <div><span class="eyebrow">Car · base lap</span><b class="mono">${base.toFixed(2)}</b><small>Power ${s.power} · Aero ${s.aero} · Handling ${s.handling} · Racecraft ${s.racecraft}${qualiUp(s)>0?` · upgrades −${(t.lapTime*qualiUp(s)).toFixed(2)} s`:''}</small></div>
+  <div><span class="eyebrow">Good zone</span><b class="mono">${Math.round(z.wg*200)}%</b><small>Handling ${s.handling} + Consistency ${s.consistency}</small></div>
+  <div><span class="eyebrow">Perfect zone</span><b class="mono">${Math.round(z.wp*200)}%</b><small>Racecraft ${s.racecraft}</small></div></div>`;}
+function qCardEl(id,on){const cd=CARDS[id],q=QCARD[cd.fam];
+ return `<div class="hcard dcard qcard${on?' on':''}" data-qc="${id}" style="--fc:${FAM[cd.fam].c}">${cardFace(cd,{}).replace('<span class="pc"></span>',`<span class="pc qpc">${ic(cd.fam)}<small>${esc(FAM[cd.fam].n)}</small></span>`)}
+  <p class="dtxt"><b>${esc(q.n)}:</b> ${esc(q.txt(QS.t))}</p><p class="qcost">Starts the race in your discard pile.</p></div>`;}
+function renderQuali(){
+ const el=$('#quali'),t=QS.t;
+ if(QS.phase==='pick'){
+  const pl=qualiPlan(t,G.stats,null);
+  el.innerHTML=`<div class="page-in">
+   <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying · race ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2>
+    <p class="muted">A rolling start, then ${pl.laps} timed laps (${pl.checks.length} corners). Your time sets where you start, and car and driver upgrades make you quicker here.</p></div>
+   <div class="panel grid" style="gap:10px"><h3>How it works</h3>
+    <ul class="q-how"><li>At every corner a needle sweeps the brake bar. <b>Tap Space</b> (or the BRAKE button) when it is in the green zone. Gold in the middle is Perfect.</li>
+    <li><b>Hold</b> to slow time with your ${K('Focus','focus')} bar, then <b>let go</b> to brake. Focus does not refill, but each Perfect gives a little back.</li>
+    <li>Good or Perfect corners in a row build a chain up to ×4, like a ${K('combo','combo')}. A Miss breaks it and costs time.</li></ul>
+    ${qStatLine(t)}</div>
+   <div class="panel grid" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Qualifying card</h3><span class="muted" style="font-size:13px">Three cards from your race deck. Pick one to trim the run, or none.</span></div>
+    <div class="dgrid q-offer">${QS.offer.map(id=>qCardEl(id,QS.card===id)).join('')}<div class="hcard dcard qcard qnone${QS.card?'':' on'}" data-qc=""><span class="nm">No card</span><p class="dtxt">Run the lap as it is and keep all your cards for the race.</p></div></div></div>
+   <div class="row"><button class="btn primary" id="q-go" style="font-size:18px">Start qualifying</button><button class="btn" id="q-skip" title="Sim an average lap: the same odds as before qualifying existed">Skip: sim an average lap</button><button class="btn" id="q-back">Back to the garage</button></div>
+  </div>`;
+  el.querySelectorAll('[data-qc]').forEach(b=>b.onclick=()=>{QS.card=b.dataset.qc||null;renderQuali();});
+  $('#q-go').onclick=qualiStart;$('#q-back').onclick=()=>{QS=null;showGarage();};
+  $('#q-skip').onclick=()=>{qualiFinish(t,null,true);saveSeason();QS.phase='done';renderQuali();};
+  return;
+ }
+ if(QS.phase==='run'){
+  const pl=QS.pl,cq=qcardOf(pl.card);
+  el.innerHTML=`<div class="page-in q-run">
+   <div class="row" style="justify-content:space-between"><div class="grid" style="gap:2px"><span class="eyebrow">Qualifying · ${esc(t.short)}</span><h2 id="q-corner">Get ready</h2></div>
+    <div class="row">${cq?`<span class="q-cardtag" style="--fc:${FAM[CARDS[pl.card].fam].c}">${ic(CARDS[pl.card].fam)}${esc(cq.n)}</span>`:''}<button class="btn small" id="q-quit" title="Leave this run and sim an average lap instead">Give up: average lap</button></div></div>
+   <div class="q-top">
+    <div class="mod q-map"><span class="plate"><span>Track</span></span><canvas id="q-cv" width="360" height="220"></canvas></div>
+    <div class="q-side">
+     <div class="mod q-lcdm"><span class="plate"><span>Lap</span></span><div class="lcd q-lap" id="q-lap">1/${pl.laps}</div></div>
+     <div class="mod q-lcdm"><span class="plate"><span>Time</span></span><div class="lcd q-time" id="q-time">--.---</div><div class="q-laps" id="q-laps"></div></div>
+     <div class="mod q-lcdm"><span class="plate"><span>Chain</span></span><div class="q-chain" id="q-chain"></div></div>
+    </div></div>
+   <div class="mod q-bar"><span class="plate"><span>Brake bar</span></span>
+    <div class="q-track" id="q-track"><i class="q-o" id="q-zo"></i><i class="q-g" id="q-zg"></i><i class="q-p" id="q-zp"></i><i class="q-needle" id="q-needle"></i><span class="q-judge" id="q-judge"></span></div>
+    <div class="q-ctl"><div class="q-focus"><span class="eyebrow">Focus</span><div class="q-fbar"><i id="q-ff"></i></div><b class="mono" id="q-fp">100%</b></div>
+     <button class="q-brake" id="q-brake"><b>BRAKE</b><small>Tap or Space · hold = slow-mo</small></button></div>
+    <div class="q-pips" id="q-pips">${pl.checks.map((c,i)=>`<i data-i="${i}" title="${esc(c.n)}"></i>`).join('')}</div>
+   </div></div>`;
+  const bt=$('#q-brake');
+  bt.addEventListener('pointerdown',e=>{e.preventDefault();qualiHold(true);});
+  bt.addEventListener('pointerup',e=>{e.preventDefault();qualiHold(false);});
+  bt.addEventListener('contextmenu',e=>e.preventDefault());
+  bt.addEventListener('pointerleave',()=>{if(QS&&QS.held==='ptr')qualiHold(false);});
+  $('#q-quit').onclick=()=>{QS.phase='done';qualiFinish(t,null,true);saveSeason();renderQuali();};
+  qualiDrawMap();return;
+ }
+ // done: the grid
+ const q=G.qual,rows=q.grid.map((id,i)=>({c:G.cars[id],time:q.times[i]}));const mine=q.pos;
+ const c=q.counts||{};const avgRef=qualiLap(t,qBase()+QL.skipQ);
+ el.innerHTML=`<div class="page-in">
+  <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying results · ${esc(t.name)}</span><h2>You start P${mine}${q.time?` · ${q.time.toFixed(3)}`:''}</h2>
+   <p class="muted">${q.skip?'Simmed an average lap.':`${['P','G','O','E','L'].filter(k=>c[k]).map(k=>`${c[k]} ${QT[k]}`).join(' · ')} · best chain ×${q.best}. ${q.time<avgRef-0.0005?`${(avgRef-q.time).toFixed(3)} s quicker than an average lap.`:q.time>avgRef+0.0005?`${(q.time-avgRef).toFixed(3)} s slower than an average lap.`:'About an average lap.'}`}${q.card?` ${esc(CARDS[q.card].n)} starts the race in your discard pile.`:''}</p></div>
+  <div class="panel"><ol class="q-grid">${rows.map((r,i)=>`<li class="${r.c.isMe?'me':''}"><span class="mono">P${i+1}</span><i class="famdot" style="background:${teamOf(r.c).c}"></i><span>#${r.c.num} ${esc(r.c.isMe?r.c.name+' (you)':r.c.name)}</span><span class="mono">${r.time.toFixed(3)}</span></li>`).join('')}</ol></div>
+  <div class="row"><button class="btn primary" id="q-race" style="font-size:18px">Go racing</button><span class="muted" style="font-size:13px">Enter</span></div>
+ </div>`;
+ $('#q-race').onclick=qualiRace;
+}
+function qualiRace(){QS=null;G.snap=null;G.inRace=null;G.snap=JSON.stringify(G);startRace();markInRace();}
+function qualiStart(){
+ const t=QS.t;QS.pl=qualiPlan(t,G.stats,QS.card);QS.phase='run';QS.time=0;QS.focus=qcardOf(QS.card)&&CARDS[QS.card].fam==='crew'?1.5:1;QS.held=false;QS.last=performance.now();QS.judgeAt=-9;
+ renderQuali();requestAnimationFrame(qualiFrame);
+}
+function qualiHold(on,src){
+ if(!QS||QS.phase!=='run')return;
+ if(on){if(!QS.held)QS.held=src||'ptr';return;}
+ if(!QS.held)return;QS.held=false;
+ const ch=QS.pl.checks.find(c=>!c.res&&QS.time>=c.s0&&QS.time<c.s1);if(!ch)return;
+ ch.x=(QS.time-ch.s0)/(ch.s1-ch.s0);ch.res=qualiJudge(ch,ch.x);qualiJudged(ch);
+}
+function qualiJudged(ch){
+ if(ch.res==='P')QS.focus=Math.min(1.5,QS.focus+QL.perfFocus);
+ const sc=qualiScore(QS.pl);QS.judge={r:ch.saved?'O':ch.res,saved:ch.saved,at:QS.time,pts:ch.pts};
+ const j=$('#q-judge');if(j){j.className='q-judge j-'+QS.judge.r;j.textContent=(ch.saved?'Saved: OK':QT[ch.res])+(ch.res==='P'||ch.res==='G'?(ch.chain>1?' ×'+ch.chain:''):'');j.style.left=(ch.x==null?100:ch.x*100)+'%';}
+ const pip=document.querySelector(`#q-pips [data-i="${QS.pl.checks.indexOf(ch)}"]`);if(pip)pip.className='j-'+QS.judge.r;
+ // lap finished
+ const lapDone=QS.pl.checks.filter(c=>c.lap===ch.lap).every(c=>c.res);
+ if(lapDone){const lp=sc.lapPts[ch.lap]/sc.lapN[ch.lap];const tm=qualiLap(QS.t,qBase()+qualiDelta(lp));QS.lapTimes=QS.lapTimes||[];QS.lapTimes[ch.lap]=tm;
+  const ls=$('#q-laps');if(ls)ls.innerHTML=QS.lapTimes.map((x,i)=>`<span>L${i+1} <b class="mono">${x.toFixed(3)}</b></span>`).join('');}
+}
+function qualiFrame(now){
+ if(!QS||QS.phase!=='run'||screen!=='quali')return;
+ const raw=Math.min(0.05,(now-QS.last)/1000)*(QL.timeK||1);QS.last=now;const pl=QS.pl;
+ const cur=pl.checks.find(c=>!c.res&&QS.time<c.s1);const inSweep=cur&&QS.time>=cur.s0;
+ let k=1;if(QS.held&&inSweep&&QS.focus>0){k=QL.slow;QS.focus=Math.max(0,QS.focus-raw/QL.focusSec);}
+ if(!$('#modal').hidden)k=0;
+ QS.time+=raw*k;
+ // a check whose sweep ran out without a release = late
+ for(const c of pl.checks)if(!c.res&&QS.time>=c.s1){c.x=null;c.res='L';qualiJudged(c);}
+ qualiDraw(k<1);
+ if(QS.time>=pl.end){qualiFinish(QS.t,pl,false);saveSeason();QS.phase='done';renderQuali();return;}
+ requestAnimationFrame(qualiFrame);
+}
+function qualiCarU(){const pl=QS.pl,T=QS.time;if(T<QL.roll)return pl.u0-QL.rollU*(1-T/QL.roll);let i=pl.checks.findIndex(c=>T<c.s1);
+ if(i<0){const l=pl.checks[pl.checks.length-1];return l.u+(pl.uEnd-l.u)*clamp((T-l.s1)/(pl.end-l.s1),0,1);}
+ const c=pl.checks[i];return c.u0+(c.u-c.u0)*clamp((T-c.t0)/(c.s1-c.t0),0,1);}
+function qualiMapPts(t){if(t._qmap)return t._qmap;const pts=[];for(let i=0;i<=(t.path?480:240);i++){const p=worldPos(t,i/(t.path?480:240),0);pts.push([p.x,p.z*TILT]);}
+ let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const [x,z] of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z);}
+ return t._qmap={pts,x0,x1,z0,z1};}
+function qualiDrawMap(){const cv=$('#q-cv');if(!cv)return;const t=QS.t,m=qualiMapPts(t),W=cv.width,H=cv.height,pad=22;
+ const s=Math.min((W-2*pad)/(m.x1-m.x0),(H-2*pad)/(m.z1-m.z0)),ox=W/2-(m.x0+m.x1)/2*s,oz=H/2-(m.z0+m.z1)/2*s;QS.map={s,ox,oz};}
+function qualiXY(u){const p=worldPos(QS.t,u,0),m=QS.map;return [m.ox+p.x*m.s,m.oz+p.z*TILT*m.s];}
+function qualiDraw(slow){
+ const pl=QS.pl,T=QS.time,cv=$('#q-cv');if(!cv||!QS.map)return;const x=cv.getContext('2d'),W=cv.width,H=cv.height,m=qualiMapPts(QS.t);
+ x.clearRect(0,0,W,H);x.lineJoin='round';x.lineCap='round';
+ x.beginPath();m.pts.forEach(([px,pz],i)=>{const X=QS.map.ox+px*QS.map.s,Y=QS.map.oz+pz*QS.map.s;i?x.lineTo(X,Y):x.moveTo(X,Y);});x.closePath();
+ const tw=Math.max(8,2*TRACK_HW*QS.map.s*0.8);x.strokeStyle=PAL.apronBand||'#0c1118';x.lineWidth=tw+4;x.stroke();x.strokeStyle=PAL.asphalt||'#3a4150';x.lineWidth=tw;x.stroke();
+ // start/finish
+ {const u0=pl.checks[0].u0,[a,b]=qualiXY(u0);x.fillStyle='#f4f5f8';x.fillRect(a-2,b-7,4,14);}
+ // corners of the current lap (results colored)
+ const cur=pl.checks.find(c=>!c.res&&T<c.s1)||pl.checks[pl.checks.length-1];
+ for(const c of pl.checks){if(c.lap!==cur.lap)continue;const [a,b]=qualiXY(c.u);x.beginPath();x.arc(a,b,c===cur&&!c.res?6:4.5,0,7);
+  x.fillStyle=c.res?QCOL[c.saved?'O':c.res]:c===cur?'#e9b52f':'#9aa3b8';x.fill();x.strokeStyle='#05070c';x.lineWidth=1.5;x.stroke();}
+ {const [a,b]=qualiXY(cur.u);x.font='bold 11px sans-serif';x.textAlign=a>W/2?'right':'left';x.textBaseline='middle';x.lineWidth=3;x.strokeStyle='#05070c';const lb=cur.n.toUpperCase(),lx=a+(a>W/2?-11:11);x.strokeText(lb,lx,b);x.fillStyle='#e9b52f';x.fillText(lb,lx,b);}
+ // car
+ {const [a,b]=qualiXY(qualiCarU());x.beginPath();x.arc(a,b,7,0,7);x.fillStyle=TEAMS[me().team].c;x.fill();x.lineWidth=2;x.strokeStyle='#fff';x.stroke();x.fillStyle='#04150b';x.font='bold 8px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('77',a,b+0.5);}
+ // bar
+ const inS=cur&&!cur.res&&T>=cur.s0,show=cur&&(inS||T>=cur.t0);
+ const set=(id,l,w)=>{const e=document.getElementById(id);e.style.left=(l*100)+'%';e.style.width=(w*100)+'%';};
+ if(cur){set('q-zo',cur.c-cur.wo,2*cur.wo);set('q-zg',cur.c-cur.wg,2*cur.wg);set('q-zp',cur.c-cur.wp,2*cur.wp);}
+ const nd=$('#q-needle');const nx=inS?(T-cur.s0)/(cur.s1-cur.s0):cur&&cur.res&&cur.x!=null?cur.x:0;nd.style.left=(nx*100)+'%';
+ $('#q-track').classList.toggle('live',!!inS);$('#q-track').classList.toggle('slow',!!slow);
+ const j=$('#q-judge');if(QS.judge&&T-QS.judge.at>1.1&&j.textContent){j.textContent='';}
+ $('#q-corner').textContent=T<QL.roll?'Rolling start · timing at the line':T<QL.roll+0.8?'Green: on the clock':cur?`${cur.n} · ${cur.a}`:'Take the flag';
+ $('#q-lap').textContent=`${Math.min(pl.laps,cur.lap+1)}/${pl.laps}`;
+ const sc=qualiScore(pl);$('#q-time').textContent=sc.n?qualiLap(QS.t,qBase()+qualiDelta(sc.avg)).toFixed(3):'--.---';
+ $('#q-chain').innerHTML=[1,2,3,4].map(i=>`<i class="${i<=sc.chain?'on':''}"></i>`).join('')+`<b class="mono">×${sc.chain}</b>`;
+ const f=clamp(QS.focus/1.5,0,1);$('#q-ff').style.width=(QS.focus>1?100:QS.focus*100)+'%';$('#q-ff').classList.toggle('over',QS.focus>1);$('#q-fp').textContent=Math.round(QS.focus*100)+'%';
+}
+const QCOL={P:'#f2c94c',G:'#2fb36a',O:'#9aa3b8',E:'#e5484d',L:'#e5484d'};
+document.addEventListener('keydown',e=>{if(screen!=='quali'||!QS||e.target.tagName==='INPUT'||!$('#modal').hidden)return;
+ if(e.code==='Space'){e.preventDefault();if(!e.repeat)qualiHold(true,'key');}
+ else if(e.key==='Enter'){if(QS.phase==='done'){e.preventDefault();qualiRace();}else if(QS.phase==='pick'){e.preventDefault();qualiStart();}}});
+document.addEventListener('keyup',e=>{if(screen!=='quali'||!QS)return;if(e.code==='Space'){e.preventDefault();if(QS.held==='key')qualiHold(false);}});
+Object.assign(window.__gfd,{QL,QCARD,qualiCorners,qualiPlan,qualiJudge,qualiScore,qualiGrid,qualiFinish,qualiAuto,qualiAutoRun,showQuali,qualiOffer});
+Object.defineProperty(window.__gfd,'QS',{get(){return QS;}});
 </script>

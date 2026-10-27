@@ -1,3 +1,4 @@
+// Step 16: optional bal.quali / bal.qcard run the qualifying mini-game as a bot before each race (unset = old roll-off, byte-identical).
 // Step 15b: optional bal.coll (extra collection cards) and bal.deckFor ('same' or a track offset) to test race decks.
 // Balance harness v6 (step 8): v5 + 'human' tosses on purpose when a toss effect is live (and the card is weak or dead),
 // the human's Focus is the game's own Focus meter (beat refills, risky successes, Focus tosses and Perfect Stops all count), new policies 'human2' (tosses only dead or <40% cards), 'bold' (human timing,
@@ -34,6 +35,8 @@ const {chromium}=require('playwright');
    // step 15b: bal.coll adds cards to the collection; bal.deckFor builds the race deck with the game's auto-build for that track index ('same' = this race), else the whole collection races
    if(bal.coll){g.G.coll=[...g.G.coll,...bal.coll];g.G.deck=[...g.G.coll];}
    if(bal.deckFor!=null&&g.autoDeck)g.G.deck=g.autoDeck(g.TRACKS[bal.deckFor==='same'?trk:(trk+bal.deckFor)%5]);
+   // step 16: bal.quali = a qualifying bot (skip|poor|avg|good|great) sets the grid; bal.qcard 'best' also picks a qualifying card
+   if(bal.quali&&g.qualiAuto)g.qualiAuto(bal.quali,bal.qcard||null);
    g.startRace();const r=g.race;
    const BAL=g.BAL||{slowmo:1};const dt=0.05;
    let dry=0;const S={focus:1,hz:0,hzSeen:null,t:0,nextLook:2.5,pend:null,lastBeat:0,beats:0,slowReal:0,idleMax:0,handS:0,deadS:0,emptyS:0,samples:0,odds:[],fg:0,tossFx:0};
