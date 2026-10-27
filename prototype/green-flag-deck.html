@@ -4723,7 +4723,7 @@ if(typeof race!=='undefined'&&race)layoutBugs();
    Consistency widen the Good zone; Racecraft widens Perfect. Skip = an average lap, the same odds as the old roll-off.
    The result is G.qual = {ri, grid:[car ids], card, time, pos, skip}; startRace reads it. Everything below the UI is
    pure and also runs headless (qualiAuto) so the harness can play it. */
-const QL={laps:{mill:3,carver:3,talon:3,pine:2,ridge:2},runSec:44,sweep:{mill:1.45,carver:1.4,talon:1.2,pine:1.5,ridge:1.5},
+const QL={laps:2,roll:3.4,rollU:0.22,gapMax:2.2,statK:0.0009,runSec:44,sweep:{mill:1.45,carver:1.4,talon:1.2,pine:1.5,ridge:1.5},
  slow:0.35,focusSec:3,perfFocus:0.05,pts:{P:1.6,G:1,O:0.25,E:-0.5,L:-1},chainStep:0.1,chainMax:4,
  K:0.03,skipPts:1.15,skipQ:-0.002,noise:0.003,playNoise:0.0015};
 const QT={P:'Perfect',G:'Good',O:'OK',E:'Early',L:'Late'};
@@ -4748,20 +4748,20 @@ function qualiCorners(t){
 }
 function qualiZones(stats,card,t){
  const fam=card&&CARDS[card]?CARDS[card].fam:null;
- let wg=clamp(0.05+0.006*(stats.handling-3)+0.006*(stats.consistency-4),0.035,0.14),wp=clamp(0.015+0.003*(stats.racecraft-4),0.01,0.04);
+ let wg=clamp(0.05+0.009*(stats.handling-3)+0.009*(stats.consistency-4),0.035,0.16),wp=clamp(0.015+0.005*(stats.racecraft-4),0.01,0.05);
  if(fam==='car')wg*=1.3;if(fam==='pass')wp*=1.6;wp=Math.min(wp,wg*0.8);
  return {wp,wg,wo:wg+0.06,fam,draft:fam==='draft'?(t.draftBias>0.5?0.25:t.draftBias>0?0.15:0.05):0};
 }
 // a run: every check with its zone, timing and lap
 function qualiPlan(t,stats,card){
- const laps=QL.laps[t.id]||2,cs=qualiCorners(t),z=qualiZones(stats,card,t),sweep=QL.sweep[t.id]||1.45,n=laps*cs.length;
- const gap=Math.max(0.75,QL.runSec/n-sweep),u0=t.S!=null?(t.S/2)/perim(t):(TG(t).S/2)/TG(t).P;
- const checks=[];let at=2.2,uPrev=u0;
+ const laps=QL.laps,cs=qualiCorners(t),z=qualiZones(stats,card,t),sweep=QL.sweep[t.id]||1.45,n=laps*cs.length;
+ const gap=clamp(QL.runSec/n-sweep,0.75,QL.gapMax),u0=t.S!=null?(t.S/2)/perim(t):(TG(t).S/2)/TG(t).P;
+ const checks=[];let at=QL.roll,uPrev=u0;
  for(let l=0;l<laps;l++)for(const c of cs){let u=c.u+l;while(u<=uPrev)u+=1;
   const k=c.kind==='hairpin'?0.8:c.kind==='sweeper'?1.2:t.id==='talon'?1.25:1,w1=(card&&z.fam==='pit'&&l===0)?1.25:1;
   checks.push({lap:l,n:c.n,a:c.a,u,u0:uPrev,t0:at,s0:at+gap,s1:at+gap+sweep,c:0.58+Math.random()*0.22,wp:z.wp*k*w1,wg:z.wg*k*w1,wo:z.wo*k*w1,res:null,x:null});
   uPrev=u;at+=gap+sweep;}
- return {t,laps,checks,sweep,gap,end:at+1.2,uEnd:Math.ceil(uPrev-u0+1e-9)+u0,z,card,stats};
+ return {t,laps,checks,sweep,gap,end:at+1.2,uEnd:Math.ceil(uPrev-u0+1e-9)+u0,u0,z,card,stats};
 }
 // judge a release at needle x (null = never released = late)
 function qualiJudge(ch,x){if(x==null)return 'L';const d=Math.abs(x-ch.c);return d<=ch.wp?'P':d<=ch.wg?'G':d<=ch.wo?'O':x<ch.c?'E':'L';}
@@ -4780,10 +4780,13 @@ function qualiScore(pl){
 }
 // pace fraction (higher = faster) for my car from an average-points score
 const qualiDelta=avg=>QL.skipQ+QL.K*(avg-QL.skipPts);
+// upgrades: every car or driver point bought above the starting car adds qualifying pace on top of carRating (raceday pace is unchanged)
+const qualiUp=s=>QL.statK*Math.max(0,['power','aero','handling','racecraft','consistency'].reduce((a,k)=>a+(s[k]-(k==='consistency'||k==='racecraft'?4:3)),0)-((G&&ARCH[G.arch]&&ARCH[G.arch].bonus)?Object.entries(ARCH[G.arch].bonus).filter(([k])=>['power','aero','handling','racecraft','consistency'].includes(k)).reduce((a,[,v])=>a+v,0):0));
 const qualiLap=(t,q)=>t.lapTime*(1-q);
+const qBase=()=>carRating(me())+qualiUp(G.stats);
 // the full grid: AI as before (carRating + noise), me from my run (or the old roll-off when skipped)
 function qualiGrid(t,avg,skip){
- const rows=G.cars.map(c=>{let q=carRating(c);if(c.isMe)q+=skip?QL.skipQ+gauss()*QL.noise:qualiDelta(avg)+gauss()*QL.playNoise;else q+=gauss()*QL.noise;return {id:c.id,q};});
+ const rows=G.cars.map(c=>{let q=carRating(c);if(c.isMe)q+=qualiUp(c.stats)+(skip?QL.skipQ+gauss()*QL.noise:qualiDelta(avg)+gauss()*QL.playNoise);else q+=gauss()*QL.noise;return {id:c.id,q};});
  rows.sort((a,b)=>b.q-a.q);rows.forEach(r=>r.time=qualiLap(t,r.q));return rows;
 }
 function qualiFinish(t,pl,skip){
@@ -4819,9 +4822,9 @@ function showQuali(){
  if(G.qual&&G.qual.ri===G.raceIdx&&G.qual.grid){QS={t,phase:'done'};renderQuali();showScreen('quali');return;}
  QS={t,phase:'pick',offer:qualiOffer(),card:null};renderQuali();showScreen('quali');$('#quali').scrollTop=0;
 }
-function qStatLine(t){const s=G.stats,z=qualiZones(s,null,t);const base=qualiLap(t,carRating(me())+QL.skipQ);
+function qStatLine(t){const s=G.stats,z=qualiZones(s,null,t);const base=qualiLap(t,qBase()+QL.skipQ);
  return `<div class="q-stats">
-  <div><span class="eyebrow">Car · base lap</span><b class="mono">${base.toFixed(2)}</b><small>Power ${s.power} · Aero ${s.aero} · Handling ${s.handling} · Racecraft ${s.racecraft}</small></div>
+  <div><span class="eyebrow">Car · base lap</span><b class="mono">${base.toFixed(2)}</b><small>Power ${s.power} · Aero ${s.aero} · Handling ${s.handling} · Racecraft ${s.racecraft}${qualiUp(s)>0?` · upgrades −${(t.lapTime*qualiUp(s)).toFixed(2)} s`:''}</small></div>
   <div><span class="eyebrow">Good zone</span><b class="mono">${Math.round(z.wg*200)}%</b><small>Handling ${s.handling} + Consistency ${s.consistency}</small></div>
   <div><span class="eyebrow">Perfect zone</span><b class="mono">${Math.round(z.wp*200)}%</b><small>Racecraft ${s.racecraft}</small></div></div>`;}
 function qCardEl(id,on){const cd=CARDS[id],q=QCARD[cd.fam];
@@ -4833,7 +4836,7 @@ function renderQuali(){
   const pl=qualiPlan(t,G.stats,null);
   el.innerHTML=`<div class="page-in">
    <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying · race ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2>
-    <p class="muted">${pl.laps} timed laps, ${pl.checks.length} corners, about a minute. Your time sets where you start.</p></div>
+    <p class="muted">A rolling start, then ${pl.laps} timed laps (${pl.checks.length} corners). Your time sets where you start, and car and driver upgrades make you quicker here.</p></div>
    <div class="panel grid" style="gap:10px"><h3>How it works</h3>
     <ul class="q-how"><li>At every corner a needle sweeps the brake bar. <b>Tap Space</b> (or the BRAKE button) when it is in the green zone. Gold in the middle is Perfect.</li>
     <li><b>Hold</b> to slow time with your ${K('Focus','focus')} bar, then <b>let go</b> to brake. Focus does not refill, but each Perfect gives a little back.</li>
@@ -4876,7 +4879,7 @@ function renderQuali(){
  }
  // done: the grid
  const q=G.qual,rows=q.grid.map((id,i)=>({c:G.cars[id],time:q.times[i]}));const mine=q.pos;
- const c=q.counts||{};const avgRef=qualiLap(t,carRating(me())+QL.skipQ);
+ const c=q.counts||{};const avgRef=qualiLap(t,qBase()+QL.skipQ);
  el.innerHTML=`<div class="page-in">
   <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying results · ${esc(t.name)}</span><h2>You start P${mine}${q.time?` · ${q.time.toFixed(3)}`:''}</h2>
    <p class="muted">${q.skip?'Simmed an average lap.':`${['P','G','O','E','L'].filter(k=>c[k]).map(k=>`${c[k]} ${QT[k]}`).join(' · ')} · best chain ×${q.best}. ${q.time<avgRef-0.0005?`${(avgRef-q.time).toFixed(3)} s quicker than an average lap.`:q.time>avgRef+0.0005?`${(q.time-avgRef).toFixed(3)} s slower than an average lap.`:'About an average lap.'}`}${q.card?` ${esc(CARDS[q.card].n)} starts the race in your discard pile.`:''}</p></div>
@@ -4904,7 +4907,7 @@ function qualiJudged(ch){
  const pip=document.querySelector(`#q-pips [data-i="${QS.pl.checks.indexOf(ch)}"]`);if(pip)pip.className='j-'+QS.judge.r;
  // lap finished
  const lapDone=QS.pl.checks.filter(c=>c.lap===ch.lap).every(c=>c.res);
- if(lapDone){const lp=sc.lapPts[ch.lap]/sc.lapN[ch.lap];const tm=qualiLap(QS.t,carRating(me())+qualiDelta(lp));QS.lapTimes=QS.lapTimes||[];QS.lapTimes[ch.lap]=tm;
+ if(lapDone){const lp=sc.lapPts[ch.lap]/sc.lapN[ch.lap];const tm=qualiLap(QS.t,qBase()+qualiDelta(lp));QS.lapTimes=QS.lapTimes||[];QS.lapTimes[ch.lap]=tm;
   const ls=$('#q-laps');if(ls)ls.innerHTML=QS.lapTimes.map((x,i)=>`<span>L${i+1} <b class="mono">${x.toFixed(3)}</b></span>`).join('');}
 }
 function qualiFrame(now){
@@ -4920,26 +4923,27 @@ function qualiFrame(now){
  if(QS.time>=pl.end){qualiFinish(QS.t,pl,false);saveSeason();QS.phase='done';renderQuali();return;}
  requestAnimationFrame(qualiFrame);
 }
-function qualiCarU(){const pl=QS.pl,T=QS.time;let i=pl.checks.findIndex(c=>T<c.s1);
+function qualiCarU(){const pl=QS.pl,T=QS.time;if(T<QL.roll)return pl.u0-QL.rollU*(1-T/QL.roll);let i=pl.checks.findIndex(c=>T<c.s1);
  if(i<0){const l=pl.checks[pl.checks.length-1];return l.u+(pl.uEnd-l.u)*clamp((T-l.s1)/(pl.end-l.s1),0,1);}
  const c=pl.checks[i];return c.u0+(c.u-c.u0)*clamp((T-c.t0)/(c.s1-c.t0),0,1);}
-function qualiMapPts(t){if(t._qmap)return t._qmap;const pts=[];for(let i=0;i<=240;i++){const p=worldPos(t,i/240,0);pts.push([p.x,p.z]);}
+function qualiMapPts(t){if(t._qmap)return t._qmap;const pts=[];for(let i=0;i<=(t.path?480:240);i++){const p=worldPos(t,i/(t.path?480:240),0);pts.push([p.x,p.z*TILT]);}
  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const [x,z] of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z);}
  return t._qmap={pts,x0,x1,z0,z1};}
 function qualiDrawMap(){const cv=$('#q-cv');if(!cv)return;const t=QS.t,m=qualiMapPts(t),W=cv.width,H=cv.height,pad=22;
  const s=Math.min((W-2*pad)/(m.x1-m.x0),(H-2*pad)/(m.z1-m.z0)),ox=W/2-(m.x0+m.x1)/2*s,oz=H/2-(m.z0+m.z1)/2*s;QS.map={s,ox,oz};}
-function qualiXY(u){const p=worldPos(QS.t,u,0),m=QS.map;return [m.ox+p.x*m.s,m.oz+p.z*m.s];}
+function qualiXY(u){const p=worldPos(QS.t,u,0),m=QS.map;return [m.ox+p.x*m.s,m.oz+p.z*TILT*m.s];}
 function qualiDraw(slow){
  const pl=QS.pl,T=QS.time,cv=$('#q-cv');if(!cv||!QS.map)return;const x=cv.getContext('2d'),W=cv.width,H=cv.height,m=qualiMapPts(QS.t);
  x.clearRect(0,0,W,H);x.lineJoin='round';x.lineCap='round';
  x.beginPath();m.pts.forEach(([px,pz],i)=>{const X=QS.map.ox+px*QS.map.s,Y=QS.map.oz+pz*QS.map.s;i?x.lineTo(X,Y):x.moveTo(X,Y);});x.closePath();
- x.strokeStyle='#0c1118';x.lineWidth=13;x.stroke();x.strokeStyle='#3a4150';x.lineWidth=9;x.stroke();
+ const tw=Math.max(8,2*TRACK_HW*QS.map.s*0.8);x.strokeStyle=PAL.apronBand||'#0c1118';x.lineWidth=tw+4;x.stroke();x.strokeStyle=PAL.asphalt||'#3a4150';x.lineWidth=tw;x.stroke();
  // start/finish
  {const u0=pl.checks[0].u0,[a,b]=qualiXY(u0);x.fillStyle='#f4f5f8';x.fillRect(a-2,b-7,4,14);}
  // corners of the current lap (results colored)
  const cur=pl.checks.find(c=>!c.res&&T<c.s1)||pl.checks[pl.checks.length-1];
  for(const c of pl.checks){if(c.lap!==cur.lap)continue;const [a,b]=qualiXY(c.u);x.beginPath();x.arc(a,b,c===cur&&!c.res?6:4.5,0,7);
   x.fillStyle=c.res?QCOL[c.saved?'O':c.res]:c===cur?'#e9b52f':'#9aa3b8';x.fill();x.strokeStyle='#05070c';x.lineWidth=1.5;x.stroke();}
+ {const [a,b]=qualiXY(cur.u);x.font='bold 11px sans-serif';x.textAlign=a>W/2?'right':'left';x.textBaseline='middle';x.lineWidth=3;x.strokeStyle='#05070c';const lb=cur.n.toUpperCase(),lx=a+(a>W/2?-11:11);x.strokeText(lb,lx,b);x.fillStyle='#e9b52f';x.fillText(lb,lx,b);}
  // car
  {const [a,b]=qualiXY(qualiCarU());x.beginPath();x.arc(a,b,7,0,7);x.fillStyle=TEAMS[me().team].c;x.fill();x.lineWidth=2;x.strokeStyle='#fff';x.stroke();x.fillStyle='#04150b';x.font='bold 8px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('77',a,b+0.5);}
  // bar
@@ -4949,9 +4953,9 @@ function qualiDraw(slow){
  const nd=$('#q-needle');const nx=inS?(T-cur.s0)/(cur.s1-cur.s0):cur&&cur.res&&cur.x!=null?cur.x:0;nd.style.left=(nx*100)+'%';
  $('#q-track').classList.toggle('live',!!inS);$('#q-track').classList.toggle('slow',!!slow);
  const j=$('#q-judge');if(QS.judge&&T-QS.judge.at>1.1&&j.textContent){j.textContent='';}
- $('#q-corner').textContent=T<pl.checks[0].t0+0.4?'Get ready':cur?`${cur.n} · ${cur.a}`:'Take the flag';
+ $('#q-corner').textContent=T<QL.roll?'Rolling start · timing at the line':T<QL.roll+0.8?'Green: on the clock':cur?`${cur.n} · ${cur.a}`:'Take the flag';
  $('#q-lap').textContent=`${Math.min(pl.laps,cur.lap+1)}/${pl.laps}`;
- const sc=qualiScore(pl);$('#q-time').textContent=sc.n?qualiLap(QS.t,carRating(me())+qualiDelta(sc.avg)).toFixed(3):'--.---';
+ const sc=qualiScore(pl);$('#q-time').textContent=sc.n?qualiLap(QS.t,qBase()+qualiDelta(sc.avg)).toFixed(3):'--.---';
  $('#q-chain').innerHTML=[1,2,3,4].map(i=>`<i class="${i<=sc.chain?'on':''}"></i>`).join('')+`<b class="mono">×${sc.chain}</b>`;
  const f=clamp(QS.focus/1.5,0,1);$('#q-ff').style.width=(QS.focus>1?100:QS.focus*100)+'%';$('#q-ff').classList.toggle('over',QS.focus>1);$('#q-fp').textContent=Math.round(QS.focus*100)+'%';
 }

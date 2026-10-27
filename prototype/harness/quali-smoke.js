@@ -35,7 +35,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   console.log(W,'qualified',JSON.stringify(q));
   if(q.n!==20||q.rows!==20)fail(W+': grid size');
   if(!q.me||!q.me.startsWith('P'+q.pos))fail(W+': your grid row '+q.me);
-  if(!(q.counts.P+(q.counts.G||0)>=8))fail(W+': bot timing too poor (input lag?) '+JSON.stringify(q.counts));
+  if(!((q.counts.P||0)+(q.counts.G||0)>=6))fail(W+': bot timing too poor (input lag?) '+JSON.stringify(q.counts));
   await shot('quali-done');
   await p.keyboard.press('Enter');await p.waitForTimeout(200);
   const st=await p.evaluate(()=>{const g=window.__gfd,r=g.race,m=g.meCar();return {race:!document.getElementById('race').hidden,start:m.start,disc:r.discard.slice(),pile:r.pile.length+r.hand.length};});
