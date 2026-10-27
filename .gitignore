@@ -1,0 +1,44 @@
+# Unity project lives in game/ (created in roadmap step 25)
+/game/[Ll]ibrary/
+/game/[Tt]emp/
+/game/[Oo]bj/
+/game/[Bb]uild/
+/game/[Bb]uilds/
+/game/[Ll]ogs/
+/game/[Uu]ser[Ss]ettings/
+/game/[Mm]emoryCaptures/
+/game/[Rr]ecordings/
+/game/Assets/Plugins/Editor/JetBrains*
+/game/Assets/[Ss]treamingAssets/aa*
+/game/*.csproj
+/game/*.sln
+/game/*.slnx
+/game/*.unityproj
+/game/*.pidb
+/game/*.booproj
+/game/*.svd
+/game/*.user
+/game/*.userprefs
+/game/sysinfo.txt
+/game/crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+
+# .NET sim library and tests (sim/)
+bin/
+obj/
+TestResults/
+*.trx
+
+# Editors and OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Prototype harness output
+prototype/harness/r_*.json
+node_modules/
