@@ -53,7 +53,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  await click('#g-fix');if(!(await ok())||await p.$eval('#g-go',e=>e.disabled))fail('garage fix');
  // race, pick a card: it lands in the collection
  const n0=(await G()).coll.length;
- await click('#g-go');
+ await click('#g-go');await click('#q-skip');await click('#q-race'); // step 16: skip qualifying
  await p.evaluate(()=>{const g=window.__gfd,r=g.race;window.__gfdHeadless=true;window.__gfdPitPolicy='human';let k=0;while(g.race===r&&k++<30000){if(r.paused){r.paused=false;r._beatPaused=false;}g.update(0.05);}window.__gfdHeadless=false;g.saveSeason();});
  const pick=await p.$('#reward .minicard.pickable');if(pick){await pick.click();if((await G()).coll.length!==n0+1)fail('pick not in collection');}
  // reload keeps the collection

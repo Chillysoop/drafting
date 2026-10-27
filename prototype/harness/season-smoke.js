@@ -12,18 +12,20 @@ const html=process.argv[2],shots=process.argv[3]||null;
   window.__gfdHeadless=false;g.saveSeason();
   return !g.race||{phase:r.phase,lap:g.lapOf?g.lapOf(g.meCar()):null,paused:r.paused,k};});
  const click=async sel=>{await p.click(sel);await p.waitForTimeout(80);};
+ // step 16: Go racing opens qualifying; skip it (after a reload it shows the grid you already set) and start the race
+ const goRace=async()=>{await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');};
  await load();await p.evaluate(()=>localStorage.clear());await load();
  if(await p.$('#t-cont'))fail('continue shown with no save');
  await click('#t-go');
  if(!(await p.evaluate(()=>!!window.__gfd.readSave())))fail('no save on the garage screen');
  for(let i=0;i<10;i++){
-  await click('#g-go');
+  await goRace();
   if(i===1){ // close the page mid-race (standard stakes): continue restarts the race from the garage
    await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<400;k++)g.update(0.05);});
    await load();await shot('title-continue');await click('#t-cont');
    const st=await p.evaluate(()=>({scr:!document.getElementById('garage').hidden,idx:window.__gfd.G.raceIdx,n:window.__gfd.G.results.length,notice:!!window.__gfd.G.notice}));
    if(!st.scr||st.idx!==1||st.n!==1||!st.notice)fail('mid-race continue (standard) '+JSON.stringify(st));
-   await click('#g-go');
+   await goRace();
   }
   {const rr=await runRace();if(rr!==true){fail('race '+(i+1)+' did not finish '+JSON.stringify(rr));break;}}
   if(i===0)await shot('reward-standings');
@@ -57,7 +59,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  // Ironman: closing mid-race starts the race over too (board Q48: no), with no DNF and no penalty
  await click('#e-new');await p.evaluate(()=>{window.__gfd.titleSel.stakes='ironman';window.__gfd.titleSel.diff='normal';});
  await click('#t-go');const m0=await p.evaluate(()=>window.__gfd.G.money);
- await click('#g-go');await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<200;k++)g.update(0.05);});
+ await goRace();await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<200;k++)g.update(0.05);});
  await load();await click('#t-cont');
  const ab=await p.evaluate(()=>{const G=window.__gfd.G;return {n:G.results.length,idx:G.raceIdx,money:G.money,inRace:G.inRace,garage:!document.getElementById('garage').hidden,notice:!!G.notice};});
  if(ab.n!==0||ab.idx!==0||ab.money!==m0||ab.inRace||!ab.garage||!ab.notice)fail('ironman mid-race continue '+JSON.stringify(ab));

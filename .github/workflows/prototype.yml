@@ -29,3 +29,5 @@ jobs:
         run: node prototype/harness/deck-smoke.js "$PWD/prototype/green-flag-deck.html"
       - name: HUD smoke (console, toss bin, tiles)
         run: node prototype/harness/hud-smoke.js "$PWD/prototype/green-flag-deck.html"
+      - name: Qualifying check (real screens and keys)
+        run: node prototype/harness/quali-smoke.js "$PWD/prototype/green-flag-deck.html"
