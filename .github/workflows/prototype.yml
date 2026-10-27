@@ -1,0 +1,25 @@
+name: prototype
+
+on:
+  pull_request:
+    paths: ['prototype/**', '.github/workflows/prototype.yml']
+  push:
+    branches: [main]
+    paths: ['prototype/**']
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright Chromium
+        run: |
+          npm init -y >/dev/null
+          npm i -D playwright@1.47.2
+          npx playwright install --with-deps chromium
+      - name: One headless race per track, no page errors
+        run: node prototype/harness/smoke.js "$PWD/prototype/green-flag-deck.html" "$RUNNER_TEMP/title.png"
