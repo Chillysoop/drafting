@@ -23,3 +23,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: One headless race per track, no page errors
         run: node prototype/harness/smoke.js "$PWD/prototype/green-flag-deck.html" "$RUNNER_TEMP/title.png"
+      - name: Season save/continue check
+        run: node prototype/harness/season-smoke.js "$PWD/prototype/green-flag-deck.html"
