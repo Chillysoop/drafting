@@ -1030,6 +1030,7 @@ body.look-tv .dragghost::after{display:block}
 <div id="reward" class="screen page" hidden></div>
 <div id="deckb" class="screen page" hidden></div>
 <div id="quali" class="screen page" hidden></div>
+<div id="event" class="screen page" hidden></div>
 <div id="race" class="screen" hidden>
   <canvas id="cv"></canvas><div id="crt"></div>
   <div id="pylon" class="bug"></div>
@@ -1164,7 +1165,7 @@ function saveSeason(){if(!G||(typeof window!=='undefined'&&window.__gfdHeadless)
 function readSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&s.G&&s.G.cars?s:null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 // your car's stats object is G.stats itself; JSON restores break that link
-function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();}
+function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();ensureDrv();}
 function continueSeason(){
  const s=readSave();if(!s)return false;G=s.G;relinkG();
  if(G.inRace){
@@ -1592,7 +1593,7 @@ function seasonWrap(rk){
  (G.past=G.past||[]).push({season,rank:rk,pts:(G.pts||{})[me().id]||0,sponsor:sp?sp.id:null,met:!!out.met});
  const keep=out.met?[{id:sp.id,per:out.renewPer,bonus:out.renewBonus,renew:true}]:[];
  G.sponsorOffers=[...keep,...rollSponsorOffers(rk,sp&&sp.id)].slice(0,3);
- G.sponsor=null;G.season=season+1;G.raceIdx=0;G.results=[];G.pts={};G.deckFor=null;G.qual=null;G.inRace=null;G.reward=null;G.snap=null;G.relicShop=null;G.shopRerolls=0;
+ G.sponsor=null;G.event=null;G.season=season+1;G.raceIdx=0;G.results=[];G.pts={};G.deckFor=null;G.qual=null;G.inRace=null;G.reward=null;G.snap=null;G.relicShop=null;G.shopRerolls=0;
  for(const c of G.cars)c.career.swins=0;
  G.nextObjectives=rollRaceObjectives();
  G.notice=`Season ${season} done: P${rk} in points.${sp?out.met?` ${sp.n} hit their goal, paid ${money(S.bonus)} and want to renew with a raise.`:` ${sp.n} walked: you missed "${SGOALS[sp.goal].n}".`:''} Sign a sponsor for season ${season+1}.`;
@@ -1617,7 +1618,7 @@ setBal(location.hash==='#classic'?'classic':location.hash==='#beats'?'beats':'en
 let G=null;      // career
 let race=null;   // current race
 let screen='title';
-const titleSel={sched:'mixed',arch:'drafter',diff:'normal',info:'full',stakes:'standard',name:'Rookie'};
+const titleSel={sched:'mixed',arch:'drafter',diff:'normal',info:'full',stakes:'standard',name:'Rookie',bg:null};
 
 function newCareer(){
  const a=ARCH[titleSel.arch];
@@ -1626,6 +1627,7 @@ function newCareer(){
   stats:{power:3,handling:3,aero:3,durability:4,racecraft:4,defense:4,consistency:4,tireMgmt:4,crewChief:3,engineer:3,spotter:3},
   hist:{},sched:titleSel.sched||'mixed',cars:[],pts:{},inRace:null,relicShop:null,shopRerolls:0,tune:Object.assign({},a.tune||{hand:0,aero:0,focus:null})};
  G.coll=[...G.deck];G.trackDecks={};
+ G.drv=newDriver(titleSel.bg||BG_FOR[titleSel.arch]);G.contract={per:0,clauses:[]};G.event=null; // step 18
  G.equipped[RELICS[a.relic].slot]=a.relic;
  for(const k in a.bonus)G.stats[k]+=a.bonus[k];
  buildField();
@@ -1699,9 +1701,11 @@ function startRace(){
  race.mate=race.cars.find(c=>c.team===mine.team&&!c.isMe);
  race.objectives=normObjs(G.nextObjectives||rollObjectives());race.objE=expFinish();
  G.nextObjectives=null;
+ if(G.drv&&G.drv.next&&G.drv.next.mom&&G._pti==null){race.momentum=clamp(race.momentum+G.drv.next.mom,0,5);race.drvMom=G.drv.next.mom;G.drv.next.mom=0;}
  for(let i=0;i<5;i++)draw(1,true);for(const h of race.hand)h.beat=0;
  race.window=true;
  commentate(`Welcome to ${t.name}. ${t.laps} laps on the ${t.len} ${t.type.toLowerCase()}.`);
+ if(race.drvMom)commentate(`Off-track buzz: you start with +${race.drvMom} Momentum.`);
  commentate(qg?`You qualified P${mine.start}${G.qual.time?' with a '+G.qual.time.toFixed(3):''}. Your expected finish in this car is P${race.expected}.`:`You roll off P${mine.start}. Your expected finish in this car is P${race.expected}.`);
  $('#b-speed').textContent='1×';G.showOdds=G.info==='full';$('#b-odds').classList.toggle('on',G.showOdds);
  showScreen('race');$('#gauges').innerHTML='';$('#res').innerHTML='';renderRes.prev=null;resize();renderHand();renderFilters();renderGauges();
@@ -3087,8 +3091,12 @@ function endRace(){
  res.objMet=res.objs.filter(o=>o.ok).length;
  if(res.objs.length>=2&&res.objMet===res.objs.length&&!m.dnf&&res.tier!=='victory'){res.tierFrom=res.tier;res.tier={rough:'solid',solid:'strong',strong:'victory'}[res.tier];}
  if(G.sponsor&&sponsorOf(G.sponsor.id)){res.sponsor=G.sponsor.id;res.retainer=G.sponsor.per;}
+ // step 18: team salary from contract talk, Hype and XP for the driver sheet
+ res.tid=r.track.id;res.dmg=Math.round(m.damage||0);
+ if(G.contract&&G.contract.per)res.salary=G.contract.per;
+ if(G.drv){const hy=raceHype(res);res.hype=Math.min(hy.length,3-G.drv.hype);res.hypeWhy=hy;G.drv.hype+=res.hype;res.xp=DXP.race;res.lvlUp=addXp(DXP.race);}
  res.log=r.log;
- res.total=res.purse+res.bonus+(res.retainer||0)+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
+ res.total=res.purse+res.bonus+(res.retainer||0)+(res.salary||0)+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
  G.money+=res.total;G.results.push(res);
  stakesPenalty(res,m.dnf);
  scoreRace(res,fo);G.inRace=null;G.notice=null;
@@ -3117,7 +3125,7 @@ function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includ
 const rerollCost=k=>DIFF[G.diff].reroll+k*1000;
 
 /* ================= screens ================= */
-function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb','quali'])$('#'+s).hidden=s!==id;}
+function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb','quali','event'])$('#'+s).hidden=s!==id;}
 function famDot(f){return `<i class="famdot" style="background:${FAM[f].c}"></i>`;}
 function miniCard(id,extra=''){const cd=CARDS[id];const cost=cd.cost.tire?`${cd.cost.tire}% tire`:cd.cost.mom?`${cd.cost.mom} Momentum`:'Free';
  return `<div class="minicard ${extra}" data-card="${id}" style="--fc:${FAM[cd.fam].c}"><div class="fl"><span>${FAM[cd.fam].n}</span><span>${cd.rar}</span></div><div class="nm">${esc(cd.n)}</div><p>${esc(cd.txt)}</p><div class="rl">${esc(cd.real)}</div><div class="fl"><span>${cost}</span><span>${cd.wreck?'Can wreck':cd.noFail?'Never fails':'Safe'}</span></div></div>`;}
@@ -3140,6 +3148,7 @@ function renderTitle(){
   <div class="panel grid" style="gap:8px"><h3>Look <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· style test, roadmap step 11. Press L in a race to flip between them.</span></h3><div class="lookpick">${LOOK_ORDER.map(k=>`<button class="panel sel${LOOK===k?' on':''}" data-look="${k}"><b>${LOOKS[k].n}</b><small>${LOOKS[k].d}</small></button>`).join('')}</div></div>
   <div class="grid" style="gap:10px"><h2>Pick a persona</h2><p class="muted" style="font-size:13px">A persona is a deck lean, not a class: it sets your starting cards, one signature relic and a default car tune. Card rewards and the garage can take you anywhere.</p><div class="grid g4 personas">${Object.entries(ARCH).map(([k,a])=>`<button class="panel sel arch${titleSel.arch===k?' on':''}" data-arch="${k}"><span class="eyebrow">${esc(a.tag)}</span><h3 style="margin:4px 0">${esc(a.n)}</h3><p style="font-size:13px">${esc(a.desc)}</p><p style="font-size:13px;margin-top:6px"><b>Relic:</b> ${esc(RELICS[a.relic].n)}. ${esc(RELICS[a.relic].txt)}</p><p style="font-size:13px;margin-top:6px"><b>Tune:</b> ${esc(tuneLabel(a.tune))}</p><p style="font-size:12px;margin-top:4px" class="muted">Strong: ${esc(a.strong)} · Weak: ${esc(a.weak)}</p><div class="minis">${a.add.map(id=>`<span>${esc(CARDS[id].n)}</span>`).join('')}</div></button>`).join('')}</div>
   <p class="muted" style="font-size:13px">Every deck also starts with: ${BASE_DECK.map(id=>CARDS[id].n).join(', ')}.</p></div>
+  ${typeof bgPickHTML==='function'?bgPickHTML():''}
   <div class="grid" style="gap:10px"><h2>Difficulty</h2><p class="muted" style="font-size:13px">Three separate dials. Pick a preset or set each one. Harder Information and Stakes settings pay bigger purses.</p>
    <div class="row">${Object.entries(PRESETS).map(([k,p])=>{const on=p.diff===titleSel.diff&&p.info===titleSel.info&&p.stakes===titleSel.stakes;return `<button class="chip${on?' on':''}" data-preset="${k}" style="font-size:15px;padding:6px 14px">${p.n}</button>`;}).join('')}</div>
    ${[['AI skill','diff',DIFF],['Information','info',INFO],['Stakes','stakes',STAKES]].map(([lab,key,tab])=>`<div class="grid" style="gap:6px"><span class="eyebrow">${lab}</span><div class="grid g4">${Object.entries(tab).map(([k,d])=>`<button class="panel sel${titleSel[key]===k?' on':''}" data-dial="${key}" data-val="${k}" style="padding:10px 12px"><h3>${d.n}${d.bonus?` <span class="mono" style="color:var(--amber);font-size:13px">+${Math.round(d.bonus*100)}% purse</span>`:''}</h3><p style="font-size:13px">${esc(d.desc)}</p></button>`).join('')}</div></div>`).join('')}</div>
@@ -3148,6 +3157,7 @@ function renderTitle(){
   <div class="row"><button class="btn primary" id="t-go" style="font-size:20px;padding:10px 26px">Start career</button><button class="btn" id="t-tut" style="font-size:17px;padding:10px 18px">${tutDone()?'Replay first-lap tutorial':'First-lap tutorial'}</button><span class="muted" style="font-size:13px">Optional. Starts race 1 with a guided first lap that pauses and has you try each control. Skip it any time.</span></div>
  </div>`;
  el.querySelectorAll('[data-arch]').forEach(b=>b.onclick=()=>{titleSel.arch=b.dataset.arch;titleSel.name=$('#t-name').value;renderTitle();});
+ el.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{titleSel.bg=b.dataset.bg;titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-look]').forEach(b=>b.onclick=()=>{setLook(b.dataset.look);titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-dial]').forEach(b=>b.onclick=()=>{titleSel[b.dataset.dial]=b.dataset.val;titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-sched]').forEach(b=>b.onclick=()=>{titleSel.sched=b.dataset.sched;titleSel.name=$('#t-name').value;renderTitle();});
@@ -3171,17 +3181,18 @@ const SHOP=[
 function showGarage(){
  const t=TRACKS[arcTi(G.raceIdx)];if(!G.relicShop)G.relicShop=rollRelics(1)[0]||null;
  ensureColl();if(G.deckFor!==G.raceIdx){G.deckFor=G.raceIdx;if(!deckOk(t)){const was=[...G.deck];G.deck=fixDeck(t);G.deckNote=deckDiff(was,G.deck,t);}else G.deckNote=null;}
- const el=$('#garage');$('#deckb').innerHTML='';
+ ensureDrv();const el=$('#garage');$('#deckb').innerHTML='';$('#event').innerHTML='';
  if(!G.sponsor&&!G.sponsorOffers)G.sponsorOffers=rollSponsorOffers((G.past&&G.past.length)?G.past[G.past.length-1].rank:99);
  const sel=G.sponsor?null:G.sponsorOffers;
  el.innerHTML=`<div class="page-in">
-  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN} · ${G.results.length?`P${myRank()} in points`:'no points yet'}</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN} · ${G.results.length?`P${myRank()} in points`:'no points yet'}</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-dsheet">Driver sheet${G.drv&&G.drv.pts?` <span class="fxc up">+${G.drv.pts}</span>`:''}</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
   ${G.notice?`<div class="panel" style="border-color:var(--amber)"><p>${esc(G.notice)}</p></div>`:''}
+  ${eventPanel()}
   ${sel?`<div class="panel grid" id="g-spons" style="gap:10px;border-color:var(--amber)"><div class="grid" style="gap:2px"><span class="eyebrow">Season ${G.season||1} · sponsor offers</span><h3>Sign a sponsor for the season</h3><p class="muted" style="font-size:13px">One contract for the whole season: money every race, a season goal with a bonus, and one race objective of their choosing each week that pays ${ASK_MUL}×. Hit the goal and they renew with a raise. Miss it and they walk.</p></div><div class="grid g4">${sel.map(o=>sponsorCard(o,true)).join('')}</div></div>`:''}
   <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
    ${sponsorStrip()}
    <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish())}</div>
-   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
+   <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor&&evClear()?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${evClear()?'':`<span style="color:var(--amber)">${esc(EVENTS[G.event.id].n)} first (above).</span>`}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
   <div class="grid g2">
    <div class="panel grid" style="gap:6px"><h3>Season calendar</h3>${calendarHTML()}</div>
    <div class="panel grid" style="gap:6px"><h3>Points standings</h3>${G.results.length?standingsTable(10):'<p class="muted">No races yet. 40 points for a win, 35 for 2nd, then one less per place.</p>'}</div>
@@ -3206,7 +3217,8 @@ function showGarage(){
  $('#g-quit').onclick=()=>{saveSeason();G=null;renderTitle();};
  $('#g-deck2').onclick=()=>showDeckBuilder();
  el.querySelectorAll('[data-sign]').forEach(b=>b.onclick=()=>{const o=G.sponsorOffers.find(x=>x.id===b.dataset.sign);G.sponsor={id:o.id,per:o.per,bonus:o.bonus,since:G.season||1,renew:!!o.renew};G.sponsorOffers=null;G.nextObjectives=rollRaceObjectives();showGarage();});
- $('#g-go').onclick=()=>{if(!deckOk(t)||!G.sponsor)return;G.notice=null;showQuali();};
+ $('#g-go').onclick=()=>{if(!deckOk(t)||!G.sponsor||!evClear())return;G.notice=null;showQuali();};
+ $('#g-dsheet').onclick=()=>{sheetTab='driver';openSheet(me().id);};wireEventPanel();
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -3316,6 +3328,7 @@ function showReward(){
     <div class="row" style="justify-content:space-between"><span>Beat expectation by ${Math.max(0,res.expected-res.finish)}</span><b class="mono">${money(res.bonus)}</b></div>
     <div class="row" style="justify-content:space-between"><span>Objectives met (${res.objMet??res.objs.filter(o=>o.ok).length} of ${res.objs.length})</span><b class="mono">${money(objPay)}</b></div>
     ${spR?`<div class="row" style="justify-content:space-between"><span>${esc(spR.n)} · per race</span><b class="mono">${money(res.retainer)}</b></div>`:''}
+    ${res.salary?`<div class="row" style="justify-content:space-between"><span>Team salary</span><b class="mono">${money(res.salary)}</b></div>`:''}
     <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><b>Total</b><span class="money">+${money(res.total)}</span></div>
     <div class="row" style="justify-content:space-between"><span class="muted">Bank</span><span class="money" style="font-size:18px">${money(G.money)}</span></div></div>
    <div class="panel"><h3>Top 10 this race</h3><div class="tw"><table><tbody>${rows.map(([i,o])=>{const c=G.cars[o.id];return `<tr style="${c.isMe?'background:rgba(47,179,106,.2)':''}"><td class="num">${i+1}</td><td><i class="famdot" style="background:${TEAMS[c.team].c}"></i>${esc(c.isMe?c.name+' (you)':c.name)}</td><td class="muted">${esc(TEAMS[c.team].name)}</td><td>${o.dnf?'DNF':''}</td></tr>`;}).join('')}</tbody></table></div></div>
@@ -3324,6 +3337,7 @@ function showReward(){
    ${res.objs.map(o=>`<div class="row objl" style="justify-content:space-between"><span><b style="color:${o.ok?'var(--green)':'var(--red)'}">${o.ok?'✓':'✗'}</b> ${o.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${esc(o.n)}</span><b class="mono" style="color:${o.ok?'var(--green)':'var(--muted)'}">${o.ok?money(o.pay):'—'}</b></div>`).join('')}
    <p class="muted" style="font-size:13px">${res.tierFrom?`Every objective met, so your rewards moved up from ${tierName[res.tierFrom]} to ${tierTxt}: ${res.tier==='victory'?'the best card odds and':'better card odds and'} ${res.tier==='strong'||res.tier==='victory'?'a part pick':'three cards to choose from'}.`:res.dnf?'A DNF never moves rewards up.':res.tier==='victory'?'Victory lane is the top reward tier.':'Meet every objective to move your rewards up one tier.'}</p>
    ${spR&&G.sponsor&&G.sponsor.id===spR.id?sponsorStrip():''}</div>
+  ${G.drv&&res.xp?`<div class="panel row" id="w-drv" style="gap:10px;justify-content:space-between"><span class="row" style="gap:8px"><b>Driver</b><span class="fxc up">+${res.xp} XP</span>${res.hype?`<span class="fxc up">+${res.hype} Hype</span><span class="muted" style="font-size:13px">${esc(res.hypeWhy.join(', '))}</span>`:res.hypeWhy&&res.hypeWhy.length?'<span class="muted" style="font-size:13px">Hype is full (3)</span>':'<span class="muted" style="font-size:13px">Hype comes from a ×4 combo or a big finish.</span>'}${res.lvlUp&&res.lvlUp.length?`<b style="color:var(--amber)">Level ${res.lvlUp[res.lvlUp.length-1]}! Spend your point on the driver sheet.</b>`:''}</span><span class="muted" style="font-size:13px">${(()=>{const id=OFF_SCHED[G.results.length];return id&&!last&&res.penalty!=='dead'?`Off track next: ${EVENTS[id].n}`:'';})()}</span></div>`:''}
   <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Points standings</h3>${res.pts!=null?`<span class="mono">+${res.pts} pts · P${res.rank}${res.rankBefore&&G.results.length>1&&res.rankBefore!==res.rank?` <b style="color:${res.rank<res.rankBefore?'var(--green)':'var(--red)'}">${res.rank<res.rankBefore?'▲':'▼'}${Math.abs(res.rankBefore-res.rank)}</b>`:''}</span>`:''}</div>${standingsTable(10)}</div>
   ${res.penalty==='survive'?`<div class="panel" style="border-color:var(--amber)"><h3 style="color:var(--amber)">Survive token used</h3><p>The DNF would have ended your run. Your token saved it, but it still cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}. No tokens left.</p></div>`:res.penalty==='ironman'?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Ironman penalty</h3><p>The DNF cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}.</p></div>`:''}
   ${res.log&&res.log.length?`<div class="panel grid" style="gap:8px"><h3>Your calls</h3><p class="muted" style="font-size:13px">Every card you played, the real odds at that moment, and what moved them. Use it to learn what a good moment looks like.</p><div class="tw"><table><thead><tr><th>Lap</th><th>Card</th><th>Odds</th><th>Result</th><th>What moved it</th></tr></thead><tbody>${res.log.map(l=>`<tr><td class="num">${l.lap}</td><td>${esc(l.n)}</td><td class="num">${Math.round(l.succ*100)}%</td><td><i class="famdot ${TIER_CLS[l.tier]}"></i>${TIER_NAME[l.tier]}</td><td style="font-size:12px">${l.tags.map(([v,t])=>`<span style="color:${v>0?'#58d68d':'#ff7b7f'}">${v>0?'▲':'▼'} ${esc(t)} ${v>0?'+':''}${v}</span>`).join(' · ')||'—'}</td></tr>`).join('')}</tbody></table></div></div>`:''}
@@ -3339,7 +3353,7 @@ function showReward(){
  el.querySelectorAll('[data-relic]').forEach(b=>b.onclick=()=>{addRelic(b.dataset.relic);R.relicPicked=b.dataset.relic;showReward();});
  const rrr=$('#w-rrr');if(rrr)rrr.onclick=()=>{const c=rerollCost(R.relicRerolls);if(G.money<c)return;G.money-=c;R.relicRerolls++;R.relicOffer=rollRelics(2);showReward();};
  const wr=$('#w-retry');if(wr)wr.onclick=()=>{const snap=G.snap;G=JSON.parse(snap);G.snap=snap;relinkG();startRace();markInRace();};
- $('#w-go').onclick=()=>{G.reward=null;if(last||res.penalty==='dead'){showEnd(res.penalty==='dead');}else{G.raceIdx++;G.relicShop=null;G.shopRerolls=0;G.nextObjectives=rollRaceObjectives();showGarage();}};
+ $('#w-go').onclick=()=>{G.reward=null;if(last||res.penalty==='dead'){showEnd(res.penalty==='dead');}else{G.raceIdx++;G.relicShop=null;G.shopRerolls=0;G.nextObjectives=rollRaceObjectives();G.event=offTrackNext();showGarage();}};
  showScreen('reward');el.scrollTop=0;saveSeason();
 }
 function showEnd(dead){
@@ -3367,7 +3381,7 @@ function openSheet(carId){
  const car=G.cars[carId];if(race&&!race.paused){race.paused=true;race._autoPaused=true;$('#pause').hidden=false;}
  $('#modal').hidden=false;renderSheet(car);
 }
-function closeSheet(){$('#modal').hidden=true;if(race&&race._autoPaused){race.paused=false;race._autoPaused=false;$('#pause').hidden=true;}if(screen==='garage')showGarage();}
+function closeSheet(){$('#modal').hidden=true;if(race&&race._autoPaused){race.paused=false;race._autoPaused=false;$('#pause').hidden=true;}if(screen==='garage')showGarage();if(screen==='event')renderEvent();}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet();});
 function statRow(k,v){return `<div class="stat"><span>${STAT_INFO[k][0]}</span><div class="sb"><i style="width:${v*10}%"></i></div><span class="sv">${v}</span><small>${esc(STAT_INFO[k][1])}</small></div>`;}
 function renderSheet(car){
@@ -3380,9 +3394,10 @@ function renderSheet(car){
   $('#s-close').onclick=closeSheet;return;
  }
  const canEquip=!race;
- const tabs=[['car','Car & driver'],['gear','Equipment'],['deck','Race deck']];
+ const tabs=[['car','Car & driver'],['driver','Driver sheet'],['gear','Equipment'],['deck','Race deck']];
  let body='';
  if(sheetTab==='car')body=`<div class="grid g2"><div class="panel grid" style="gap:10px"><h3>Driver</h3>${['racecraft','defense','consistency','tireMgmt'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Car</h3>${['power','handling','aero','durability'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Crew</h3>${['crewChief','engineer','spotter'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:6px"><h3>Persona</h3><b>${esc(ARCH[G.arch].n)}</b><p class="muted">${esc(ARCH[G.arch].desc)}</p><p class="muted" style="font-size:13px">Upgrade stats in the garage shop between races.</p></div></div>`;
+ if(sheetTab==='driver')body=driverTabHTML();
  if(sheetTab==='gear'){const inv=G.relics.filter(id=>!Object.values(G.equipped).includes(id));
   body=`<p class="muted" style="font-size:13px">${canEquip?'Click an equipped part to remove it, or a part in your inventory to install it in its slot.':'Parts can only be swapped in the garage.'}</p><div class="grid g4">${SLOTS.map(s=>{const id=G.equipped[s];return id?`<button class="slot full" data-unequip="${s}" ${canEquip?'':'disabled'}><span class="sn">${s}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`:`<div class="slot"><span class="sn">${s}</span><p class="muted">Empty slot</p></div>`;}).join('')}</div>
   <h3>Inventory</h3>${inv.length?`<div class="grid g4">${inv.map(id=>`<button class="slot full" data-equip="${id}" ${canEquip?'':'disabled'}><span class="sn">${RELICS[id].slot}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`).join('')}</div>`:'<p class="muted">Nothing in storage. Earn parts with strong runs or buy them from the parts dealer.</p>'}`;}
@@ -3390,6 +3405,7 @@ function renderSheet(car){
   body=`<p class="muted" style="font-size:13px">${G.deck.length} cards in your race deck. Change it in the garage deck builder.</p>${deckCards(G.deck)}${rest.length?`<h3>Rest of your collection (${rest.length})</h3>${deckCards(rest)}`:''}`;}
  box.innerHTML=`${head}${career}<div class="tabs">${tabs.map(([k,n])=>`<button class="chip${sheetTab===k?' on':''}" data-tab="${k}">${n}</button>`).join('')}</div>${body}`;
  box.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{sheetTab=b.dataset.tab;renderSheet(car);});
+ if(sheetTab==='driver')wireDriverTab(box,car);
  box.querySelectorAll('[data-unequip]').forEach(b=>b.onclick=()=>{G.equipped[b.dataset.unequip]=null;renderSheet(car);});
  box.querySelectorAll('[data-equip]').forEach(b=>b.onclick=()=>{G.equipped[RELICS[b.dataset.equip].slot]=b.dataset.equip;renderSheet(car);});
  $('#s-close').onclick=closeSheet;
@@ -5061,4 +5077,385 @@ document.addEventListener('keydown',e=>{if(screen!=='quali'||!QS||e.target.tagNa
 document.addEventListener('keyup',e=>{if(screen!=='quali'||!QS)return;if(e.code==='Space'){e.preventDefault();if(QS.held==='key')qualiHold(false);}});
 Object.assign(window.__gfd,{QL,QCARD,qualiCorners,qualiPlan,qualiJudge,qualiScore,qualiGrid,qualiFinish,qualiAuto,qualiAutoRun,showQuali,qualiOffer});
 Object.defineProperty(window.__gfd,'QS',{get(){return QS;}});
+</script>
+<style id="driver-css">
+/* step 18: driver sheet, off-track events, d20 checks */
+.evopts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.evopt{display:grid;gap:8px;align-content:start;border-left:4px solid var(--line)}
+.evopt.sig{border-left-color:#a99bff}
+.evopt .say{font-style:italic;color:#dfe5f2;font-size:14px}
+.evq{font-family:var(--display);font-weight:700;font-size:clamp(20px,3.4vw,28px);line-height:1.15}
+.tone{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:2px;background:var(--panel3);color:var(--muted)}
+.evmath{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:13px}
+.evmath .ml{background:var(--panel3);border-radius:3px;padding:2px 7px;white-space:nowrap}
+.evmath .ml b{font-family:var(--mono);margin-left:4px}
+.evmath .ml.k-prof{box-shadow:inset 0 -2px 0 var(--green)}.evmath .ml.k-image{box-shadow:inset 0 -2px 0 #a99bff}.evmath .ml.k-trait{box-shadow:inset 0 -2px 0 var(--amber)}.evmath .ml.k-sit{box-shadow:inset 0 -2px 0 var(--accent)}
+.evmath .ml.neg b{color:#ff7b7f}.evmath .ml.pos b{color:#58d68d}
+.evmath .dc{background:#2a1c00;color:var(--amber);border-radius:3px;padding:2px 7px;font-weight:700;white-space:nowrap}
+.evmath em{font-style:normal;color:var(--muted)}
+.evneed{font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.evad{font-size:12px;display:grid;gap:2px}.evad .a{color:#58d68d}.evad .d{color:#ff7b7f}
+.oddbar{display:flex;height:12px;border-radius:3px;overflow:hidden;background:var(--panel3)}
+.oddbar i{display:block;height:100%}
+.o-crit{background:#fff}.o-succ{background:var(--green)}.o-mixed{background:var(--amber)}.o-fail{background:var(--red)}.o-fumble{background:#7a1020}
+.oddleg{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:12px;font-family:var(--mono)}
+.oddleg span::before{content:'';display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;background:var(--c)}
+.evstake{font-size:12px;display:grid;gap:3px}.evstake div{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.fxc{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:2px;background:var(--panel3)}
+.fxc.up{color:#58d68d}.fxc.dn{color:#ff7b7f}
+.evroll{display:grid;gap:12px;border-color:var(--accent)}
+.dice{display:flex;gap:10px;align-items:center}
+.die{width:64px;height:64px;display:grid;place-items:center;border-radius:12px;background:#f3f5fb;color:#0a0e18;font-family:var(--display);font-weight:800;font-size:34px;box-shadow:0 4px 0 #9aa3b8}
+.die.off{opacity:.35;transform:scale(.82)}
+.die.n20{background:#fff;box-shadow:0 0 0 3px var(--amber),0 4px 0 #9aa3b8}.die.n1{background:#ffd6d8;color:#7a1020}
+.dice.tumbling .die{animation:dtumble .14s linear infinite}
+@keyframes dtumble{0%{transform:rotate(-14deg) translateY(-3px)}50%{transform:rotate(12deg) translateY(2px)}100%{transform:rotate(-14deg) translateY(-3px)}}
+.evroll .slide{opacity:0;animation:slidein .28s ease-out forwards}
+.evroll.done .slide{opacity:1;animation:none}
+@keyframes slidein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.evres{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(26px,5vw,40px);letter-spacing:.02em}
+.evres.crit{color:#fff}.evres.succ{color:var(--green)}.evres.mixed{color:var(--amber)}.evres.fail{color:var(--red)}.evres.fumble{color:#ff7b7f}
+.evhelp{display:grid;gap:4px;font-size:14px;background:var(--panel3);border-radius:4px;padding:10px 12px}
+.evhelp li{margin-left:18px}
+.hype{display:inline-flex;gap:3px;vertical-align:middle}.hype i{width:11px;height:11px;border-radius:50%;border:2px solid var(--amber)}.hype i.on{background:var(--amber)}
+.dsheet .attrs{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.dsheet .attr{background:var(--panel3);border-radius:5px;padding:10px;display:grid;gap:4px;align-content:start}
+.dsheet .attr .sc{font-family:var(--display);font-weight:800;font-size:28px;line-height:1}
+.dsheet .attr .sc small{font-size:16px;color:var(--amber);margin-left:6px}
+.dsheet .attr p{font-size:12px;color:var(--muted)}
+.dsheet .attr .prev{font-size:12px;color:#dfe5f2}
+.skrow{display:grid;grid-template-columns:minmax(120px,1.2fr) 44px 1fr 46px;gap:8px;align-items:center;font-size:13px}
+.skrow .bar{height:8px;background:var(--panel2);border-radius:4px;position:relative;overflow:hidden}
+.skrow .bar i{position:absolute;top:0;bottom:0;left:0;background:var(--green)}
+.skrow.gap .bar i{background:var(--red)}.skrow.gap b.v{color:#ff7b7f}
+.skrow b.v{font-family:var(--mono);text-align:right}
+.skrow .pc{font-family:var(--mono);color:var(--muted);text-align:right}
+.meter{height:8px;background:var(--panel3);border-radius:4px;overflow:hidden}.meter i{display:block;height:100%;background:var(--accent)}
+.imgmap{width:100%;max-width:280px;aspect-ratio:1;display:block}
+.dlog{font-size:12px;display:grid;gap:3px}
+@media (max-width:480px){.skrow{grid-template-columns:minmax(96px,1fr) 34px 1fr 40px;gap:6px}.die{width:52px;height:52px;font-size:28px}}
+</style>
+<script id="driver-js">
+/* ================= driver sheet + d20 checks (roadmap step 18) =================
+   Off track is a tabletop check: d20 + attribute modifier + proficiency (if proficient) + labeled extras >= DC.
+   Natural 20 = critical, natural 1 = fumble. Made it = success, missed by 1-4 = mixed (you get it, with a cost), 5+ = failure.
+   Advantage/disadvantage roll two dice and keep the higher/lower; both at once cancel. Hype (earned on track) buys advantage or a reroll.
+   Every option shows its modifiers by source, the DC, the roll needed and the five-tier odds before the roll,
+   and the result shows "what would have helped" after it. The image map (Humble/Cocky x Professional/Showman) moves with the tone of each answer. */
+const DATTR={presence:{n:'Presence',ab:'PRE',d:'Camera charm, star power'},wits:{n:'Wits',ab:'WIT',d:'Thinking on your feet'},composure:{n:'Composure',ab:'COM',d:'Handling pressure and criticism'},savvy:{n:'Savvy',ab:'SAV',d:'Business sense'},rapport:{n:'Rapport',ab:'RAP',d:'Relationships with people'},grit:{n:'Grit',ab:'GRT',d:'Fitness and work ethic'}};
+const DSKILL={media:{n:'Media',a:'presence'},pitch:{n:'Sponsor Pitch',a:'presence'},read:{n:'Read the Room',a:'wits'},deflect:{n:'Deflect',a:'wits'},cool:{n:'Keep Cool',a:'composure'},negotiate:{n:'Negotiate',a:'savvy'},contract:{n:'Read Contract',a:'savvy'},crew:{n:'Lead the Crew',a:'rapport'},peace:{n:'Make Peace',a:'rapport'},endure:{n:'Endurance',a:'grit'},fans:{n:'Fan Work',a:'grit'}};
+const DPROF=2,ATTR_MAX=20,amod=s=>Math.floor((s-10)/2),sgn=v=>(v>0?'+':v<0?'−':'+')+Math.abs(v);
+const DXP={race:25,made:30,missed:20},xpNeed=l=>100*l;
+// image map: x = Humble (-) .. Cocky (+), y = Professional (-) .. Showman (+). Each answer moves 1 step per axis; an image needs 2+ on both axes.
+const IMAGES={
+ rookie:{n:'Cocky Rookie',x:1,y:1,fav:['media','deflect'],c:'#ff6b5e',txt:'Big fan swings. Youth brands love you; veterans don\'t.'},
+ champ:{n:'Humble Champion',x:-1,y:-1,fav:['cool','crew'],c:'#2fb3a0',txt:'Blue-chip sponsors and top teams trust you.'},
+ fan:{n:'Fan Favorite',x:-1,y:1,fav:['fans','pitch'],c:'#f2c94c',txt:'Fans and grassroots sponsors. Media goes easy on you.'},
+ assassin:{n:'Cold Assassin',x:1,y:-1,fav:['read','negotiate'],c:'#a99bff',txt:'Media is cold, the garage respects you, contracts are pure business.'}
+};
+const IMG_AT=2,IMG_LEAN=5,IMG_MAX=10;
+const TONE_N={x:{'-1':'Humble','1':'Cocky'},y:{'-1':'Professional','1':'Showman'}};
+function imageOf(p){p=p||(G&&G.drv&&G.drv.img);if(!p||Math.abs(p.x)<IMG_AT||Math.abs(p.y)<IMG_AT)return null;return Object.keys(IMAGES).find(k=>IMAGES[k].x===Math.sign(p.x)&&IMAGES[k].y===Math.sign(p.y))||null;}
+function inChar(t,im){const I=IMAGES[im];return !!t&&(!t.x||Math.sign(t.x)===I.x)&&(!t.y||Math.sign(t.y)===I.y);}
+const toneChips=t=>t?['x','y'].filter(a=>t[a]).map(a=>`<span class="tone">${TONE_N[a][Math.sign(t[a])]}</span>`).join(''):'';
+const shortTrack=c=>!!c&&['mill','pine'].includes(c.tid);
+// backgrounds: two proficiencies, a trait, a flaw and a starting spread (15 14 13 12 10 9)
+const BACKGROUNDS={
+ hero:{n:'Short-Track Hero',blurb:'Grew up winning Saturday nights at the local bullring.',attr:{presence:14,wits:12,composure:9,savvy:10,rapport:13,grit:15},prof:['media','endure'],
+  trait:{n:'Hometown Favorite',txt:'Advantage on Media checks after a short-track race (Millbrook, Pinewood).',fx:(sk,c)=>sk==='media'&&shortTrack(c)?{adv:'Hometown Favorite: short-track crowd'}:null},
+  flaw:{n:'Short Fuse',txt:'Disadvantage on Keep Cool after a DNF or a race you finished with heavy damage.',fx:(sk,c)=>sk==='cool'&&c&&(c.dnf||c.dmg>=40)?{dis:'Short Fuse: still hot from the race'}:null}},
+ rich:{n:'Rich Kid',blurb:'Family money bought the first car. Now you have to prove it.',attr:{presence:15,wits:13,composure:12,savvy:14,rapport:10,grit:9},prof:['pitch','negotiate'],fans:20,
+  trait:{n:'Old Money',txt:'+2 on Sponsor Pitch. You know how these dinners go.',fx:sk=>sk==='pitch'?{v:2,src:'Old Money (trait)'}:null},
+  flaw:{n:'Silver Spoon',txt:'−1 on Media and Fan Work. Fans don\'t buy the story. Starts with fewer fans.',fx:sk=>sk==='media'||sk==='fans'?{v:-1,src:'Silver Spoon (flaw)'}:null}},
+ dirt:{n:'Dirt Grinder',blurb:'Ran dirt ovals in a truck you fixed yourself.',attr:{presence:10,wits:12,composure:14,savvy:9,rapport:13,grit:15},prof:['endure','fans'],
+  trait:{n:'Seen Worse',txt:'+2 on Keep Cool after a DNF.',fx:(sk,c)=>sk==='cool'&&c&&c.dnf?{v:2,src:'Seen Worse (trait)'}:null},
+  flaw:{n:'Rough Edges',txt:'−1 on Sponsor Pitch and Negotiate.',fx:sk=>sk==='pitch'||sk==='negotiate'?{v:-1,src:'Rough Edges (flaw)'}:null}},
+ crew:{n:'Former Crew Member',blurb:'Changed tires for six seasons before anyone let you drive.',attr:{presence:9,wits:14,composure:13,savvy:10,rapport:15,grit:12},prof:['crew','read'],
+  trait:{n:'Shop Talk',txt:'Advantage on Lead the Crew checks.',fx:sk=>sk==='crew'?{adv:'Shop Talk: you speak their language'}:null},
+  flaw:{n:'Camera Shy',txt:'−1 on Media.',fx:sk=>sk==='media'?{v:-1,src:'Camera Shy (flaw)'}:null}},
+ sim:{n:'Sim Racer',blurb:'Ten thousand online races, three real ones.',attr:{presence:9,wits:15,composure:13,savvy:14,rapport:10,grit:12},prof:['read','deflect'],
+  trait:{n:'Data Brain',txt:'+1 on Read the Room and Read Contract.',fx:sk=>sk==='read'||sk==='contract'?{v:1,src:'Data Brain (trait)'}:null},
+  flaw:{n:'Keyboard Warrior',txt:'Disadvantage on Keep Cool at press scrums.',fx:(sk,c)=>sk==='cool'&&c&&c.ev==='press'?{dis:'Keyboard Warrior: the comments get to you'}:null}}
+};
+const BG_FOR={drafter:'sim',bully:'hero',whisperer:'dirt',restart:'crew',gambler:'rich'};
+function newDriver(bg){if(!BACKGROUNDS[bg])bg='hero';const B=BACKGROUNDS[bg];return {bg,attr:Object.assign({},B.attr),prof:[...B.prof],lvl:1,xp:0,pts:0,hype:0,fans:B.fans||35,respect:35,img:{x:0,y:0},trail:[],log:[],next:{mom:0}};}
+// saves from before step 18 get a driver from their persona's default background
+function ensureDrv(){if(!G)return;if(!G.drv)G.drv=newDriver(BG_FOR[G.arch]||'hero');if(!G.contract)G.contract={per:0,clauses:[]};const d=G.drv;d.next=d.next||{mom:0};d.trail=d.trail||[];d.log=d.log||[];d.img=d.img||{x:0,y:0};}
+function addXp(n){const d=G.drv,up=[];d.xp+=n;while(d.xp>=xpNeed(d.lvl)){d.xp-=xpNeed(d.lvl);d.lvl++;d.pts++;up.push(d.lvl);}return up;}
+// Hype from the race: a x4 combo, and a big finish (top 3 or 5+ spots over expected). Max 3 held.
+function raceHype(res){const why=[];if((res.bestChain||0)>=4)why.push('×4 combo');if(!res.dnf&&(res.finish<=3||res.expected-res.finish>=5))why.push(res.finish<=3?`P${res.finish} finish`:`${res.expected-res.finish} spots over expected`);return why;}
+
+/* ---- the check ---- */
+function chkTier(d,mod,dc){if(d===20)return 'crit';if(d===1)return 'fumble';const t=d+mod;return t>=dc?'succ':t>=dc-4?'mixed':'fail';}
+function chkOdds(mod,dc,mode){const o={crit:0,succ:0,mixed:0,fail:0,fumble:0};for(let k=1;k<=20;k++){const p=mode==='adv'?(k*k-(k-1)*(k-1))/400:mode==='dis'?((21-k)**2-(20-k)**2)/400:1/20;o[chkTier(k,mod,dc)]+=p;}return o;}
+const TIER_D={crit:['Critical','#fff','o-crit'],succ:['Success','var(--green)','o-succ'],mixed:['Mixed','var(--amber)','o-mixed'],fail:['Failure','var(--red)','o-fail'],fumble:['Fumble','#ff7b7f','o-fumble']};
+const TIERS=['crit','succ','mixed','fail','fumble'];
+const pct=p=>p>0&&p<0.005?'<1%':Math.round(p*100)+'%';
+// every modifier on a check, labeled by source. L adds to the die, dcl moves the DC, adv/dis are the reasons for two dice.
+function chkBuild(o,ev,hype){
+ const d=G.drv,sk=DSKILL[o.skill],A=DATTR[sk.a],sc=d.attr[sk.a],B=BACKGROUNDS[d.bg],c=ev.ctx;
+ const L=[{v:amod(sc),src:`${A.n} ${sc}`,k:'attr'}],adv=[],dis=[],dcl=[];
+ if(d.prof.includes(o.skill))L.push({v:DPROF,src:'Proficiency',k:'prof'});
+ const im=imageOf();
+ if(im&&IMAGES[im].fav.includes(o.skill)&&inChar(o.tone,im))L.push({v:1,src:`${IMAGES[im].n}, in character`,k:'image'});
+ if(o.sig&&im===o.sig&&Math.abs(d.img.x)>=IMG_LEAN&&Math.abs(d.img.y)>=IMG_LEAN)L.push({v:1,src:'Leaning all the way in',k:'image'});
+ for(const t of [B.trait,B.flaw]){const f=t.fx(o.skill,c);if(!f)continue;if(f.v)L.push({v:f.v,src:f.src,k:'trait'});if(f.adv)adv.push(f.adv);if(f.dis)dis.push(f.dis);}
+ const E=EVENTS[ev.id],s=E.sit?E.sit(o,ev)||{}:{};
+ (s.L||[]).forEach(l=>L.push(Object.assign({k:'sit'},l)));(s.dcl||[]).forEach(l=>dcl.push(l));(s.adv||[]).forEach(a=>adv.push(a));(s.dis||[]).forEach(a=>dis.push(a));
+ if(hype)adv.push('Spent 1 Hype');
+ const mod=L.reduce((a,l)=>a+l.v,0),dc=o.dc+dcl.reduce((a,l)=>a+l.v,0);
+ const mode=adv.length&&!dis.length?'adv':dis.length&&!adv.length?'dis':'flat';
+ return {L,dcl,adv,dis,mod,dc,mode,odds:chkOdds(mod,dc,mode),need:clamp(dc-mod,2,20)};
+}
+const d20=()=>1+Math.floor(Math.random()*20);
+function chkRoll(b){const a=d20(),z=d20();const kept=b.mode==='adv'?Math.max(a,z):b.mode==='dis'?Math.min(a,z):a;
+ // the second die is rolled every time: with one die it is only shown afterwards, as what advantage would have done
+ return {dice:[a,z],kept,other:kept===a?z:a,total:kept+b.mod,tier:chkTier(kept,b.mod,b.dc)};}
+// "what would have helped": attribute, proficiency, image, advantage (the second die), Hype, and the other answers on the same die
+function chkHelp(o,b,R,ev,opts){
+ const d=G.drv,sk=DSKILL[o.skill],A=DATTR[sk.a],sc=d.attr[sk.a],out=[];
+ if(R.tier==='crit')return [`Natural 20. Nothing could beat that.`];
+ if(R.tier==='succ'){const m=R.total-b.dc;out.push(`Made it by ${m}. ${m>=4?'Plenty of room.':`One bad roll from a mixed result: every +1 on ${sk.n} is +5% here.`}`);
+  if(b.mode==='flat'&&R.other===1)out.push('Your second die was a 1. Rolling with disadvantage would have fumbled.');return out;}
+ if(R.tier==='fumble'){out.push('A natural 1 always fumbles, whatever the modifiers.');
+  if(b.mode!=='adv')out.push(`With advantage you'd have kept your other die, a ${R.other}: ${TIER_D[chkTier(R.other,b.mod,b.dc)][0].toLowerCase()}. ${d.hype?'You have Hype to spend on advantage.':'Earn Hype on track with a ×4 combo or a big finish.'}`);
+  return out;}
+ const gap=b.dc-R.total,goal=R.tier==='mixed'?'a success':'a mixed result';
+ const gapM=R.tier==='mixed'?gap:gap-4; // to reach mixed you only need to get within 4
+ out.push(`Rolled ${R.kept} ${sgn(b.mod)} = ${R.total} vs DC ${b.dc}. Missed by ${gap}.`);
+ let s=sc;while(s<ATTR_MAX&&amod(s)<amod(sc)+gapM)s++;
+ if(amod(s)>=amod(sc)+gapM)out.push(`${A.n} ${sc} → ${s} (${sgn(amod(s))}) would have made it ${goal}.`);
+ if(!d.prof.includes(o.skill)&&gapM<=DPROF)out.push(`Proficiency in ${sk.n} (+${DPROF}) would have made it ${goal}.`);
+ const im=imageOf(),fav=Object.keys(IMAGES).find(k=>IMAGES[k].fav.includes(o.skill));
+ if(gapM<=1&&fav&&!(im===fav&&inChar(o.tone,im)))out.push(`Answering in character as a ${IMAGES[fav].n} (+1) would have made it ${goal}.`);
+ if(b.mode!=='adv'&&R.other>R.kept){const t2=chkTier(R.other,b.mod,b.dc);if(TIERS.indexOf(t2)<TIERS.indexOf(R.tier))out.push(`Advantage would have kept your other die, a ${R.other}: ${TIER_D[t2][0].toLowerCase()}. ${d.hype?'Spend Hype for advantage.':'Earn Hype on track with a ×4 combo or a big finish.'}`);}
+ for(const x of opts){if(x===o||x.auto)continue;const b2=chkBuild(x,ev,false),t2=chkTier(R.kept,b2.mod,b2.dc);if(t2==='succ'||t2==='crit')out.push(`${x.n} (${DSKILL[x.skill].n}, needed ${b2.need}+) would have passed on this roll.`);}
+ // always point at the best bet: the answer with the best odds this round, or the long-term fix if this was it
+ const pass=bb=>bb.odds.crit+bb.odds.succ,mine=pass(b);let best=null;
+ for(const x of opts){if(x===o||x.auto)continue;const b2=chkBuild(x,ev,false);if(pass(b2)>mine+0.001&&(!best||pass(b2)>best.p))best={x,p:pass(b2),need:b2.need};}
+ if(best)out.push(`Best odds this round: ${best.x.n} (${DSKILL[best.x.skill].n}) passed ${pct(best.p)} of the time (${best.need}+), vs ${pct(mine)} for this answer.`);
+ else out.push(`This was already your best answer here (${pct(mine)} to pass). Long term, every +1 on ${sk.n} adds 5%: raise ${A.n}${d.prof.includes(o.skill)?'':' or pick up the proficiency'}.`);
+ return out;
+}
+
+/* ---- effects ---- */
+function fxScale(fx,k){const o={};for(const key in fx)o[key]=typeof fx[key]==='number'&&!['sal','adv','reveal'].includes(key)?Math.round(fx[key]*k):fx[key];return o;}
+function fxMerge(a,b){const o=Object.assign({},a);for(const k in b)o[k]=typeof b[k]==='number'&&typeof o[k]==='number'?o[k]+b[k]:b[k];return o;}
+// what each tier does: crit = success x2 + 1 Hype, mixed = success + the event's (or option's) cost, fumble = failure + the event's fumble
+function tierFx(o,tier,E){if(o.out)return o.out[tier]||{};
+ const win=o.win||{},lose=o.lose||{};
+ return tier==='crit'?fxMerge(fxScale(win,2),{hype:1}):tier==='succ'?win:tier==='mixed'?fxMerge(win,o.cost||E.cost):tier==='fail'?lose:fxMerge(lose,E.fumble);}
+const CLAUSE_N={power:'+1 Power',handling:'+1 Handling',crewChief:'+1 Crew chief'};
+function fxChips(fx,ev){const c=[],ch=(v,t)=>c.push(`<span class="fxc ${v>0?'up':v<0?'dn':''}">${t}</span>`);
+ if(fx.fans)ch(fx.fans,`${sgn(fx.fans)} Fans`);if(fx.respect)ch(fx.respect,`${sgn(fx.respect)} Respect`);if(fx.hype)ch(fx.hype,`${sgn(fx.hype)} Hype`);
+ if(fx.money)ch(fx.money,`${fx.money>0?'+':'−'}${money(Math.abs(fx.money))}`);if(fx.trust)ch(fx.trust,`Sponsor trust ${sgn(fx.trust)}`);
+ if(fx.per)ch(fx.per,`${fx.per>0?'+':'−'}${money(Math.abs(fx.per))} per race (sponsor)`);if(fx.bonus)ch(fx.bonus,`${fx.bonus>0?'+':'−'}${money(Math.abs(fx.bonus))} goal bonus`);
+ if(fx.sal!=null){const v=ev&&ev.revealed?`${money(r100(ev.ceil*fx.sal))}/race salary`:`salary ${Math.round(fx.sal*100)}% of their ceiling`;ch(fx.sal>=0.6?1:fx.sal>=0.35?0:-1,v);}
+ if(fx.mom)ch(fx.mom,`+${fx.mom} Momentum next green flag`);if(fx.clause)ch(1,`Clause: ${CLAUSE_N[fx.clause]||fx.clause}`);if(fx.adv)ch(1,'Advantage on the next question');if(fx.reveal)ch(1,'Learn their budget');
+ return c.join(' ')||'<span class="fxc">nothing changes</span>';}
+function applyFx(fx,ev){const d=G.drv,S=G.sponsor;
+ if(fx.fans)d.fans=clamp(d.fans+fx.fans,0,100);if(fx.respect)d.respect=clamp(d.respect+fx.respect,0,100);if(fx.hype)d.hype=clamp(d.hype+fx.hype,0,3);if(fx.money)G.money=Math.max(0,G.money+fx.money);
+ if(S){if(fx.trust)S.trust=clamp((S.trust||0)+fx.trust,-2,2);if(fx.per)S.per=Math.max(500,S.per+fx.per);if(fx.bonus)S.bonus=Math.max(0,S.bonus+fx.bonus);}
+ if(fx.sal!=null){G.contract.per=r100(ev.ceil*fx.sal);G.contract.since={season:G.season||1,race:G.results.length};}
+ if(fx.mom)d.next.mom=Math.min(3,(d.next.mom||0)+fx.mom);
+ if(fx.clause){G.stats[fx.clause]=Math.min(10,G.stats[fx.clause]+1);G.contract.clauses.push(fx.clause);}
+ if(fx.adv)ev.advFor=ev.ri+1;if(fx.reveal)ev.revealed=true;}
+
+/* ---- the three events ---- */
+const lowCar=()=>G.stats.power<=G.stats.handling?'power':'handling';
+const PRESS_SIG=[
+ {id:'trash',sig:'rookie',n:'Trash-talk the leader',say:'"He\'s been lucky. Next week I\'m in his mirror."',skill:'media',dc:15,tone:{x:1,y:1},win:{fans:10,hype:1},cost:{respect:-4},lose:{fans:-4,respect:-4,trust:-1},hit:'The clip runs all week.',miss:'It reads as sour grapes.'},
+ {id:'names',sig:'champ',n:'Thank every crew member by name',say:'"Mikey, Dee, Jojo, Big Ron..."',skill:'crew',dc:11,tone:{x:-1,y:-1},win:{respect:5,mom:1},lose:{respect:-1},hit:'The crew will run through a wall for you next week.',miss:'You forget the tire carrier. He noticed.'},
+ {id:'sign',sig:'fan',n:'Sign autographs through the scrum',say:'"Who\'s got a Sharpie?"',skill:'fans',dc:12,tone:{x:-1,y:1},win:{fans:9},lose:{fans:-2,respect:-1},hit:'Every kid at the fence gets a hat.',miss:'The reporters get nothing and say so.'},
+ {id:'nocomment',sig:'assassin',n:'"No comment."',say:'Walk past the cameras without breaking stride.',skill:'read',dc:10,tone:{x:1,y:-1},win:{respect:4},lose:{fans:-3},hit:'The garage nods. Results talk.',miss:'"Arrogant" is the headline.'}
+];
+const DINNER_SIG=[
+ {id:'promise',sig:'rookie',n:'Promise them a win',say:'"Put the logo on the hood. I\'ll put it in victory lane."',skill:'media',dc:15,tone:{x:1,y:1},win:{per:600},lose:{per:-200,trust:-1},hit:'They love the confidence and pay for it.',miss:'They wonder what else you overpromise.'},
+ {id:'believe',sig:'champ',n:'Thank them for believing in you',say:'"None of this happens without you."',skill:'peace',dc:11,tone:{x:-1,y:-1},win:{trust:2},lose:{trust:-1},hit:'Real loyalty, both ways.',miss:'It comes off as flattery.'},
+ {id:'fanclub',sig:'fan',n:'Bring the fan club to dessert',say:'"Mind if a few friends join us?"',skill:'fans',dc:13,tone:{x:-1,y:1},win:{per:300,fans:4},lose:{trust:-1},hit:'The VP takes forty selfies.',miss:'The restaurant asks you all to leave.'},
+ {id:'numbers',sig:'assassin',n:'Show them the TV numbers',say:'Slide a one-page report across the table.',skill:'negotiate',dc:13,tone:{x:1,y:-1},win:{bonus:4000},lose:{trust:-1},hit:'Pure business. They raise the goal bonus.',miss:'They don\'t like being sold to at dinner.'}
+];
+const CONTRACT_SIG=[
+ {id:'walkout',sig:'rookie',n:'Threaten to walk',say:'"Three teams called me this week."',skill:'deflect',dc:16,tone:{x:1,y:1},out:{crit:{sal:1.4,hype:1},succ:{sal:1.25},mixed:{sal:0.9,respect:-3},fail:{sal:0.2,respect:-4},fumble:{sal:0,respect:-6}},hit:'They blink first.',miss:'They call your bluff.'},
+ {id:'offer',sig:'assassin',n:'Mention another offer',say:'Leave a rival team\'s letterhead on the desk.',skill:'negotiate',dc:14,tone:{x:1,y:-1},out:{crit:{sal:1.3},succ:{sal:1.15},mixed:{sal:0.85},fail:{sal:0.4,respect:-2},fumble:{sal:0.1,respect:-4}},hit:'Business is business. They match it.',miss:'They know the letter is old.'},
+ {id:'teamfirst',sig:'champ',n:'"Pay the crew first."',say:'"Take care of the guys. I\'ll take what\'s left."',skill:'crew',dc:12,tone:{x:-1,y:-1},out:{crit:{sal:0.9,respect:6,mom:1},succ:{sal:0.75,respect:5},mixed:{sal:0.6,respect:3},fail:{sal:0.4,respect:2},fumble:{sal:0.3}},hit:'The whole shop hears about it.',miss:'They take you at your word.'},
+ {id:'merch',sig:'fan',n:'Bring the merch numbers',say:'"My shirts outsell the whole team\'s."',skill:'fans',dc:13,tone:{x:-1,y:1},out:{crit:{sal:1.2,fans:4},succ:{sal:1},mixed:{sal:0.8},fail:{sal:0.45},fumble:{sal:0.3,fans:-3}},hit:'Hard to argue with sales.',miss:'They point out the shirts were on sale.'}
+];
+const EVENTS={
+ press:{n:'Press scrum',who:'Reporters at the hauler',go:'Face the press',walk:{n:'Skip the scrum',fx:{fans:-3}},cost:{respect:-2},fumble:{money:-1500,respect:-2},fumbleTxt:'The series fines you $1,500 for the quote.',
+  sit:(o,ev)=>{const c=ev.ctx,s={adv:[],dis:[]};if(c.top3)s.adv.push(`Finished P${c.fin}: the room is yours`);if(c.dnf)s.dis.push('DNF: the room smells blood');return s;},
+  rounds:[ev=>{const c=ev.ctx;
+   if(c.dnf)return {q:`"Out early at ${c.track}. Whose fault was that?"`,opts:[
+    {id:'own',n:'Own it',say:'"That one\'s on me. I asked too much of the car."',skill:'cool',dc:13,tone:{x:-1,y:-1},win:{respect:4,trust:1},cost:{fans:-2},lose:{respect:-2,fans:-2},hit:'The story dies down. The garage respects a driver who owns it.',miss:'You snap at a follow-up. That\'s the clip they run.'},
+    {id:'blame',n:'Blame the field',say:`"Ask ${c.rival}. He knows what he did."`,skill:'media',dc:11,tone:{x:1,y:1},win:{fans:5},cost:{respect:-3},lose:{respect:-4,trust:-1},hit:'Your fans eat it up.',miss:'It reads as whining. Your sponsor calls.'},
+    {id:'joke',n:'Joke it off',say:'"Hey, I had the best seat in the house for that one."',skill:'deflect',dc:14,tone:{x:-1,y:1},win:{fans:7},lose:{trust:-1,fans:-2},hit:'Biggest laugh of the weekend.',miss:'Looks careless to sponsors.'}]};
+   if(c.big)return {q:`"P${c.fin} from P${c.start}. Where did that come from?"`,opts:[
+    {id:'credit',n:'Credit the team',say:'"This crew gave me a rocket. I just steered."',skill:'crew',dc:12,tone:{x:-1,y:-1},win:{respect:4,mom:1},lose:{respect:-1},hit:'The crew hears it and comes back fired up.',miss:'It sounds rehearsed.'},
+    {id:'shot',n:'Call your shot',say:'"Get used to it. Next week we win."',skill:'media',dc:14,tone:{x:1,y:1},win:{fans:8,hype:1},cost:{respect:-3},lose:{fans:-3,respect:-3},hit:'The clip goes around.',miss:'Now you have to back it up, and nobody believes you.'},
+    {id:'thank',n:'Thank the fans',say:'"Y\'all were loud in turn 3. I heard you."',skill:'fans',dc:12,tone:{x:-1,y:1},win:{fans:6},lose:{fans:-1},hit:'The stands go nuts on the replay.',miss:'Nobody heard it over the generator.'}]};
+   return {q:`"P${c.fin} today. Expected more?"`,opts:[
+    {id:'break',n:'Break it down',say:'"We were tight in the center all day. We\'ll fix it."',skill:'read',dc:12,tone:{y:-1},win:{respect:4},lose:{respect:-1,fans:-1},hit:'Straight answers. The beat writers like you.',miss:'Too much detail. They tune out.'},
+    {id:'subject',n:'Change the subject',say:'"Ask me after next week."',skill:'deflect',dc:12,tone:{x:1,y:-1},win:{fans:2,respect:2},lose:{fans:-2},hit:'They move on to the next driver.',miss:'"Evasive" is the word they use.'},
+    {id:'own2',n:'Own it',say:'"Not good enough. That\'s on me."',skill:'cool',dc:11,tone:{x:-1,y:-1},win:{respect:3,trust:1},lose:{respect:-2},hit:'Calm and honest. Your sponsor likes that.',miss:'Your voice cracks. Not a great look.'}]};}]},
+ dinner:{n:'Sponsor dinner',who:ev=>{const sp=G.sponsor&&sponsorOf(G.sponsor.id);return sp?`${sp.n} · marketing VP`:'Your sponsor';},go:'Go to dinner',walk:{n:'Send your regrets',fx:{trust:-1}},cost:{money:-500},fumble:{per:-300},fumbleTxt:'You knock a full glass into the CEO\'s lap. −$300 per race.',
+  sit:(o,ev)=>{const S=G.sponsor||{},s={adv:[],dis:[],L:[]};if((S.trust||0)>=2)s.adv.push('Sponsor trust +2: they like you');if((S.trust||0)<=-2)s.dis.push('Sponsor trust −2: they\'re wary');if(ev.advFor===ev.ri)s.adv.push('You read the table');if(G.drv.fans>=60)s.L.push({v:1,src:`Fans ${G.drv.fans}: a name they want`});return s;},
+  rounds:[()=>({q:'"So, how\'s the season feeling?"',opts:[
+    {id:'table',n:'Read the table',say:'Ask what they hope to get out of the year, and listen.',skill:'read',dc:12,tone:{y:-1},win:{adv:1},cost:{money:-500},lose:{},hit:'You catch what they really want. Advantage on the next question.',miss:'You misjudge the mood.'},
+    {id:'story',n:'Tell a garage story',say:'"So the jack breaks on lap 140..."',skill:'pitch',dc:12,tone:{x:-1,y:1},win:{trust:1,fans:2},lose:{trust:-1},hit:'The whole table is laughing.',miss:'The punchline lands on nobody.'},
+    {id:'late',n:'Stay till the last toast',say:'Four hours. Every handshake. Every photo.',skill:'endure',dc:11,tone:{x:-1,y:-1},win:{trust:1},lose:{},hit:'They notice who stays.',miss:'You yawn during the CEO\'s speech.'}]}),
+   ev=>({q:`"We're planning next year's budget. Make your case."`,opts:[
+    {id:'activate',n:'Pitch a bigger activation',say:'"Hood, fire suit, and a show-car tour. Let\'s go big."',skill:'pitch',dc:14,tone:{x:1,y:1},win:{per:400},lose:{trust:-1},hit:'They raise the per-race deal.',miss:'Too big, too soon.'},
+    {id:'bonus',n:'Negotiate the goal bonus',say:'"Pay me when I hit the goal. Pay me more."',skill:'negotiate',dc:14,tone:{x:1,y:-1},win:{bonus:3000},lose:{trust:-1},hit:'They raise the season goal bonus.',miss:'They don\'t like being pushed.'},
+    {id:'appear',n:'Offer fan appearances',say:'"I\'ll do every store opening you\'ve got."',skill:'fans',dc:12,tone:{x:-1,y:1},win:{per:200,fans:3},lose:{},hit:'A little more money and a lot more handshakes.',miss:'They already have a guy for that.'}]})]},
+ contract:{n:'Contract talk',who:()=>`${TEAMS[me().team].name} · team owner`,go:'Sit down with the owner',walk:{n:'Keep your current deal',fx:{}},cost:{respect:-2},fumble:{respect:-3},fumbleTxt:'The owner storms out. −3 Respect.',
+  sit:(o,ev)=>{const s={adv:[],dcl:[]},R=G.results.filter(r=>!r.dnf);
+   if(R.length){const av=R.reduce((a,r)=>a+r.expected-r.finish,0)/R.length,lev=clamp(Math.trunc(av/2),-3,3);if(lev)s.dcl.push({v:-lev,src:`Leverage: you average ${Math.abs(av).toFixed(1)} spots ${av>0?'better':'worse'} than expected`});}
+   if(G.drv.respect>=60)s.dcl.push({v:-1,src:`Garage respect ${G.drv.respect}`});
+   if(ev.advFor===ev.ri)s.adv.push('You know their number');return s;},
+  rounds:[()=>({q:'"Let\'s talk about the rest of the year, and next year."',opts:[
+    {id:'room',n:'Read the room',say:'Let them talk first. Watch the spreadsheet.',skill:'read',dc:12,tone:{x:1,y:-1},win:{reveal:1,adv:1},lose:{},hit:'You catch their budget ceiling and go in with advantage.',miss:'They give nothing away.'},
+    {id:'shop',n:'Talk about the shop',say:'"The guys have been working nights. That\'s why we\'re fast."',skill:'crew',dc:11,tone:{x:-1,y:-1},win:{respect:3},lose:{},hit:'The owner warms up.',miss:'They want to talk money, not people.'},
+    {id:'fine',n:'Read the fine print',say:'Ask for last year\'s contract and go line by line.',skill:'contract',dc:12,tone:{y:-1},win:{reveal:1},lose:{},hit:'Page 4 shows what they can pay.',miss:'Twelve pages of nothing.'}]}),
+   ev=>({q:ev.revealed?`"So what do you want a race?" (Their ceiling: ${money(ev.ceil)}.)`:'"So what do you want a race?"',opts:[
+    {id:'ceiling',n:'Ask for the ceiling',say:'"Pay me what the car\'s worth."',skill:'negotiate',dc:15,tone:{x:1,y:-1},out:{crit:{sal:1.15,hype:1},succ:{sal:1},mixed:{sal:0.75,respect:-2},fail:{sal:0.35,respect:-2},fumble:{sal:0,respect:-4}},hit:'They pay the top of the range.',miss:'They counter low and won\'t move.'},
+    {id:'fair',n:'Ask for a fair raise',say:'"Something that keeps the lights on."',skill:'negotiate',dc:11,tone:{x:-1,y:-1},out:{crit:{sal:0.8},succ:{sal:0.65},mixed:{sal:0.5},fail:{sal:0.3},fumble:{sal:0.15}},hit:'Fair is fair.',miss:'They hear "cheap" and run with it.'},
+    {id:'results',n:'Let the results talk',say:'Slide the season results across the desk. Say nothing.',skill:'cool',dc:12,tone:{x:1,y:-1},out:{crit:{sal:0.95,respect:4},succ:{sal:0.7,respect:3},mixed:{sal:0.55},fail:{sal:0.3},fumble:{sal:0.2,respect:-2}},hit:'The numbers speak.',miss:'You fidget. They notice.'}]}),
+   ()=>({q:'"Anything else before we shake on it?"',opts:[
+    {id:'car',n:'Ask for a car upgrade',say:`"Give me a better ${lowCar()==='power'?'engine':'chassis'} and I'll give you better finishes."`,skill:'pitch',dc:13,tone:{y:1},win:{clause:lowCar()},lose:{},hit:'Written in: the shop upgrades your car.',miss:'"Next year, maybe."'},
+    {id:'chief',n:'Bring in a better crew chief',say:'"I want the guy from the 14 on my box."',skill:'crew',dc:13,tone:{x:-1,y:-1},win:{clause:'crewChief'},lose:{},hit:'Written in: a better crew chief.',miss:'They like the chief you have.'},
+    {id:'parts',n:'Ask for a parts budget',say:'"Four grand for parts, up front."',skill:'negotiate',dc:12,tone:{x:1,y:-1},win:{money:4000},lose:{},hit:'Cash for the parts dealer.',miss:'"We\'ll see."'},
+    {id:'shake',n:'Shake on it',say:'No extras. Sign and go racing.',auto:true,tone:{x:-1,y:-1}}]})]}
+};
+const SIGS={press:{0:PRESS_SIG},dinner:{1:DINNER_SIG},contract:{1:CONTRACT_SIG}};
+// one event after these race numbers each season (races done -> event)
+const OFF_SCHED={1:'press',2:'dinner',4:'contract',6:'press',7:'dinner',9:'press'};
+function evRound(ev){const E=EVENTS[ev.id],r=E.rounds[ev.ri](ev),im=imageOf(),sg=(SIGS[ev.id]||{})[ev.ri];
+ if(sg&&im){const s=sg.find(x=>x.sig===im);if(s)r.opts=[...r.opts,s];}return r;}
+const evWho=ev=>{const w=EVENTS[ev.id].who;return typeof w==='function'?w(ev):w;};
+function makeEvent(id){const res=G.results[G.results.length-1],t=res&&TRACKS.find(x=>x.name===res.track);
+ const ctx={ev:id,fin:res?res.finish:0,start:res?res.start:0,exp:res?res.expected:0,dnf:!!(res&&res.dnf),dmg:res?res.dmg||0:0,track:res?res.track:'',tid:res?res.tid||(t&&t.id):null,rival:res&&res.rival||'the 14',top3:!!(res&&!res.dnf&&res.finish<=3)};
+ ctx.big=!ctx.dnf&&res&&res.expected-res.finish>=3;
+ return {id,ri:0,ctx,ceil:r100(rand(1100,1700)),revealed:false,advFor:-1,hist:[],cur:null,done:false,walked:false};}
+const evClear=()=>!G||!G.event||G.event.done;
+function offTrackNext(){ensureDrv();const id=OFF_SCHED[G.results.length];if(!id||(id==='dinner'&&!G.sponsor))return null;return makeEvent(id);}
+
+/* ---- event screen ---- */
+let evHypeOn=false,evAnimT=null;
+function evChoose(oid){const ev=G.event;if(!ev||ev.cur||ev.done)return;const r=evRound(ev),o=r.opts.find(x=>x.id===oid);if(!o)return;const d=G.drv;
+ const hype=!o.auto&&evHypeOn&&d.hype>0,b=o.auto?null:chkBuild(o,ev,hype);evHypeOn=false;
+ // the tone moves your image after the check is built, so the in-character bonus uses the image you walked in with
+ if(o.tone){d.img.x=clamp(d.img.x+Math.sign(o.tone.x||0),-IMG_MAX,IMG_MAX);d.img.y=clamp(d.img.y+Math.sign(o.tone.y||0),-IMG_MAX,IMG_MAX);d.trail.push({x:d.img.x,y:d.img.y});if(d.trail.length>12)d.trail.shift();}
+ if(o.auto){ev.hist.push({ri:ev.ri,opt:o.id,n:o.n,auto:true});evNext();return;}
+ if(hype)d.hype--;const R=chkRoll(b);
+ ev.cur={opt:o.id,hype,b,R,shown:false,rerolled:false,info:G.info};evSettle(ev,o);saveSeason();renderEvent();}
+// the result's effects are stored with the roll and applied when you move on, so a Hype reroll replaces them cleanly
+function evSettle(ev,o){ev.cur.fx=tierFx(o,ev.cur.R.tier,EVENTS[ev.id]);}
+function evCommit(ev){const c=ev.cur,r=evRound(ev),o=r.opts.find(x=>x.id===c.opt),d=G.drv;
+ applyFx(c.fx,ev);const made=c.R.tier==='succ'||c.R.tier==='crit';c.up=addXp(made?DXP.made:DXP.missed);c.xp=made?DXP.made:DXP.missed;
+ d.log.unshift({ev:EVENTS[ev.id].n,opt:o.n,skill:DSKILL[o.skill].n,tier:c.R.tier,txt:`${c.R.kept} ${sgn(c.b.mod)} = ${c.R.total} vs DC ${c.b.dc}`,s:G.season||1,r:G.results.length});d.log=d.log.slice(0,8);
+ ev.hist.push({ri:ev.ri,opt:o.id,n:o.n,tier:c.R.tier,fx:c.fx});c.committed=true;}
+function evReroll(){const ev=G.event,c=ev&&ev.cur,d=G.drv;if(!c||c.committed||c.rerolled||!d.hype||c.R.tier==='succ'||c.R.tier==='crit')return;
+ d.hype--;const r=evRound(ev),o=r.opts.find(x=>x.id===c.opt);c.R0=c.R;c.R=chkRoll(c.b);c.rerolled=true;c.shown=false;evSettle(ev,o);saveSeason();renderEvent();}
+function evNext(){const ev=G.event;if(ev.cur&&!ev.cur.committed)evCommit(ev);ev.cur=null;ev.ri++;if(ev.ri>=EVENTS[ev.id].rounds.length){ev.done=true;saveSeason();showGarage();return;}saveSeason();renderEvent();}
+function evWalk(){const ev=G.event;if(!ev||ev.done)return;const E=EVENTS[ev.id];if(ev.cur&&!ev.cur.committed)return;applyFx(E.walk.fx,ev);ev.walked=true;ev.done=true;saveSeason();showGarage();}
+function showEvent(){if(!G.event||G.event.done){showGarage();return;}renderEvent();showScreen('event');$('#event').scrollTop=0;}
+function mathHTML(b,cls){return `<div class="evmath ${cls||''}"><span class="ml">d20</span>${b.L.map(l=>`<em>+</em><span class="ml k-${l.k} ${l.v<0?'neg':l.v>0&&l.k!=='attr'?'pos':''}" title="${esc(l.src)}">${esc(l.src)}<b>${sgn(l.v)}</b></span>`).join('')}<em>vs</em><span class="dc">DC ${b.dc}</span>${b.dcl.map(l=>`<span class="ml k-sit" title="${esc(l.src)}">${esc(l.src)}<b>DC ${sgn(l.v)}</b></span>`).join('')}</div>`;}
+function advHTML(b){const t=b.mode==='adv'?'Advantage: roll two dice, keep the higher':b.mode==='dis'?'Disadvantage: roll two dice, keep the lower':b.adv.length?'Advantage and disadvantage cancel: one die':'';
+ return b.adv.length||b.dis.length?`<div class="evad">${b.adv.map(a=>`<span class="a">▲ ${esc(a)}</span>`).join('')}${b.dis.map(a=>`<span class="d">▼ ${esc(a)}</span>`).join('')}<span class="muted">${t}</span></div>`:'';}
+function oddsHTML(o){return `<div class="oddbar">${TIERS.map(k=>`<i class="${TIER_D[k][2]}" style="width:${o[k]*100}%"></i>`).join('')}</div><div class="oddleg">${TIERS.map(k=>`<span style="--c:${TIER_D[k][1]}">${TIER_D[k][0]} ${pct(o[k])}</span>`).join('')}</div>`;}
+function optHTML(o,ev,showOdds){const E=EVENTS[ev.id];
+ if(o.auto)return `<div class="panel evopt" data-o="${o.id}"><div class="row" style="justify-content:space-between"><b>${esc(o.n)}</b><span class="row" style="gap:4px">${toneChips(o.tone)}</span></div><p class="say">${esc(o.say)}</p><p class="muted" style="font-size:13px">No roll. Nothing else changes.</p><button class="btn small" data-opt="${o.id}">${esc(o.n)}</button></div>`;
+ const b=chkBuild(o,ev,evHypeOn&&G.drv.hype>0),sk=DSKILL[o.skill];const st=k=>fxChips(tierFx(o,k,E),ev);
+ return `<div class="panel evopt${o.sig?' sig':''}" data-o="${o.id}">
+  <div class="row" style="justify-content:space-between"><b style="font-size:16px">${esc(o.n)}</b><span class="row" style="gap:4px">${o.sig?`<span class="tone" style="color:#c9bfff">${esc(IMAGES[o.sig].n)} only</span>`:''}${toneChips(o.tone)}</span></div>
+  <p class="say">${esc(o.say)}</p>
+  <div class="row" style="gap:6px"><span class="chip">${esc(sk.n)}</span><span class="muted" style="font-size:12px">${DATTR[sk.a].ab} check</span></div>
+  ${mathHTML(b)}
+  ${advHTML(b)}
+  ${showOdds?`<div class="row" style="justify-content:space-between"><span class="evneed">Roll needed ${b.need>=20?'20 (natural 20 only)':b.need+'+'}</span><span class="mono" style="font-size:13px">Gets it ${pct(b.odds.crit+b.odds.succ+b.odds.mixed)}</span></div>${oddsHTML(b.odds)}`:`<span class="muted" style="font-size:12px">${G.info==='feel'?'Feel mode: odds hidden, modifiers shown.':'Reveal after: the odds show once you roll.'}</span>`}
+  <div class="evstake"><div><b style="color:var(--green)">Success</b> ${st('succ')}</div><div><b style="color:var(--amber)">Mixed</b> ${st('mixed')}</div><div><b style="color:var(--red)">Failure</b> ${st('fail')}</div><div class="muted" style="font-size:11px">Critical doubles a success and adds 1 Hype. A fumble is a failure plus: ${esc(E.fumbleTxt)}</div></div>
+  <button class="btn primary small" data-opt="${o.id}">Say it</button></div>`;}
+function rollHTML(ev,anim){const c=ev.cur,E=EVENTS[ev.id],r=evRound(ev),o=r.opts.find(x=>x.id===c.opt),b=c.b,R=c.R,T=TIER_D[R.tier];
+ const two=b.mode!=='flat',dieCls=v=>`die${v===20?' n20':v===1?' n1':''}`;
+ const dice=two?R.dice.map((v,i)=>`<div class="${dieCls(v)}${v!==R.kept||(R.dice[0]===R.dice[1]&&i===1)?' off':''}" data-die="${i}">${v}</div>`).join(''):`<div class="${dieCls(R.kept)}" data-die="0">${R.kept}</div>`;
+ const help=chkHelp(o,b,R,ev,r.opts);let k=0;const dl=()=>`style="animation-delay:${anim?0.75+0.12*(k++):0}s"`;
+ const txt=R.tier==='succ'||R.tier==='crit'?o.hit:R.tier==='mixed'?`${o.hit} But it costs you.`:o.miss;
+ const canRe=!c.committed&&!c.rerolled&&G.drv.hype>0&&(R.tier!=='succ'&&R.tier!=='crit');
+ const last=ev.ri>=E.rounds.length-1;
+ return `<div class="panel evroll${anim?'':' done'}">
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:2px"><span class="eyebrow">${esc(o.n)} · ${esc(DSKILL[o.skill].n)}${c.rerolled?' · rerolled with Hype':''}</span><p class="say">${esc(o.say)}</p></div>${two?`<span class="muted" style="font-size:13px">${b.mode==='adv'?'Advantage: keep the higher':'Disadvantage: keep the lower'}</span>`:''}</div>
+  <div class="row" style="gap:16px;align-items:center"><div class="dice${anim?' tumbling':''}" id="ev-dice">${dice}</div>
+   <div class="evmath"><span class="ml slide" ${dl()}>d20 <b style="margin-left:2px">${R.kept}</b></span><em>+</em>${b.L.map(l=>`<span class="ml slide k-${l.k}" ${dl()}>${esc(l.src)}<b>${sgn(l.v)}</b></span>`).join('<em>+</em>')}<em class="slide" ${dl()}>=</em><span class="ml slide" ${dl()} style="font-size:16px"><b style="margin:0">${R.total}</b></span><em class="slide" ${dl()}>vs</em><span class="dc slide" ${dl()}>DC ${b.dc}</span></div></div>
+  ${advHTML(b)}
+  <div class="grid slide" ${dl()} style="gap:6px"><div class="evres ${R.tier}">${T[0]}${R.kept===20?' · natural 20':R.kept===1?' · natural 1':''}</div><p>${esc(txt)}${R.tier==='fumble'?' '+esc(E.fumbleTxt):''}</p><div class="row" style="gap:4px">${fxChips(c.fx,ev)}${(()=>{const made=R.tier==='succ'||R.tier==='crit',xp=made?DXP.made:DXP.missed,d=G.drv;return `<span class="fxc up">+${xp} XP</span>${!c.committed&&d.xp+xp>=xpNeed(d.lvl)?`<b style="color:var(--amber)">Level ${d.lvl+1}! +1 attribute point on the driver sheet</b>`:''}`;})()}</div>
+   ${c.info==='reveal'?`<div class="grid" style="gap:4px"><span class="eyebrow">The odds were</span>${oddsHTML(b.odds)}</div>`:''}</div>
+  <div class="evhelp slide" ${dl()} id="ev-help"><b>${R.tier==='succ'||R.tier==='crit'?'How it went':'What would have helped'}</b><ul>${help.map(h=>`<li>${esc(h)}</li>`).join('')}</ul></div>
+  <div class="row slide" ${dl()}>${canRe?`<button class="btn" id="ev-reroll">Spend 1 Hype: reroll</button>`:''}<button class="btn primary" id="ev-next">${last?'Back to the garage':'Next question'}</button>${c.R0?`<span class="muted" style="font-size:13px">First roll: ${c.R0.kept} (${TIER_D[c.R0.tier][0]})</span>`:''}</div>
+ </div>`;}
+function renderEvent(){const ev=G.event,el=$('#event');if(!ev)return;const E=EVENTS[ev.id],d=G.drv,r=evRound(ev),c=ev.ctx;
+ const showOdds=G.info==='full';const anim=ev.cur&&!ev.cur.shown;
+ el.innerHTML=`<div class="page-in">
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Off track · ${esc(E.n)} · question ${ev.ri+1} of ${E.rounds.length}</span><h2>${esc(evWho(ev))}</h2>
+   <span class="muted" style="font-size:13px">${c.fin?`After P${c.fin}${c.dnf?' (DNF)':''} at ${esc(c.track)} · expected P${c.exp} · `:''}${esc(G.name)} · ${esc(BACKGROUNDS[d.bg].n)} · ${imageOf()?esc(IMAGES[imageOf()].n):'Fresh face'}</span></div>
+   <div class="row"><span class="row" style="gap:6px">Hype <span class="hype">${[0,1,2].map(i=>`<i class="${i<d.hype?'on':''}"></i>`).join('')}</span></span><button class="btn small" id="ev-sheet">Driver sheet</button>${ev.cur?'':`<button class="btn small" id="ev-walk">${esc(E.walk.n)}${Object.keys(E.walk.fx).length?' · '+fxChips(E.walk.fx).replace(/<[^>]+>/g,''):''}</button>`}</div></div>
+  <div class="evq">${esc(r.q)}</div>
+  ${ev.cur?rollHTML(ev,anim):`
+  ${d.hype?`<div class="row"><button class="chip${evHypeOn?' on':''}" id="ev-hype" style="font-size:14px;padding:5px 12px">${evHypeOn?'✓ Spending 1 Hype: advantage on this answer':'Spend 1 Hype for advantage'}</button><span class="muted" style="font-size:12px">Or keep it to reroll a miss.</span></div>`:''}
+  <div class="evopts">${r.opts.map(o=>optHTML(o,ev,showOdds)).join('')}</div>
+  <p class="muted" style="font-size:13px">You pick what you say; the answer picks the skill. Every bonus is labeled by where it comes from. Natural 20 is always a critical, natural 1 always a fumble. Miss by 1 to 4 and you still get it, with a cost. Each answer's tone moves your image on the driver sheet.</p>`}
+ </div>`;
+ el.querySelectorAll('[data-opt]').forEach(b=>b.onclick=()=>evChoose(b.dataset.opt));
+ {const h=$('#ev-hype');if(h)h.onclick=()=>{evHypeOn=!evHypeOn;renderEvent();};}
+ {const w=$('#ev-walk');if(w)w.onclick=evWalk;}
+ $('#ev-sheet').onclick=()=>{sheetTab='driver';openSheet(me().id);};
+ {const n=$('#ev-next');if(n)n.onclick=()=>{if(ev.cur&&!ev.cur.shown)return;evNext();};}
+ {const rr=$('#ev-reroll');if(rr)rr.onclick=evReroll;}
+ if(anim){clearTimeout(evAnimT);const dice=$('#ev-dice'),cells=dice?[...dice.querySelectorAll('.die')]:[];let n=0;
+  const tick=()=>{if(!dice.isConnected)return;if(n++<8){cells.forEach(x=>x.textContent=d20());evAnimT=setTimeout(tick,75);return;}
+   dice.classList.remove('tumbling');cells.forEach((x,i)=>x.textContent=ev.cur.b.mode==='flat'?ev.cur.R.kept:ev.cur.R.dice[i]);ev.cur.shown=true;};
+  tick();}
+}
+// garage panel: tonight's event, or what happened at it
+function eventPanel(){const ev=G.event;if(!ev)return '';const E=EVENTS[ev.id];
+ if(ev.done)return `<div class="panel grid" id="g-ev" style="gap:6px"><span class="eyebrow">Off track · ${esc(E.n)}</span>${ev.walked?`<p>You skipped it: ${fxChips(E.walk.fx)}</p>`:ev.hist.map(h=>`<div class="row" style="gap:6px"><b>${esc(h.n)}</b>${h.auto?'<span class="muted">no roll</span>':`<b style="color:${TIER_D[h.tier][1]}">${TIER_D[h.tier][0]}</b> ${fxChips(h.fx,ev)}`}</div>`).join('')}</div>`;
+ return `<div class="panel grid" id="g-ev" style="gap:8px;border-color:var(--accent)"><span class="eyebrow">Off track tonight · ${E.rounds.length} question${E.rounds.length>1?'s':''} · d20 checks</span><h3>${esc(E.n)}: ${esc(evWho(ev))}</h3>
+  <p class="muted" style="font-size:13px">${ev.id==='press'?'The reporters want a quote about your last race.':ev.id==='dinner'?'Your sponsor is buying. Their mood sets your money for the rest of the season.':'Your team wants to set your salary. Leverage from your results lowers every DC.'} Every answer shows its odds and where each bonus comes from.</p>
+  <div class="row"><button class="btn primary" id="g-ev-go">${esc(E.go)}</button><button class="btn small" id="g-ev-walk">${esc(E.walk.n)}${Object.keys(E.walk.fx).length?' · '+fxChips(E.walk.fx).replace(/<[^>]+>/g,''):''}</button></div></div>`;}
+function wireEventPanel(){const g=$('#g-ev-go');if(g)g.onclick=showEvent;const w=$('#g-ev-walk');if(w)w.onclick=evWalk;}
+
+/* ---- driver sheet tab ---- */
+function skillTotal(sk){const d=G.drv,B=BACKGROUNDS[d.bg];let v=amod(d.attr[DSKILL[sk].a])+(d.prof.includes(sk)?DPROF:0);for(const t of [B.trait,B.flaw]){const f=t.fx(sk,null);if(f&&f.v)v+=f.v;}return v;}
+function imgMapSVG(d){const S=200,h=S/2,px=v=>h+v/IMG_MAX*(h-14),im=imageOf(d.img);
+ const q=Object.entries(IMAGES).map(([k,I])=>`<rect x="${I.x<0?0:h}" y="${I.y>0?0:h}" width="${h}" height="${h}" fill="${I.c}" opacity="${im===k?0.22:0.07}"/><text x="${I.x<0?h/2:h*1.5}" y="${I.y>0?h/2:h*1.5}" text-anchor="middle" font-size="11" font-weight="700" fill="${I.c}">${I.n}</text>`).join('');
+ const tr=d.trail.length?`<polyline points="${d.trail.map(p=>`${px(p.x)},${px(-p.y)}`).join(' ')}" fill="none" stroke="#98a2b8" stroke-width="1.5" stroke-dasharray="3 3"/>`:'';
+ return `<svg class="imgmap" viewBox="0 0 ${S} ${S}" role="img" aria-label="Image map: Humble to Cocky across, Professional to Showman up. You are at ${d.img.x}, ${d.img.y}."><rect x="0" y="0" width="${S}" height="${S}" fill="none" stroke="#26304a"/>${q}
+  <rect x="${h-IMG_AT/IMG_MAX*(h-14)}" y="${h-IMG_AT/IMG_MAX*(h-14)}" width="${2*IMG_AT/IMG_MAX*(h-14)}" height="${2*IMG_AT/IMG_MAX*(h-14)}" fill="#0a0e18" opacity=".7"/>
+  <line x1="${h}" y1="0" x2="${h}" y2="${S}" stroke="#26304a"/><line x1="0" y1="${h}" x2="${S}" y2="${h}" stroke="#26304a"/>
+  <text x="4" y="${h-4}" font-size="9" fill="#98a2b8">HUMBLE</text><text x="${S-4}" y="${h-4}" font-size="9" fill="#98a2b8" text-anchor="end">COCKY</text><text x="${h+4}" y="10" font-size="9" fill="#98a2b8">SHOWMAN</text><text x="${h+4}" y="${S-4}" font-size="9" fill="#98a2b8">PROFESSIONAL</text>
+  ${tr}<circle cx="${px(d.img.x)}" cy="${px(-d.img.y)}" r="6" fill="#fff" stroke="#0a0e18" stroke-width="2"/></svg>`;}
+function attrPreview(k){const d=G.drv,s=d.attr[k];if(s>=ATTR_MAX)return 'Maxed at 20.';const m0=amod(s),m1=amod(s+1),sks=Object.keys(DSKILL).filter(x=>DSKILL[x].a===k);
+ if(m1===m0)return `+1 → ${s+1}: modifier stays ${sgn(m0)} (next step at ${s+2}).`;
+ return `+1 → ${s+1}: ${sgn(m0)} → ${sgn(m1)} on ${sks.map(x=>DSKILL[x].n).join(' and ')}. Each is +5% to pass a check.`;}
+function driverTabHTML(){ensureDrv();const d=G.drv,B=BACKGROUNDS[d.bg],im=imageOf(),S=G.sponsor;
+ const meter=(n,v,c)=>`<div class="grid" style="gap:3px"><div class="row" style="justify-content:space-between;font-size:13px"><span>${n}</span><b class="mono">${v}</b></div><div class="meter"><i style="width:${v}%;background:${c}"></i></div></div>`;
+ return `<div class="dsheet grid" style="gap:12px">
+ <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><div class="grid" style="gap:2px"><span class="eyebrow">Driver sheet · off track</span><h3>Level ${d.lvl} · ${esc(B.n)} · Proficiency +${DPROF} · ${im?esc(IMAGES[im].n):'Fresh face'}</h3></div><span class="row" style="gap:6px">Hype <span class="hype">${[0,1,2].map(i=>`<i class="${i<d.hype?'on':''}"></i>`).join('')}</span></span></div>
+  <div class="meter" title="XP"><i style="width:${d.xp/xpNeed(d.lvl)*100}%;background:var(--amber)"></i></div><span class="muted" style="font-size:12px">${d.xp} / ${xpNeed(d.lvl)} XP to level ${d.lvl+1} · +${DXP.race} per race, +${DXP.made} per check made, +${DXP.missed} per check missed. Each level gives 1 attribute point.${d.pts?` <b style="color:var(--amber)">${d.pts} point${d.pts>1?'s':''} to spend below.</b>`:''}</span>
+  <p class="muted" style="font-size:13px">${esc(B.blurb)} Hype: earn it on track with a ×4 combo or a big finish (top 3, or 5+ spots over expected), up to 3. Spend it off track for advantage or a reroll.</p>
+  <div class="grid g2" style="gap:10px">${meter('Fans',d.fans,'var(--accent)')}${meter('Garage respect',d.respect,'var(--green)')}</div>
+  <div class="row" style="font-size:13px;gap:14px"><span>Team salary <b class="mono">${G.contract.per?money(G.contract.per)+'/race':'none yet'}</b>${G.contract.clauses.length?' · clauses: '+G.contract.clauses.map(k=>CLAUSE_N[k]).join(', '):''}</span>${S?`<span>Sponsor trust <b class="mono">${sgn(S.trust||0)}</b></span>`:''}${d.next.mom?`<span style="color:var(--green)">Next race: +${d.next.mom} Momentum at the green flag</span>`:''}</div></div>
+ <div class="panel grid" style="gap:8px"><h3>Attributes</h3><p class="muted" style="font-size:12px">Scores 8 to 20. Modifier = (score − 10) ÷ 2, rounded down.</p><div class="attrs">${Object.entries(DATTR).map(([k,A])=>`<div class="attr"><span class="eyebrow">${A.ab}</span><b>${A.n}</b><div class="sc">${d.attr[k]}<small>${sgn(amod(d.attr[k]))}</small></div><p>${esc(A.d)} · ${Object.keys(DSKILL).filter(x=>DSKILL[x].a===k).map(x=>DSKILL[x].n).join(', ')}</p>${d.pts?`<span class="prev">${esc(attrPreview(k))}</span><button class="btn small" data-attr-up="${k}" ${d.attr[k]>=ATTR_MAX?'disabled':''}>+1 ${A.ab}</button>`:''}</div>`).join('')}</div></div>
+ <div class="grid g2">
+  <div class="panel grid" style="gap:6px"><h3>Skills</h3><p class="muted" style="font-size:12px">◆ proficient (+${DPROF}) · ★ favored by your image (+1 when you answer in character). Right column: chance to make a DC 12 check, one die. Typical DCs: 10 easy, 12 to 13 normal, 15 hard.</p>
+   ${Object.entries(DSKILL).map(([k,s])=>{const v=skillTotal(k),fav=im&&IMAGES[im].fav.includes(k),o=chkOdds(v,12,'flat');return `<div class="skrow${v<=0?' gap':''}"><span>${d.prof.includes(k)?'◆':'◇'} ${esc(s.n)}${fav?' ★':''} <span class="muted" style="font-size:11px">${DATTR[s.a].ab}</span></span><b class="v">${sgn(v)}</b><div class="bar"><i style="width:${clamp((v+2)/10,0,1)*100}%"></i></div><span class="pc">${pct(o.crit+o.succ)}</span></div>`;}).join('')}</div>
+  <div class="grid" style="gap:12px;align-content:start">
+   <div class="panel grid" style="gap:6px"><h3>Trait and flaw</h3><div><b style="color:var(--amber)">${esc(B.trait.n)}</b> <span class="muted" style="font-size:13px">${esc(B.trait.txt)}</span></div><div><b style="color:#ff7b7f">${esc(B.flaw.n)}</b> <span class="muted" style="font-size:13px">${esc(B.flaw.txt)}</span></div></div>
+   <div class="panel grid" style="gap:8px"><h3>Image</h3><div class="row" style="align-items:flex-start;gap:14px">${imgMapSVG(d)}<div class="grid" style="gap:6px;flex:1;min-width:160px;font-size:13px">${im?`<b style="color:${IMAGES[im].c}">${IMAGES[im].n}</b><span>${esc(IMAGES[im].txt)}</span><span>Favored: ${IMAGES[im].fav.map(x=>DSKILL[x].n).join(', ')} (+1 in character). Unlocks a signature answer in every event${Math.abs(d.img.x)>=IMG_LEAN&&Math.abs(d.img.y)>=IMG_LEAN?', now +1 because you lean all the way in':`, +1 more once you lean in to ${IMG_LEAN} on both axes`}.</span>`:`<b>Fresh face</b><span>Every answer has a tone. Two steps the same way on both axes sets your image, and each image favors two skills and unlocks a signature answer.</span>`}<span class="muted">Image is how the world sees you off track. Your deck persona (${esc(ARCH[G.arch].n)}) is separate.</span></div></div></div>
+  </div></div>
+ ${d.log.length?`<div class="panel grid" style="gap:6px"><h3>Recent checks</h3><div class="dlog">${d.log.map(l=>`<div class="row" style="gap:8px"><span class="mono muted">S${l.s} R${l.r}</span><b>${esc(l.ev)}</b><span>${esc(l.opt)} (${esc(l.skill)})</span><span class="mono">${esc(l.txt)}</span><b style="color:${TIER_D[l.tier][1]}">${TIER_D[l.tier][0]}</b></div>`).join('')}</div></div>`:''}
+ </div>`;}
+function wireDriverTab(box,car){box.querySelectorAll('[data-attr-up]').forEach(b=>b.onclick=()=>{const d=G.drv,k=b.dataset.attrUp;if(!d.pts||d.attr[k]>=ATTR_MAX)return;d.pts--;d.attr[k]++;saveSeason();renderSheet(car);});}
+function bgPickHTML(){return `<div class="grid" style="gap:10px" id="t-bgs"><h2>Background <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· off track: press, sponsors, contracts</span></h2><p class="muted" style="font-size:13px">Your driver sheet for d20 checks off track. A background sets your six attributes, two proficient skills, a trait and a flaw. It doesn't change your cards or car.</p><div class="grid g4">${Object.entries(BACKGROUNDS).map(([k,B])=>{const on=(titleSel.bg||BG_FOR[titleSel.arch])===k;return `<button class="panel sel${on?' on':''}" data-bg="${k}" style="padding:10px 12px"><h3>${esc(B.n)}</h3><p style="font-size:13px">${esc(B.blurb)}</p><p style="font-size:12px;margin-top:4px"><b>Proficient:</b> ${B.prof.map(x=>DSKILL[x].n).join(', ')}</p><p style="font-size:12px"><b style="color:var(--amber)">${esc(B.trait.n)}:</b> ${esc(B.trait.txt)}</p><p style="font-size:12px"><b style="color:#ff7b7f">${esc(B.flaw.n)}:</b> ${esc(B.flaw.txt)}</p><p class="mono muted" style="font-size:11px;margin-top:4px">${Object.keys(DATTR).map(x=>DATTR[x].ab+' '+B.attr[x]).join(' · ')}</p></button>`;}).join('')}</div>${titleSel.bg?'':'<p class="muted" style="font-size:12px">Picked to match your persona until you choose one.</p>'}</div>`;}
+if(screen==='title'&&!G)renderTitle(); // the title first renders before this script loads
+Object.assign(window.__gfd,{DATTR,DSKILL,BACKGROUNDS,IMAGES,EVENTS,OFF_SCHED,newDriver,ensureDrv,chkBuild,chkOdds,chkTier,chkRoll,chkHelp,tierFx,applyFx,makeEvent,offTrackNext,evClear,evRound,showEvent,evChoose,evNext,evWalk,evReroll,imageOf,addXp,skillTotal,raceHype,amod});
 </script>
