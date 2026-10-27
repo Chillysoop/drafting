@@ -722,9 +722,10 @@ body.aiming.aimout .gauge .gplay{background:var(--panel3);color:var(--muted);ani
 .hcard .wx b{background:#c62b2b;color:#fff}
 .hcard .mods{display:flex;gap:3px;justify-content:center;min-height:15px;width:100%}
 .hcard .mods b{display:inline-flex;align-items:center;gap:2px;font-family:var(--display);font-weight:800;font-size:12px;line-height:1;border-radius:3px;padding:1px 4px 1px 3px;white-space:nowrap}
-.m-combo{background:#36c5ff;color:#03141d}.m-boost{background:#ffc83d;color:#241a00}.m-mom{background:#9fe0b5;color:#0b3a1d}
-.m-setup{background:#38c9b9;color:#032420}.m-shape{background:#9be36b;color:#132a06}.shape-tip{color:#9be36b}.m-tune{background:#c3b2ff;color:#1d0f45}
-.m-heat,.m-block,.m-dmg{background:#e5484d;color:#fff}
+/* odds-changer chips are <b>; scoped so they don't paint the #res modules that share the m-mom / m-heat names */
+b.m-combo{background:#36c5ff;color:#03141d}b.m-boost{background:#ffc83d;color:#241a00}b.m-mom{background:#9fe0b5;color:#0b3a1d}
+b.m-setup{background:#38c9b9;color:#032420}b.m-shape{background:#9be36b;color:#132a06}.shape-tip{color:#9be36b}b.m-tune{background:#c3b2ff;color:#1d0f45}
+b.m-heat,b.m-block,b.m-dmg{background:#e5484d;color:#fff}
 .hcard .nm{margin-top:auto;font-size:15px}
 .hcard .ef{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;max-height:16px;overflow:hidden}
 .hcard .ef b{background:transparent;color:var(--card-ink);border:1px solid #c9ceda;padding:1px 3px}
@@ -862,6 +863,112 @@ body.look-tv .hcard .fl,body.look-tv .hcard .ct{color:#fff}
 body.look-tv .hcard .pc{font-style:italic}
 body.look-tv .hcard .nm{font-style:italic}
 body.look-tv .ctl,body.look-tv .btn,body.look-tv .chip{background:linear-gradient(180deg,#3a63bb,#14306e 50%,#0c1f50 51%,#14306e);border-color:#8fb0ff;font-style:italic}
+</style>
+<style id="hud3-css">
+/* ===== HUD round 3 (Conner, Oct 27): outline-only module states, unified Focus + combo console, toss tiles, toss bin, icons ===== */
+/* Momentum / Heat look like Position: dark panel, no color fill. Changes flash the outline; a full meter keeps a pulsing outline. */
+#res .mod.m-mom,#res .mod.m-heat,#res .m-heat.hot{background:linear-gradient(180deg,var(--dash2),var(--dash) 60%);color:inherit}
+body.look-pixel #res .mod.m-mom,body.look-pixel #res .mod.m-heat{background:linear-gradient(180deg,#3a56c8,#101c5c)}
+body.look-poly #res .mod.m-mom,body.look-poly #res .mod.m-heat{background:linear-gradient(160deg,#4a566e 0,#1b2230 42%,#10151f 70%,#283246 100%)}
+body.look-tv #res .mod.m-mom,body.look-tv #res .mod.m-heat{background:linear-gradient(180deg,#3a63bb 0,#1a3a82 47%,#0c1f50 53%,#14306e 100%)}
+#res .m-heat.hot{border-color:#2c3546}
+#res .mod.full{animation:full-g 1.1s ease-in-out infinite alternate;border-color:#7dffa8}
+#res .m-heat.full{animation-name:full-b;border-color:#ff5a5f}
+#res .m-mom.full .st{color:#7dffa8}
+@keyframes full-g{from{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 1px rgba(125,255,168,.45),0 0 8px rgba(47,179,106,.35)}to{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(125,255,168,.85),0 0 26px rgba(47,179,106,.9)}}
+@keyframes full-b{from{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 1px rgba(255,90,95,.45),0 0 8px rgba(229,72,77,.35)}to{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(255,107,112,.9),0 0 26px rgba(229,72,77,.95)}}
+.mod.fl-g,#res .mod.full.fl-g{animation:fl3-g .3s steps(2,jump-none) 3}.mod.fl-b,#res .mod.full.fl-b{animation:fl3-b .3s steps(2,jump-none) 3}
+@keyframes fl3-g{0%{border-color:#7dffa8;box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(125,255,168,.8),0 0 24px rgba(47,179,106,.85)}}
+@keyframes fl3-b{0%{border-color:#ff6b70;box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(255,107,112,.8),0 0 24px rgba(229,72,77,.9)}}
+/* threat preview keeps its blink but on the outline only */
+#res .mod.warn1,#res .mod.warn2{background:linear-gradient(180deg,var(--dash2),var(--dash) 60%)}
+body.look-pixel #res .mod.warn1,body.look-pixel #res .mod.warn2{background:linear-gradient(180deg,#3a56c8,#101c5c)}
+body.look-poly #res .mod.warn1,body.look-poly #res .mod.warn2{background:linear-gradient(160deg,#4a566e 0,#1b2230 42%,#10151f 70%,#283246 100%)}
+body.look-tv #res .mod.warn1,body.look-tv #res .mod.warn2{background:linear-gradient(180deg,#3a63bb 0,#1a3a82 47%,#0c1f50 53%,#14306e 100%)}
+#res .mod.full.warn1{animation:warn1 .8s ease-in-out infinite alternate}#res .mod.full.warn2{animation:warn2 .4s steps(2,jump-none) infinite alternate}
+#res .bk{display:none!important}
+@media (prefers-reduced-motion:reduce){#res .mod.full{animation:none;box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(125,255,168,.8)}#res .m-heat.full{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 3px rgba(255,107,112,.85)}}
+
+/* the hand never scrolls vertically (it overflowed by a few px and showed a scrollbar); wide screens fan instead of scrolling */
+#hand{overflow-y:hidden}
+body.hud2 #hand{scrollbar-width:none}body.hud2 #hand::-webkit-scrollbar{display:none}
+
+/* ---- unified console: Focus on top, combo underneath, toss bin on the right, toss tiles float above ---- */
+#hudcore{display:flex;align-items:stretch;gap:10px;width:min(900px,100%);justify-self:center;margin-top:44px;padding:8px 8px 7px 12px}
+#hudcore .hc-main{flex:1;min-width:0;display:grid;gap:5px}
+#hudcore #focusbar{position:static;background:none;border:0;box-shadow:none;margin:0;padding:0;width:auto!important;justify-self:stretch;animation:none;border-radius:0}
+#hudcore #focusbar .plate{top:-9px}
+#hudcore.live{border-color:var(--accent);box-shadow:inset 0 1px 0 var(--bevl),inset 0 -2px 0 var(--bevd),0 3px 0 #05070c,0 0 16px rgba(110,168,255,.45)}
+#hudcore.refill{border-color:var(--green)}
+#hudcore.low.live{border-color:var(--red);animation:fblink2 .5s steps(2,jump-none) infinite alternate}
+#hudcore #combo{position:static!important;transform:none!important;left:auto!important;bottom:auto!important;width:auto!important;background:none;border:0;border-top:1px solid rgba(255,255,255,.09);box-shadow:none;border-radius:0;
+ padding:5px 0 0;display:grid;grid-template-columns:auto 1fr minmax(80px,180px);align-items:center;gap:0 12px}
+#hudcore #combo .ct{grid-row:1;grid-column:1;gap:10px;align-items:center}
+#hudcore #combo .ct b{font-size:17px;display:inline-flex;align-items:center;gap:6px}
+#hudcore #combo .ct b::before{content:"";width:16px;height:16px;background:currentColor;-webkit-mask:var(--ic-combo) no-repeat center/contain;mask:var(--ic-combo) no-repeat center/contain}
+#hudcore #combo.idle .ct b{font-size:14px;color:#8b95a8}
+#hudcore #combo .ct span{font-size:12px}
+#hudcore #combo .cn{grid-row:1;grid-column:2;text-align:left;font-size:12px}
+#hudcore #combo .cw{grid-row:1;grid-column:3;height:8px}
+#hudcore #combo.idle .cn{color:var(--muted)}
+#hudcore #combo .cbd{display:none}
+#hudcore #combo:not(.idle) .ct b{color:#36c5ff;text-shadow:0 0 8px rgba(54,197,255,.6)}
+/* toss bin: drag a card here (or tap a card's toss button) */
+#tossbin{flex:none;width:96px;position:relative;display:grid;justify-items:center;align-content:center;gap:2px;border-radius:5px;padding:4px 4px 5px;
+ background:repeating-linear-gradient(-45deg,rgba(233,181,47,.10) 0 6px,transparent 6px 12px),#0b1020;box-shadow:inset 0 2px 5px rgba(0,0,0,.8);border:2px dashed #3a4458;
+ font-family:var(--display);text-transform:uppercase;transition:border-color .15s,transform .15s,background-color .15s}
+#tossbin .tb-ic{width:24px;height:24px;color:#9fd0ff}#tossbin .tb-ic .px{width:100%;height:100%}
+#tossbin b{font-size:12px;font-weight:800;letter-spacing:.08em;line-height:1}
+#tossbin .tb-dots{display:flex;gap:3px}#tossbin .tb-dots i{width:8px;height:8px;border-radius:50%;border:1px solid #36c5ff}#tossbin .tb-dots i.on{background:#36c5ff;box-shadow:0 0 6px #36c5ff}
+#tossbin small{font-size:10px;font-weight:700;letter-spacing:.02em;color:var(--muted);text-align:center;line-height:1.1;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:2.2em}
+#tossbin small .px{font-size:11px;margin-right:2px;color:#9fd0ff}
+#tossbin.live{border-color:#9fd0ff}#tossbin.live small{color:#cfe8ff}
+body.carddrag #tossbin{border-color:#9fd0ff;border-style:solid;animation:binwait .6s ease-in-out infinite alternate}
+body.carddrag.overtoss #tossbin{transform:scale(1.07);background-color:#123056;border-color:#fff;animation:none;box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 3px rgba(159,208,255,.6),0 0 22px rgba(159,208,255,.8)}
+#tossbin.gulp{animation:gulp .45s ease-out}
+@keyframes binwait{to{box-shadow:inset 0 2px 5px rgba(0,0,0,.8),0 0 14px rgba(159,208,255,.55)}}
+@keyframes gulp{0%{transform:scale(1.12);border-color:#fff;box-shadow:0 0 22px rgba(159,208,255,.9)}100%{transform:none}}
+.dragghost.willtoss{box-shadow:0 0 0 4px #9fd0ff,0 14px 30px rgba(0,0,0,.6);transform:rotate(8deg) scale(.86)}
+.dragghost.willtoss::after{content:attr(data-toss);background:#9fd0ff;color:#04121f}
+.dragghost.tossfly::after{display:none}
+/* toss effect tiles above the console */
+#tossfx{position:absolute;left:0;right:0;bottom:calc(100% + 7px);display:flex;flex-wrap:wrap-reverse;justify-content:center;gap:8px;pointer-events:none}
+.tsk{--tc:#9fd0ff;position:relative;display:flex;align-items:center;gap:7px;height:32px;padding:0 8px 0 4px;border-radius:5px;background:linear-gradient(180deg,var(--dash2),var(--dash));border:2px solid var(--tc);
+ box-shadow:inset 0 1px 0 var(--bevl),0 3px 0 #05070c,0 4px 10px rgba(0,0,0,.5);font-family:var(--display);text-transform:uppercase;pointer-events:auto;animation:tskin .25s ease-out;overflow:visible}
+.tsk .ti{width:24px;height:24px;border-radius:3px;background:var(--tc);color:#06101c;display:grid;place-items:center;flex:none}.tsk .ti .px{width:16px;height:16px}
+.tsk .tt{display:grid;line-height:1.05;min-width:0;max-width:150px}
+.tsk .tt b{font-size:13px;font-weight:800;white-space:nowrap}.tsk .tt small{font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis}
+.tsk .tc{font-family:var(--lcdf);font-size:22px;line-height:1;color:var(--lcdi);text-shadow:0 0 5px rgba(166,255,107,.5);min-width:28px;text-align:right}
+.tsk .tb{position:absolute;left:4px;right:4px;bottom:2px;height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden}.tsk .tb i{display:block;height:100%;background:var(--tc)}
+.tsk.wait{border-style:dashed}.tsk.wait .tc{font-family:var(--display);font-size:11px;font-weight:800;color:var(--tc);text-shadow:none;letter-spacing:.06em}
+.tsk.done{opacity:.95;animation:tskin .25s ease-out,tskout .5s ease-in 2.1s forwards}
+.tsk.done .tc{font-family:var(--display);font-size:14px;color:var(--tc);text-shadow:none}
+.tsk.low .tc{color:#ff7b7f;text-shadow:0 0 6px rgba(255,90,96,.8)}
+.tsk.k-buff{--tc:#ffc83d}.tsk.k-bank{--tc:#ffc83d}.tsk.k-chain{--tc:#36c5ff}.tsk.k-setup{--tc:#38c9b9}.tsk.k-done{--tc:#9fd0ff}
+.tsk .tg{display:none;position:absolute;left:50%;top:-19px;transform:translateX(-50%);background:var(--tc);color:#06101c;font-style:normal;font-size:11px;font-weight:800;padding:0 6px;border-radius:3px;line-height:15px;white-space:nowrap;letter-spacing:.04em}
+.tsk.glow{animation:tskglow .45s ease-in-out infinite alternate;border-color:#fff;border-style:solid}
+.tsk.glow .tg{display:block}
+@keyframes tskglow{from{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 2px var(--tc),0 0 10px var(--tc)}to{box-shadow:inset 0 1px 0 var(--bevl),0 0 0 4px var(--tc),0 0 26px var(--tc)}}
+@keyframes tskin{from{transform:translateY(10px) scale(.8);opacity:0}}
+@keyframes tskout{to{transform:translateY(-8px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.tsk,.tsk.glow,#tossbin,#tossbin.gulp,body.carddrag #tossbin{animation:none}.tsk.done{animation:tskout .01s linear 2.5s forwards}}
+@media (min-width:1500px) and (min-height:860px){#hudcore{width:min(1000px,100%)}#tossbin{width:112px}#hudcore #combo .ct b{font-size:19px}#hudcore #combo .cn{font-size:13px}}
+@media (max-width:700px){#hudcore{margin-top:40px;padding:6px 6px 5px 8px;gap:6px}#tossbin{width:62px}#tossbin small{display:none}#tossbin .tb-ic{width:18px;height:18px}
+ #hudcore #combo{grid-template-columns:auto 1fr;gap:0 8px}#hudcore #combo .cn{display:none}#hudcore #combo .cw{grid-column:2}
+ .tsk{height:28px}.tsk .tt small{display:none}.tsk .tt b{font-size:11px}.tsk .tc{font-size:18px;min-width:22px}}
+
+@media (max-height:500px){#hudcore{margin-top:10px}}
+/* ---- iconography: stronger family marks on cards, icons on keywords and HUD plates ---- */
+.hcard .fi{width:22px;height:22px;font-size:15px;border-radius:4px}
+.hcard .ct{min-height:22px}
+.hcard .cx b,.hcard .wx b,.hcard .ef b{font-size:11px;gap:3px}
+.hcard .cx .px,.hcard .wx .px,.hcard .ef .px{font-size:12px}
+.hcard .burn .px{font-size:13px}
+.hcard .lk .px{font-size:13px}
+.kwi::before{content:"";display:inline-block;width:.95em;height:.95em;margin-right:.25em;vertical-align:-.12em;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
+.plate>span[data-ic]::before,.plate>span[data-kw]::before{width:1.05em;height:1.05em;margin-right:.35em;vertical-align:-.16em}
+#kwtip b .px{font-size:1.1em;margin-right:5px;vertical-align:-.15em}
+#hfilters .chip[data-sort] .px{color:inherit;opacity:.85}
 </style>
 
 <div id="title" class="screen page" hidden></div>
@@ -4386,4 +4493,161 @@ function drawPathDeco(t){const P=TG(t),r=race;
  }}
 for(const t of TRACKS)if(t.path)t.S=TG(t).S;
 window.__gfdShape={TG,SCHED,arcTi,shapeOdds,segWords};
+</script>
+<script id="hud3-js">
+/* ===== HUD round 3 (Conner, Oct 27). Loaded after the main script; replaces/wraps a few HUD functions.
+   - Momentum / Heat: outline-only flashes, permanent pulsing outline while full (CSS + the .full class here)
+   - #hudcore: Focus bar and combo meter merged into one console, a toss bin on its right, toss effect tiles above it
+   - Toss: drag a card onto the bin (or tap its toss button) and it flies in; effects become tiles with a countdown,
+     or a dashed "ready" tile while they wait to fire. Hovering a card that a tile would change makes that tile glow.
+   - Icons: keyword + HUD plate icons (CSS masks built from PX), bigger family marks on cards. ===== */
+Object.assign(PX,{
+ toss:['..####..','..#..#..','..####..','...##...','.######.','..####..','#..##..#','########'],
+ board:['..####..','##.##.##','#......#','#.####.#','#......#','#.####.#','#......#','########'],
+ fuel:['####....','#..#.#..','#..#..#.','####..#.','####.##.','####.#..','####....','#####...'],
+ flag:['##.##.#.','#.##.##.','##.##.#.','#.##.##.','#.......','#.......','#.......','#.......'],
+ caution:['...##...','...##...','..#..#..','..#..#..','.#.##.#.','.#....#.','#..##..#','########'],
+ odds:['..####..','.#....#.','#.....##','#....#.#','#.##...#','#.##...#','........','########']
+});
+/* glossary keyword -> icon */
+const KW_IC={pos:'pos',expected:'pos',tires:'tire',damage:'dmg',momentum:'mom',heat:'heat',banked:'boost',crewchief:'crew',odds:'odds',monitor2:'odds',
+ beatclock:'clock',beat:'draw',lapbug:'flag',focus:'focus',slowmo:'slow',succ:'odds',range:'odds',wreck:'wreck',cf:'wreck',setup:'clock',mods:'boost',cost:'tire',
+ toss:'toss',tossfx:'toss',riskfocus:'focus',combo:'combo',followup:'draw',setsup:'combo',crewboard:'board',fleeting:'draw',radio:'crew',pitmod:'pit',fuel:'fuel',
+ pitstrat:'pit',caution:'caution',pit:'pit',restart:'restart',draft:'draft',evade:'shield',setups:'setup',package:'setup',stale:'clock',pitgame:'pit',release:'pit',
+ prep:'board',luckydog:'flag',wavearound:'flag',pressure:'clock',reel_in:'speed',family:'shape',rival:'wreck'};
+/* plates without a glossary key, by their label */
+const PLATE_IC={'car':'car','focus':'focus','beat clock':'clock','pit stop':'pit','setups':'setup','live odds':'odds','monitor 2':'odds','booth':'crew'};
+function iconFor(k){return KW_IC[k]||(PX[k]?k:null);}
+function pxMask(n){const g=PX[n];if(!g)return 'none';let d='';g.forEach((row,y)=>{row.replace(/#+/g,(m,x)=>{d+=`M${x} ${y}h${m.length}v1h-${m.length}z`;return m;});});
+ return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><path d='${d}'/></svg>`)}")`;}
+(function iconCss(){
+ let css=':root{';for(const n in PX)css+=`--ic-${n}:${pxMask(n)};`;css+='}';
+ const sel=[];for(const k in KW_IC)if(PX[KW_IC[k]]){
+  const s=`.kw[data-kw="${k}"]::before,.plate>span[data-kw="${k}"]::before,.gauge .gh>span[data-kw="${k}"]::before`;sel.push(s);
+  css+=`${s}{-webkit-mask-image:var(--ic-${KW_IC[k]});mask-image:var(--ic-${KW_IC[k]})}`;}
+ for(const n in PX){const s=`[data-ic="${n}"]::before`;sel.push(s);css+=`${s}{-webkit-mask-image:var(--ic-${n});mask-image:var(--ic-${n})}`;}
+ css+=`${sel.join(',')}{content:"";display:inline-block;width:.95em;height:.95em;margin-right:.25em;vertical-align:-.12em;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}`;
+ const st=document.createElement('style');st.id='hud3-icons';st.textContent=css;document.head.appendChild(st);
+})();
+function decoratePlates(){
+ for(const sp of document.querySelectorAll('.plate>span:not([data-kw]):not([data-ic])')){const n=PLATE_IC[sp.textContent.trim().toLowerCase()];sp.dataset.ic=n||'';}
+}
+const _kwShow3=kwShow;
+kwShow=function(el){if(typeof drag!=='undefined'&&drag&&drag.on)return;_kwShow3(el);const n=iconFor(el.dataset.kw),b=$('#kwtip b');if(n&&b&&!b.querySelector('.px'))b.insertAdjacentHTML('afterbegin',ic(n));};
+
+/* ---- cards: the toss icon on the toss button (the .pc span stays empty for the deck builder) ---- */
+const _cardFace3=cardFace;
+cardFace=function(cd,h){return _cardFace3(cd,h||{}).replace(/(<span class="burn"[^>]*>)✕/,`$1${ic('toss')}`);};
+const SORT_IC={succ:'odds',risk:'shield',fam:'shape'};
+const _renderFilters3=renderFilters;
+renderFilters=function(){_renderFilters3();for(const c of document.querySelectorAll('#hfilters .chip[data-sort]'))if(!c.querySelector('.px'))c.insertAdjacentHTML('afterbegin',ic(SORT_IC[c.dataset.sort]||'odds'));};
+
+/* ---- the console ---- */
+function buildHudCore(){
+ if($('#hudcore'))return;const fb=$('#focusbar'),cm=$('#combo');if(!fb||!cm)return;
+ const hc=document.createElement('div');hc.id='hudcore';hc.className='mod';
+ hc.innerHTML=`<div id="tossfx" aria-live="polite"></div><div class="hc-main"></div><div id="tossbin" title="Drag a card here to toss it"><div class="tb-ic">${ic('toss')}</div><b data-kw="toss">Toss</b><span class="tb-dots" data-kw="crewboard"></span><small id="tb-note">Drag a card here</small></div>`;
+ fb.parentNode.insertBefore(hc,fb);hc.querySelector('.hc-main').append(fb,cm);
+}
+buildHudCore();
+/* combo lives inside the console now, so nothing positions it */
+layoutCombo=function(){};
+const _layoutBugs3=layoutBugs;
+layoutBugs=function(){
+ buildHudCore();_layoutBugs3();document.body.classList.remove('combo-on');
+ const hb=$('#handband').offsetHeight;
+ if(hud2()){let y=hb+6;$('#booth').style.bottom=y+'px';$('#booth').style.width='';y+=$('#booth').offsetHeight+6;
+  if($('#radio'))$('#radio').style.bottom=y+'px';$('#toast').style.bottom=(y+4)+'px';}
+};
+/* short "what tossing this does right now" */
+function tossShort(cd){const t=cd&&cd.toss;if(!t||!BAL.tossFx)return {ic:'charge',txt:BAL.board?'+1 board charge':'Next card sooner',live:false};
+ const live=tossLive(cd);if(!live)return {ic:'charge',txt:'+1 board charge',live:false};
+ const txt={chain:'Keeps the combo',buff:`+${TOSS_BUFF.v} next ${t.fam?FAM[t.fam].n:''}`,charge:'+1 board charge',draw:'Draw a card',focus:`Focus +${Math.round((t.v||0)*100)}%`,cool:'Heat −1',setup:'Setups +1 lap'}[t.k];
+ return {ic:TOSS_IC[t.k],txt,live:true};}
+/* remember what each toss did so it can show as a tile */
+const _tossEffect3=tossEffect;
+tossEffect=function(cd){const r=race,t=cd&&cd.toss,live=!!(t&&tossLive(cd)),what=_tossEffect3(cd);if(!what||!r||!t)return what;
+ if(live&&t.k==='chain')r.tossChain={id:cd.id,at:r.chainAt,n:cd.n};
+ else if(live&&t.k==='setup')r.tossSetup={fresh:r.setupFresh,n:cd.n};
+ else if(!(live&&t.k==='buff'))(r.tossFlash=r.tossFlash||[]).push({at:performance.now(),ic:live?TOSS_IC[t.k]:'charge',txt:what,n:cd.n,id:'f'+(r.tossFlash.length)});
+ return what;};
+function tossTiles(r){
+ const out=[],pv=cardPreview(),pcd=pv&&pv.cd;
+ for(const b of r.buffs||[])out.push({id:'bank'+(b.fam||''),k:'bank',ic:'boost',lb:`+${b.v} ${b.fam?FAM[b.fam].n:'next card'}`,sub:b.src||'banked',wait:'READY',glow:!!pcd&&(!b.fam||b.fam===pcd.fam),tag:`+${b.v} on this card`});
+ for(const b of r.tossBuffs||[])if(r.t<=b.until)out.push({id:'tb'+b.fam,k:'buff',ic:'boost',fam:b.fam,lb:`+${b.v} ${FAM[b.fam].n}`,sub:b.src,left:b.until-r.t,dur:TOSS_BUFF.sec,glow:!!pcd&&pcd.fam===b.fam,tag:`+${b.v} on this card`});
+ const tc=r.tossChain;
+ if(tc&&r.chainId===tc.id&&r.chainAt===tc.at&&r.chainFam&&r.t-r.chainAt<=comboWin())
+  out.push({id:'tc'+tc.at,k:'chain',ic:'combo',lb:'Combo kept',sub:'next: '+LINK[r.chainFam].map(f=>FAM[f].n).join(' / '),left:comboWin()-(r.t-r.chainAt),dur:comboWin(),glow:!!pcd&&comboFor(pcd)>0,tag:'chains off it'});
+ const ts=r.tossSetup;
+ if(ts&&ts.fresh===r.setupFresh&&r.setups&&r.setups.length){const left=staleLaps()-(lapOf(meCar())-r.setupFresh);
+  out.push({id:'ts'+ts.fresh,k:'setup',ic:'setup',lb:'Setups fresh',sub:`Tossed ${ts.n}`,wait:left>0?`${left} LAP${left>1?'S':''}`:'READY',glow:false});}
+ const now=performance.now();r.tossFlash=(r.tossFlash||[]).filter(f=>now-f.at<2700);
+ for(const f of r.tossFlash)out.push({id:f.id+'@'+f.at,k:'done',ic:f.ic,lb:f.txt.split(' ·')[0],sub:`Tossed ${f.n}`,done:true,glow:false});
+ return out;}
+function tileHtml(t){return `<div class="tsk k-${t.k}${t.wait?' wait':''}${t.done?' done':''}" data-id="${t.id}"><span class="ti">${ic(t.ic)}</span><span class="tt"><b>${esc(t.lb)}</b><small>${esc(t.sub||'')}</small></span>`+
+ `<span class="tc">${t.done?'✓':t.wait?esc(t.wait):''}</span>${t.left!=null?'<i class="tb"><i></i></i>':''}<em class="tg">▼ ${esc(t.tag||'')}</em></div>`;}
+function hudCoreTick(r){
+ const hc=$('#hudcore');if(!hc)return;const fb=$('#focusbar');
+ for(const c of ['live','low','refill'])hc.classList.toggle(c,!!(fb&&fb.classList.contains(c)));
+ if(!r)return;
+ // tiles: rebuild when the set changes, then update countdowns and glow every frame
+ const tiles=tossTiles(r),box=$('#tossfx'),key=tiles.map(t=>t.id+'|'+t.lb+'|'+t.sub+'|'+(t.wait||'')).join('/');
+ if(box._k!==key){box._k=key;box.innerHTML=tiles.map(tileHtml).join('');}
+ tiles.forEach((t,i)=>{const el=box.children[i];if(!el)return;el.classList.toggle('glow',!!t.glow);
+  if(t.left!=null){const s=clamp(Math.ceil(t.left-0.05),0,Math.round(t.dur)),c=el.querySelector('.tc');if(c._s!==s){c._s=s;c.textContent=s+'s';}el.classList.toggle('low',t.left<4);
+   const bar=el.querySelector('.tb i');if(bar)bar.style.width=clamp(t.left/t.dur,0,1)*100+'%';}});
+ // bin: board charges + what the hovered / dragged card would do if tossed
+ const bin=$('#tossbin');if(!bin)return;
+ const dots=BAL.board?[...Array(BAL.board).keys()].map(i=>`<i class="${i<(r.board||0)?'on':''}"></i>`).join(''):'';const dk=bin.querySelector('.tb-dots');if(dk._h!==dots){dk._h=dots;dk.innerHTML=dots;}
+ const pv=cardPreview(),h=pv&&r.hand.find(x=>x.uid===pv.uid),ts=pv?tossShort(pv.cd):null,special=!!(h&&h.special);
+ const note=pv?(special?"Can't toss this one":`${ic(ts.ic)}${esc(ts.txt)}`):'Drag a card here';
+ const ne=$('#tb-note');if(ne._h!==note){ne._h=note;ne.innerHTML=note;}
+ bin.classList.toggle('live',!!(ts&&ts.live&&!special));
+ if(drag&&drag.on&&drag.ghost)drag.ghost.dataset.toss=special?"Can't toss":'Toss: '+(ts?ts.txt:'+1 board charge');
+ if(now3()-(hudCoreTick.dp||0)>500){hudCoreTick.dp=now3();decoratePlates();}
+}
+function now3(){return performance.now();}
+const _focusBarTick3=focusBarTick;
+focusBarTick=function(r){_focusBarTick3(r);hudCoreTick(r);};
+/* Momentum / Heat: permanent pulsing outline while full */
+const _renderRes3=renderRes;
+renderRes=function(){_renderRes3();const r=race;if(!r)return;const m=$('#m-mom'),h=$('#m-heat');
+ if(m)m.classList.toggle('full',r.momentum>=5);if(h)h.classList.toggle('full',r.heat>=5);};
+
+/* ---- in-world toss: drop a dragged card on the bin, or tap its toss button; either way the card flies into the bin ---- */
+function overBin(x,y){const b=$('#tossbin');if(!b||!b.offsetParent)return false;const q=b.getBoundingClientRect();return x>=q.left-16&&x<=q.right+16&&y>=q.top-16&&y<=q.bottom+16;}
+addEventListener('pointermove',e=>{if(!drag||!drag.on||!drag.ghost)return;const ob=overBin(e.clientX,e.clientY);
+ drag.ghost.classList.toggle('willtoss',ob);document.body.classList.toggle('overtoss',ob);if(ob){drag.ghost.classList.remove('willplay');document.body.classList.remove('overplay');}});
+function flyToBin(g){const b=$('#tossbin');if(!g)return;
+ if(!b||matchMedia('(prefers-reduced-motion:reduce)').matches){g.remove();if(b){b.classList.remove('gulp');void b.offsetWidth;b.classList.add('gulp');}return;}
+ const q=b.getBoundingClientRect(),gr=g.getBoundingClientRect();g.classList.remove('willplay','willtoss');g.classList.add('tossfly');
+ const dx=q.left+q.width/2-(gr.left+gr.width/2),dy=q.top+q.height/2-(gr.top+gr.height/2);
+ const a=g.animate([{transform:'rotate(-4deg) scale(1.06)',opacity:1},{transform:`translate(${dx*0.55}px,${dy*0.55-40}px) rotate(${dx>=0?14:-14}deg) scale(.6)`,opacity:1,offset:.55},{transform:`translate(${dx}px,${dy}px) rotate(${dx>=0?30:-30}deg) scale(.15)`,opacity:.3}],{duration:380,easing:'ease-in',fill:'forwards'});
+ a.onfinish=()=>{g.remove();b.classList.remove('gulp');void b.offsetWidth;b.classList.add('gulp');};}
+const _burnCard3=burnCard;
+burnCard=function(uid,o){
+ if(race&&race.phase!=='finished'&&!(o&&o.noFly)&&!window.__gfdHeadless){const h=race.hand.find(x=>x.uid===uid),el=document.querySelector(`.hcard[data-uid="${uid}"]`);
+  if(h&&!h.special&&el){const q=el.getBoundingClientRect(),g=el.cloneNode(true);g.classList.remove('armed','armed2','best','dim','combo');g.classList.add('dragghost');
+   Object.assign(g.style,{left:q.left+'px',top:q.top+'px',width:q.width+'px',height:q.height+'px',margin:'0'});document.body.appendChild(g);flyToBin(g);}}
+ return _burnCard3(uid);};
+const _dragEnd3=dragEnd;
+dragEnd=function(e,cancel){
+ const d=drag;document.body.classList.remove('overtoss');
+ if(d&&d.on&&!cancel&&race&&overBin(e.clientX,e.clientY)){const h=race.hand.find(x=>x.uid===d.uid);
+  if(h&&!h.special){drag=null;d.el.classList.remove('dragging');document.body.classList.remove('carddrag','overplay');d.el._dragEnd=Date.now();
+   race.sel=d.prevSel&&d.prevSel!==d.uid&&race.hand.some(x=>x.uid===d.prevSel)?d.prevSel:null;
+   flyToBin(d.ghost);burnCard(d.uid,{noFly:1});return;}
+  return _dragEnd3(e,true);}
+ return _dragEnd3(e,cancel);};
+
+/* ---- tutorial text follows the new console + bin (targets keep their ids) ---- */
+(function(){const st=TUT_STEPS.find(s=>s.title==='Crew Board');
+ if(st){st.t='#tossbin';st.html=()=>`<p>This is the toss bin. The dots are the ${K('Crew Board','crewboard')}: every card you ${K('toss','toss')} in here or let go back to the deck adds a charge. At ${BAL.board} charges your crew hands you a fresh card, so a dead card is never totally wasted.</p>`;}
+ const te=TUT_STEPS.find(s=>s.title==='Toss effects');
+ if(te){const h0=te.html;te.html=()=>h0().replace('shown by the icon on the <b>✕</b> button under each card','shown by the icon on the toss button under each card. Drag a card onto the toss bin (or tap that button) to toss it')
+  .replace('</ul>','<li>What a toss sets up waits above the Focus bar as a tile: a countdown while it lasts, or READY while it waits to fire. Hover a card and any tile it would use lights up.</li></ul>');}
+ const cb=TUT_STEPS.find(s=>s.title==='Combos');
+ if(cb){const h0=cb.html;cb.html=()=>h0().replace('This meter shows it:','The combo row under the Focus bar shows it:');}
+})();
+if(typeof race!=='undefined'&&race)layoutBugs();
 </script>
