@@ -7,7 +7,7 @@ Targets: PC first (closed beta on Steam Playtest), then Nintendo Switch. Engine:
 ## What's in this repo
 
 ```
-prototype/            The browser slice (v35): the playable reference for every rule in the game
+prototype/            The browser slice (v36): the playable reference for every rule in the game
   green-flag-deck.html  Open it in a browser to play. One file, no build step.
   harness/              Headless balance harness (Node + Playwright) and summary scripts
 docs/

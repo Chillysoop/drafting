@@ -1,3 +1,4 @@
+// Step 15b: optional bal.coll (extra collection cards) and bal.deckFor ('same' or a track offset) to test race decks.
 // Balance harness v6 (step 8): v5 + 'human' tosses on purpose when a toss effect is live (and the card is weak or dead),
 // the human's Focus is the game's own Focus meter (beat refills, risky successes, Focus tosses and Perfect Stops all count), new policies 'human2' (tosses only dead or <40% cards), 'bold' (human timing,
 // plays >=50% / <8% wreck) and 'hspam' (human timing, always plays the best card), and toss/refill stats.
@@ -29,7 +30,11 @@ const {chromium}=require('playwright');
   function runRace(arch,trk,policy){if(bal.seed!=null)seedRng((bal.seed*7919+(__rs++)*104729+trk*31+arch.length*1009)>>>0);
    g.titleSel.arch=arch;g.titleSel.diff='normal';g.titleSel.info='full';g.titleSel.stakes='standard';
    window.__gfdPitPolicy=policy==='none'?'chief':'human';
-   g.newCareer();if(bal.tune&&g.setTune)g.setTune(bal.tune);if(bal.statBoost)for(const k of ['power','handling','aero','racecraft','defense','consistency','tireMgmt'])g.G.stats[k]+=bal.statBoost;g.G.raceIdx=trk;g.startRace();const r=g.race;
+   g.newCareer();if(bal.tune&&g.setTune)g.setTune(bal.tune);if(bal.statBoost)for(const k of ['power','handling','aero','racecraft','defense','consistency','tireMgmt'])g.G.stats[k]+=bal.statBoost;g.G.raceIdx=trk;
+   // step 15b: bal.coll adds cards to the collection; bal.deckFor builds the race deck with the game's auto-build for that track index ('same' = this race), else the whole collection races
+   if(bal.coll){g.G.coll=[...g.G.coll,...bal.coll];g.G.deck=[...g.G.coll];}
+   if(bal.deckFor!=null&&g.autoDeck)g.G.deck=g.autoDeck(g.TRACKS[bal.deckFor==='same'?trk:(trk+bal.deckFor)%5]);
+   g.startRace();const r=g.race;
    const BAL=g.BAL||{slowmo:1};const dt=0.05;
    let dry=0;const S={focus:1,hz:0,hzSeen:null,t:0,nextLook:2.5,pend:null,lastBeat:0,beats:0,slowReal:0,idleMax:0,handS:0,deadS:0,emptyS:0,samples:0,odds:[],fg:0,tossFx:0};
    while(g.race===r&&r.phase!=='finished'){
