@@ -27,3 +27,5 @@ jobs:
         run: node prototype/harness/season-smoke.js "$PWD/prototype/green-flag-deck.html"
       - name: Collection and race deck builder check
         run: node prototype/harness/deck-smoke.js "$PWD/prototype/green-flag-deck.html"
+      - name: HUD smoke (console, toss bin, tiles)
+        run: node prototype/harness/hud-smoke.js "$PWD/prototype/green-flag-deck.html"

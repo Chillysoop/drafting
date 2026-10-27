@@ -2,13 +2,13 @@
 
 `green-flag-deck.html` is the playable browser slice, version 37 (Oct 27, 2026). It is one self-contained file: open it in a browser to play. It is the reference for every race rule until the Unity port reaches parity (see `../docs/port-plan.md`).
 
-What v37 has: 20 cars and 10 teams; five tracks (Millbrook short track, Carver intermediate, Talon Ridge superspeedway, Pinewood kart circuit, Ridgeback road course); 12 s draw beats with slow-mo and drag-to-play; five-tier odds on every card; combos, Heat, Momentum and Focus; crew radio calls; real pit road with fuel windows, cautions and the pit stop card game; car setup and tunes that shift the deck; lasting damage; five personas; a 10-race season with a calendar, points standings and save/continue in browser storage (v36, roadmap step 15); a card collection and a race deck of 12 to 16 cards you build before each race in a deck builder that shows real cards, with track minimums and slot limits set by your tune (v37, step 15b); plus rewards and a shop; test track practice mode; the first-lap tutorial; and four looks to compare (press L).
+What v38 has: 20 cars and 10 teams; five tracks (Millbrook short track, Carver intermediate, Talon Ridge superspeedway, Pinewood kart circuit, Ridgeback road course); 12 s draw beats with slow-mo and drag-to-play; five-tier odds on every card; combos, Heat, Momentum and Focus; crew radio calls; real pit road with fuel windows, cautions and the pit stop card game; car setup and tunes that shift the deck; lasting damage; five personas; a 10-race season with a calendar, points standings and save/continue in browser storage (v36, roadmap step 15); a card collection and a race deck of 12 to 16 cards you build before each race in a deck builder that shows real cards, with track minimums and slot limits set by your tune (v37, step 15b); one HUD console with Focus on top and the combo row under it, toss effects as countdown or READY tiles above it, and a toss bin you drag cards into (v38); plus rewards and a shop; test track practice mode; the first-lap tutorial; and four looks to compare (press L).
 
 ## Changing it
 
 Edit the HTML directly and open a pull request. Before merging a rule or balance change:
 
-1. `node harness/smoke.js "$PWD/green-flag-deck.html"` and `node harness/season-smoke.js "$PWD/green-flag-deck.html"` and `node harness/deck-smoke.js "$PWD/green-flag-deck.html"` must pass with 0 page errors.
+1. `node harness/smoke.js "$PWD/green-flag-deck.html"` and `node harness/season-smoke.js "$PWD/green-flag-deck.html"` and `node harness/deck-smoke.js "$PWD/green-flag-deck.html"` and `node harness/hud-smoke.js "$PWD/green-flag-deck.html"` must pass with 0 page errors.
 2. Run the harness on the same seed before and after, and put both summaries in the PR:
    `cd harness && bash rp.sh "$PWD/../green-flag-deck.html" after 40 none,human,spam ',"seed":61'` then `python3 sum6.py after`.
 
