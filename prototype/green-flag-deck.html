@@ -958,6 +958,11 @@ body.carddrag.overtoss #tossbin{transform:scale(1.07);background-color:#123056;b
  .tsk{height:28px}.tsk .tt small{display:none}.tsk .tt b{font-size:11px}.tsk .tc{font-size:18px;min-width:22px}}
 
 @media (max-height:500px){#hudcore{margin-top:10px}}
+/* thin family-color border around the whole card (the top stripe stays thick) */
+.hcard::after{content:"";position:absolute;inset:0;border:2px solid var(--fc);border-top:0;border-radius:0 0 7px 7px;pointer-events:none}
+body.look-pixel .hcard::after{border-width:3px;border-top:0;border-radius:0}
+body.look-poly .hcard::after{border-radius:0}
+body.look-tv .hcard::after{display:none}
 /* ---- iconography: stronger family marks on cards, icons on keywords and HUD plates ---- */
 .hcard .fi{width:22px;height:22px;font-size:15px;border-radius:4px}
 .hcard .ct{min-height:22px}
