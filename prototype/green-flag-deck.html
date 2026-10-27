@@ -50,6 +50,7 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:now
 .tw{overflow-x:auto}
 .famdot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
 table.calendar tr.done td{color:var(--muted)}table.calendar tr.done td .tier{opacity:.8}table.calendar tr.next td{background:rgba(47,179,106,.14)}
+.btn.armed{background:var(--red);border-color:var(--red);color:#fff}
 .tier{display:inline-block;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:13px;padding:1px 8px;border-radius:2px;letter-spacing:.05em}
 .t-rough{background:var(--red);color:#fff}.t-solid{background:var(--amber);color:#241a00}.t-strong{background:var(--green);color:#04150b}.t-victory{background:#fff;color:#000}
 
@@ -2909,10 +2910,14 @@ function renderTitle(){
  el.querySelectorAll('[data-dial]').forEach(b=>b.onclick=()=>{titleSel[b.dataset.dial]=b.dataset.val;titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-sched]').forEach(b=>b.onclick=()=>{titleSel.sched=b.dataset.sched;titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS[b.dataset.preset];Object.assign(titleSel,{diff:p.diff,info:p.info,stakes:p.stakes,name:$('#t-name').value});renderTitle();});
- const okNew=()=>!readSave()||confirm('Starting a new career replaces your saved season. Start over?');
- {const c=$('#t-cont');if(c)c.onclick=()=>{continueSeason();};const d=$('#t-del');if(d)d.onclick=()=>{if(confirm('Delete your saved season? This cannot be undone.')){clearSave();titleSel.name=$('#t-name').value;renderTitle();}};}
- $('#t-tut').onclick=()=>{if(!okNew())return;clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();startTutorial();};
- $('#t-go').onclick=()=>{if(!okNew())return;clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();showGarage();};
+ // two-tap confirm in the page: window.confirm() is blocked in sandboxed frames (the artifact viewer), where it returns false
+ const arm=(b,label,fn)=>{if(!b)return;const txt=b.innerHTML;b.onclick=()=>{if(b.dataset.armed){fn();return;}b.dataset.armed='1';b.innerHTML=label;b.classList.add('armed');setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.innerHTML=txt;b.classList.remove('armed');}},4000);};};
+ const hasSave=!!readSave();
+ const goTut=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();startTutorial();};
+ const goNew=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollObjectives();showGarage();};
+ {const c=$('#t-cont');if(c)c.onclick=()=>{continueSeason();};arm($('#t-del'),'Tap again to delete',()=>{clearSave();titleSel.name=$('#t-name').value;renderTitle();});}
+ if(hasSave){arm($('#t-tut'),'Tap again: replaces your saved season',goTut);arm($('#t-go'),'Tap again: replaces your saved season',goNew);}
+ else{$('#t-tut').onclick=goTut;$('#t-go').onclick=goNew;}
  showScreen('title');
 }
 

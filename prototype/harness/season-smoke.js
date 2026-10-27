@@ -63,4 +63,13 @@ const html=process.argv[2],shots=process.argv[3]||null;
  if(ab.n!==0||ab.idx!==0||ab.money!==m0||ab.inRace||!ab.garage||!ab.notice)fail('ironman mid-race continue '+JSON.stringify(ab));
  await shot('ironman-restart');
  console.log('ironman restart ok:',JSON.stringify(ab));
+ // Delete save inside a sandboxed frame like the artifact viewer, where window.confirm() is blocked: two taps must delete it
+ {const fs=require('fs'),path=require('path'),os=require('os');const wrap=path.join(os.tmpdir(),'gfd-sandbox-wrap.html');
+  fs.writeFileSync(wrap,`<iframe sandbox="allow-scripts allow-same-origin" src="file://${html}" style="width:1200px;height:900px"></iframe>`);
+  await p.evaluate(()=>window.__gfd.saveSeason());await p.goto('file://'+wrap);await p.waitForTimeout(800);
+  const F=p.frames().find(f=>f!==p.mainFrame());
+  if(!(await F.$('#t-del')))fail('no Delete save button in the sandboxed frame');
+  else{await F.click('#t-del');await F.click('#t-del');await F.waitForTimeout(200);
+   const left=await F.evaluate(()=>!!localStorage.getItem('gfd-season-v1')||!!document.getElementById('t-cont'));
+   if(left)fail('Delete save did nothing in a sandboxed frame');else console.log('sandboxed delete ok');}}
  console.log('pageerrors',errs.length,errs.slice(0,3));if(errs.length)process.exitCode=1;await b.close();})();
