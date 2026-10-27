@@ -27,17 +27,24 @@ const html=process.argv[2],shots=process.argv[3]||null;
  if(caps1.attack!==4+(s.tune.focus==='bumper'?1:0))fail('tight++ attack cap '+JSON.stringify(caps1));
  // fill attack slots and check + is blocked
  await click('[data-tab="pass"]');
- for(let k=0;k<8;k++){const btn=await p.$('[data-in]:not([disabled])');if(!btn)break;await btn.click();await p.waitForTimeout(40);}
+ for(let k=0;k<8;k++){const btn=await p.$('#deckb [data-in]:not([disabled])');if(!btn)break;await btn.click();await p.waitForTimeout(40);}
  const used=await p.evaluate(()=>{const g=window.__gfd;return g.G.deck.filter(id=>['pass','risk'].includes(g.CARDS[id].fam)).length;});
  if(used>caps1.attack)fail('attack over cap '+used);
  await click('[data-tab="all"]');
  if(!(await ok())){await click('#d-fix');}
  if(!(await ok()))fail('fix rules did not make it legal');
- await click('#d-done');const secs=(Date.now()-t0)/1000;
- if(await p.evaluate(()=>document.getElementById('garage').hidden))fail('done did not go back to the garage');
+ const secs=(Date.now()-t0)/1000;
+ // Aero moves the max: Downforce ++ = 18, Low drag ++ = 14
+ await click('[data-su="aero"][data-v="-2"]');if((await p.evaluate(()=>window.__gfd.deckSize().max))!==18)fail('downforce++ max');
+ await click('[data-su="aero"][data-v="2"]');if((await p.evaluate(()=>window.__gfd.deckSize().max))!==14)fail('low drag++ max');
+ if((await G()).deck.length>14&&await ok())fail('15+ cards legal at low drag++');
+ await click('#d-auto');if(!(await ok())||(await G()).deck.length>14)fail('auto at low drag++');
+ await click('#d-done');
+ // car sheet shows the race deck as cards
+ await click('#g-sheet');await click('[data-tab="deck"]');const nc=await p.$$eval('#mbox .dcard',x=>x.length);if(nc<5)fail('car sheet deck cards '+nc);await shot('sheet-deck');await p.evaluate(()=>closeSheet());
  // garage auto-fix: break the next track's minimum, then come back for the next race
- await p.evaluate(()=>{const g=window.__gfd,G=g.G;const nt=g.TRACKS[g.arcTi(G.raceIdx+1)],m=g.TRACK_MIN[nt.id];const f=Object.keys(m)[0];G.deck=G.deck.filter(id=>g.CARDS[id].fam!==f);while(G.deck.length<10)G.deck.push(G.coll.find(id=>g.CARDS[id].fam==='crew'));G.raceIdx++;g.showGarage();});
- if(!(await ok()))fail('garage did not fix the deck for the new track');
+ await p.evaluate(()=>{const g=window.__gfd,G=g.G;const nt=g.TRACKS[g.arcTi(G.raceIdx+1)],m=g.TRACK_MIN[nt.id];const f=Object.keys(m)[0];G.deck=G.deck.filter(id=>g.CARDS[id].fam!==f);while(G.deck.length<12)G.deck.push(G.coll.find(id=>g.CARDS[id].fam==='crew'));G.raceIdx++;g.showGarage();});
+ if(!(await ok()))fail('garage did not fix the deck for the new track '+await p.evaluate(()=>{const g=window.__gfd;return JSON.stringify([g.G.tune,g.G.deck,g.deckRules(g.TRACKS[g.arcTi(g.G.raceIdx)])]);}));
  if(!(await p.evaluate(()=>!!window.__gfd.G.deckNote)))fail('no note after garage fix');
  await shot('garage-fixed');
  // an illegal deck blocks Go racing

@@ -672,10 +672,34 @@ body.aiming.aimout .gauge .gplay{background:var(--panel3);color:var(--muted);ani
 @media (max-width:700px){#pitgame{top:calc(env(safe-area-inset-top,0px) + 44px);padding:14px 9px 9px;max-height:calc(100% - 60px);overflow:auto}#pitgame .pg-hand{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}#pitgame .pgc{min-height:66px}#pitgame .pg-go,#pitgame .pg-rel{min-width:110px}}
 .sudial{display:flex;flex-wrap:wrap;gap:4px}.sudial .chip{font-size:13px;padding:4px 10px}
 .sufx{display:grid;gap:3px;font-size:13px;background:var(--panel3);padding:8px 10px;border-radius:4px}.sufx b{display:inline-block;min-width:78px;color:var(--amber)}
+/* garage cards (deck builder, car sheet): the hand card's face, bigger, with the effect text */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:14px 10px}
+.hcard.dcard{width:auto;height:auto;min-height:250px;padding:6px 8px 8px;cursor:pointer;gap:4px}
+.hcard.dcard:hover{transform:translateY(-3px)}
+.hcard.dcard kbd,.hcard.dcard .burn,.hcard.dcard .obr,.hcard.dcard .mods{display:none}
+.hcard.dcard .pc{font-size:34px;display:flex;align-items:baseline;gap:4px}.hcard.dcard .pc small{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--card-muted);letter-spacing:0}
+.hcard.dcard .nm{margin-top:2px;font-size:17px}
+.hcard.dcard .ef{max-height:none}
+.hcard.dcard .dtxt{font-size:12px;line-height:1.3;color:var(--card-ink);margin:0}
+.hcard.dcard .dtoss{display:flex;gap:4px;align-items:flex-start;font-size:11px;line-height:1.25;color:#3a4152;background:#e8eefc;border-radius:3px;padding:3px 5px;margin:0;text-align:left}
+.hcard.dcard .dtags{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:auto}
+.hcard.dcard .dtags b{display:inline-flex;align-items:center;gap:2px;font-family:var(--mono);font-size:10px;font-weight:600;border-radius:2px;padding:1px 4px;background:#e3e6ee;color:#3a4152;text-transform:uppercase}
+.hcard.dcard .dtags .dt-w{background:#c62b2b;color:#fff}.hcard.dcard .dtags .dt-s{background:#d7f3e2;color:#0f5e34}.hcard.dcard .dtags .r-uncommon{background:#dfe9ff;color:#1d4ea8}.hcard.dcard .dtags .r-rare{background:#ffe9b0;color:#6b4d00}
+.hcard.dcard .dact{display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px;border-top:1px solid #d9dde6;padding-top:5px}
+.hcard.dcard .dbtn{width:34px;height:28px;border-radius:4px;border:0;background:var(--panel3);color:var(--ink);font-family:var(--display);font-weight:800;font-size:20px;line-height:1}
+.hcard.dcard .dbtn[data-in]{background:var(--green);color:#04150b}.hcard.dcard .dbtn:disabled{opacity:.3;cursor:not-allowed}
+.hcard.dcard .dcount{font-family:var(--mono);font-size:12px;color:var(--card-muted)}
+.hcard.dcard.in{box-shadow:0 0 0 3px var(--green),0 4px 12px rgba(0,0,0,.45)}
+.hcard.dcard .dind{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--green);color:#04150b;font-family:var(--display);font-weight:800;font-size:12px;text-transform:uppercase;border-radius:3px;padding:0 6px;white-space:nowrap;display:inline-flex;gap:3px;align-items:center}
+.hcard.dcard .downed{position:absolute;top:-10px;right:-6px;background:var(--ink);color:var(--bg);font-family:var(--display);font-weight:800;font-size:13px;border-radius:3px;padding:0 6px}
+.dbsize{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-size:20px;font-weight:700}.dbsize b{font-size:28px}.dbsize.ok{color:#58d68d}.dbsize.bad{color:#ff7b7f}
+.dbgrid{grid-template-columns:minmax(0,1fr) 340px}@media(max-width:900px){.dbgrid{grid-template-columns:1fr}}
+.dbside{position:sticky;top:12px}@media(max-width:900px){.dbside{position:static}}
+.dstack{display:flex;flex-wrap:wrap;gap:5px}
+.dmini{display:inline-flex;align-items:center;gap:5px;background:var(--card);color:var(--card-ink);border:0;border-left:5px solid var(--fc);border-radius:4px;padding:3px 7px;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:13px}
+.dmini .px{color:var(--fc)}.dmini b{font-family:var(--mono);font-size:11px}.dmini:hover{outline:2px solid var(--red)}
 .famstrip{display:flex;flex-wrap:wrap;gap:10px;font-size:13px}
-.drules{display:grid;gap:3px;font-size:13px}.drules>div{display:grid;grid-template-columns:16px 1fr auto;gap:6px}.dbtable [data-in],.dbtable [data-out]{font-size:16px;min-width:30px;line-height:1}.drules .ok b{color:#2fb36a}.drules .bad{color:#ff7b7f}
-.dbgrid{grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:12px}@media(max-width:900px){.dbgrid{grid-template-columns:1fr}}
-.dbtable tr.in td{background:rgba(47,179,106,.10)}.dbtable td{vertical-align:top}
+.drules{display:grid;gap:3px;font-size:13px}.drules>div{display:grid;grid-template-columns:16px 1fr auto;gap:6px}.drules .ok b{color:#2fb36a}.drules .bad{color:#ff7b7f}
 .sufit{font-size:12px;font-family:var(--mono);padding:2px 8px;border-radius:2px;background:var(--panel3)}.sufit.good{color:#2fb36a}.sufit.bad{color:#ff7b7f}
 .personas{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 
@@ -1253,10 +1277,14 @@ function tuneFx(u){u=u||tuneOf();const out=[];const pct=x=>(x>=1?'+':'−')+Math
  return out;}
 
 /* Collection and race deck (step 15b, board Q19). G.coll keeps every card you own; G.deck is the race deck you build from it before each race.
-   Rules: 10 to 15 cards, a minimum of one family for each track, and slot caps that your car tune moves:
+   Rules (Conner, Oct 27): at least 12 cards, at most 16 for a stock car (CAR_TYPES; later series bring their own); Aero moves the max:
+   Downforce +1 per notch (more grip, room for more tools), Low drag −1 per notch (a lean car). A family minimum for each track, and slot caps that your tune moves:
    Attack (Passing + High risk) 6 + Handling, Defense (Defending + Car) 6 − Handling, Drafting 5 + Aero; the combo focus adds 1 slot to its group.
    A minimum or the size floor relaxes when your collection can't meet it. */
-const DECK_MIN=10,DECK_MAX=15,DECK_AUTO=15; // harness: a full 15-card auto deck beat a 12-card one by ~0.8 places
+const CAR_TYPES={stock:{n:'Stock car',min:12,max:16}};
+const carType=()=>CAR_TYPES[(G&&G.carType)||'stock'];
+function deckSize(u){u=u||(G&&G.tune)||{hand:0,aero:0,focus:null};const ct=carType();return {min:ct.min,max:ct.max-u.aero};}
+// harness (Oct 27): a full auto deck beat a 12-card one by ~0.8 places, so auto-build fills to the max
 const SLOT={attack:{n:'Attack',fams:['pass','risk'],base:6},defense:{n:'Defense',fams:['defend','car'],base:6},draft:{n:'Drafting',fams:['draft'],base:5}};
 const FOCUS_SLOT={draft:'draft',bumper:'attack',longrun:'defense'};
 const TRACK_MIN={mill:{defend:2},carver:{car:2},talon:{draft:3},pine:{pass:2},ridge:{car:2}};
@@ -1267,14 +1295,14 @@ function slotCaps(u){u=u||(G&&G.tune)||{hand:0,aero:0,focus:null};const c={attac
 const slotUsed=(deck,k)=>deck.reduce((n,id)=>n+(SLOT[k].fams.includes(CARDS[id].fam)),0);
 function deckRules(t,deck,u){deck=deck||G.deck;const caps=slotCaps(u),coll=G.coll||G.deck,out=[];
  const reach=Object.keys(SLOT).reduce((n,k)=>n+Math.min(caps[k],coll.filter(id=>SLOT[k].fams.includes(CARDS[id].fam)).length),0)+coll.filter(id=>!slotOf(CARDS[id].fam)).length;
- const lo=Math.min(DECK_MIN,reach);
- out.push({k:'size',ok:deck.length>=lo&&deck.length<=DECK_MAX,txt:`Size ${lo}–${DECK_MAX}`,have:deck.length,need:lo});
+ const sz=deckSize(u),lo=Math.min(sz.min,reach);
+ out.push({k:'size',ok:deck.length>=lo&&deck.length<=sz.max,txt:`${carType().n}: ${lo}–${sz.max} cards${lo<sz.min?` (your cards fit only ${lo} with this tune)`:''}${(u||G.tune).aero?' (Aero moves the max)':''}`,have:deck.length,need:lo,max:sz.max});
  for(const [f,n] of Object.entries(TRACK_MIN[t.id]||{})){const need=Math.min(n,famCount(coll,f));out.push({k:'min',f,ok:famCount(deck,f)>=need,txt:`${t.short}: at least ${need} ${FAM[f].n}${need<n?` (you own ${need})`:''}`,have:famCount(deck,f),need});}
  for(const k of Object.keys(SLOT))out.push({k:'cap',slot:k,ok:slotUsed(deck,k)<=caps[k],txt:`${SLOT[k].n} slots (${SLOT[k].fams.map(f=>FAM[f].n).join(' + ')})`,have:slotUsed(deck,k),need:caps[k]});
  return out;}
 const deckOk=(t,deck,u)=>deckRules(t,deck,u).every(r=>r.ok);
 // why a card can't go in (null = it can)
-function addBlock(id,t,deck,u){deck=deck||G.deck;if(cnt(deck,id)>=cnt(G.coll,id))return 'All your copies are in the deck';if(deck.length>=DECK_MAX)return `The deck is full (${DECK_MAX})`;
+function addBlock(id,t,deck,u){deck=deck||G.deck;if(cnt(deck,id)>=cnt(G.coll,id))return 'All your copies are in the deck';{const mx=deckSize(u).max;if(deck.length>=mx)return `The deck is full (${mx})`;}
  const s=slotOf(CARDS[id].fam);if(s&&slotUsed(deck,s)>=slotCaps(u)[s])return `${SLOT[s].n} slots are full. Change your tune for more.`;return null;}
 // how good a card is for this track and tune: rarity, track minimum, track shape, tune draw weight, your own success with it
 function cardScore(id,t,u){const cd=CARDS[id],f=cd.fam,h=G.hist[id];let s={common:1,uncommon:1.6,rare:2.2,special:1.8}[cd.rar]||1;
@@ -1287,14 +1315,17 @@ function fixDeck(t,deck,u,target){deck=[...(deck||G.deck)].filter(id=>CARDS[id])
  for(const k of Object.keys(SLOT))while(slotUsed(deck,k)>caps[k]){const w=byScore(deck.filter(id=>SLOT[k].fams.includes(CARDS[id].fam)),t,u).pop();deck.splice(deck.lastIndexOf(w),1);}
  const spare=()=>byScore(G.coll.filter((id,i)=>G.coll.indexOf(id)===i).flatMap(id=>Array(Math.max(0,cnt(G.coll,id)-cnt(deck,id))).fill(id)),t,u);
  const rules=()=>deckRules(t,deck,u);
- for(const r of rules().filter(r=>r.k==='min'))while(famCount(deck,r.f)<r.need){let c=spare().find(id=>CARDS[id].fam===r.f&&!addBlock(id,t,deck,u));
-  if(!c){const s=slotOf(r.f),w=s&&byScore(deck.filter(id=>SLOT[s].fams.includes(CARDS[id].fam)&&CARDS[id].fam!==r.f),t,u).pop();if(!w)break;deck.splice(deck.lastIndexOf(w),1);continue;}deck.push(c);}
- const lo=rules()[0].need,want=Math.max(lo,Math.min(DECK_MAX,target||lo));
+ // a minimum the deck can't take yet (full deck or full slot): drop the weakest card in the way, then add
+ for(const r of rules().filter(r=>r.k==='min'))while(famCount(deck,r.f)<r.need){const c=spare().find(id=>CARDS[id].fam===r.f);if(!c)break;
+  if(!addBlock(c,t,deck,u)){deck.push(c);continue;}
+  const s=slotOf(r.f),slotFull=s&&slotUsed(deck,s)>=caps[s],w=byScore(deck.filter(id=>CARDS[id].fam!==r.f&&(!slotFull||SLOT[s].fams.includes(CARDS[id].fam))),t,u).pop();
+  if(!w)break;deck.splice(deck.lastIndexOf(w),1);}
+ const mx=deckSize(u).max,lo=rules()[0].need,want=Math.max(lo,Math.min(mx,target||lo));
  while(deck.length<want){const c=spare().find(id=>!addBlock(id,t,deck,u));if(!c)break;deck.push(c);}
  const mins=TRACK_MIN[t.id]||{};
- while(deck.length>DECK_MAX){const w=byScore(deck.filter(id=>!(mins[CARDS[id].fam]&&famCount(deck,CARDS[id].fam)<=mins[CARDS[id].fam])),t,u).pop();deck.splice(deck.lastIndexOf(w),1);}
+ while(deck.length>mx){const w=byScore(deck.filter(id=>!(mins[CARDS[id].fam]&&famCount(deck,CARDS[id].fam)<=mins[CARDS[id].fam])),t,u).pop();deck.splice(deck.lastIndexOf(w),1);}
  return deck;}
-function autoDeck(t,u){return fixDeck(t,[],u,DECK_AUTO);}
+function autoDeck(t,u){return fixDeck(t,[],u,deckSize(u).max);}
 // old saves and new careers: everything in the deck is in the collection
 function ensureColl(){if(G&&!G.coll)G.coll=[...G.deck];if(G&&!G.trackDecks)G.trackDecks={};}
 
@@ -2938,14 +2969,6 @@ function tunePanel(t){const u=G.tune||{hand:0,aero:0,focus:null},a=ARCH[G.arch];
   <div class="grid" style="gap:4px"><span class="eyebrow">Combo focus</span><div class="sudial">${Object.entries(FOCUS).map(([k,p])=>`<button class="chip${u.focus===k?' on':''}" data-su="focus" data-v="${k}" title="${esc(p.txt)}">${esc(p.n)}</button>`).join('')}</div></div>
   <div class="sufx">${tuneFx(u).map(([k,v])=>`<div><b>${k}</b> ${esc(v)}</div>`).join('')}</div></div>`;}
 function addRelic(id){if(!G.relics.includes(id))G.relics.push(id);const s=RELICS[id].slot;if(!G.equipped[s])G.equipped[s]=id;}
-function deckTable(){
- const counts={};for(const id of G.deck)counts[id]=(counts[id]||0)+1;
- const ids=Object.keys(counts).sort((a,b)=>FAM_ORDER.indexOf(CARDS[a].fam)-FAM_ORDER.indexOf(CARDS[b].fam)||CARDS[a].n.localeCompare(CARDS[b].n));
- return `<div class="tw"><table><thead><tr><th>Card</th><th>Family</th><th>Rarity</th><th>Cost</th><th>Your success</th><th>Wrecks</th><th>#</th></tr></thead><tbody>${ids.map(id=>{const cd=CARDS[id],h=G.hist[id];
-  return `<tr><td>${famDot(cd.fam)}${esc(cd.n)}</td><td>${FAM[cd.fam].n}</td><td>${cd.rar}</td><td class="num">${cardCost(cd)}</td><td class="num">${succTxt(id)}</td><td class="num">${h?h.wrecks:0}</td><td class="num">${counts[id]}</td></tr>`;}).join('')}</tbody></table></div>`;
-}
-const cardCost=cd=>cd.cost.tire?cd.cost.tire+'% tire':cd.cost.mom?cd.cost.mom+' Mom':'free';
-const succTxt=id=>{const h=G.hist[id];return h&&h.plays?Math.round(h.succ/h.plays*100)+'% of '+h.plays:'—';};
 // what the garage changed when it fixed your deck for a new track
 function deckDiff(was,now,t){const add=[],out=[];const a={},b={};for(const id of was)a[id]=(a[id]||0)+1;for(const id of now)b[id]=(b[id]||0)+1;
  for(const id in b)for(let k=a[id]||0;k<b[id];k++)add.push(CARDS[id].n);for(const id in a)for(let k=b[id]||0;k<a[id];k++)out.push(CARDS[id].n);
@@ -2954,11 +2977,32 @@ function famStrip(deck){return `<div class="famstrip">${FAM_ORDER.map(f=>{const 
 function rulesList(t,deck){return `<div class="drules">${deckRules(t,deck).map(r=>`<div class="${r.ok?'ok':'bad'}"><b>${r.ok?'✓':'✗'}</b><span>${esc(r.txt)}</span><span class="mono">${r.have}${r.k==='cap'?' / '+r.need:''}</span></div>`).join('')}</div>`;}
 function deckPanel(t){const ok=deckOk(t);
  return `<div class="panel grid" style="gap:8px;${ok?'':'border-color:var(--red)'}"><div class="row" style="justify-content:space-between"><h3>Race deck (${G.deck.length} of ${G.coll.length} cards owned)</h3><button class="btn small primary" id="g-deck">Build race deck</button></div>
-  <p class="muted" style="font-size:13px">You keep every card in your collection. Before each race you pick up to 15 to take. The track sets a minimum, and your tune sets how many attack, defense and drafting cards fit.</p>
+  <p class="muted" style="font-size:13px">You keep every card in your collection. Before each race you pick 12 to 16 to take (Aero moves the max). The track sets a minimum, and your tune sets how many attack, defense and drafting cards fit.</p>
   ${G.deckNote?`<p style="color:var(--amber);font-size:13px">${esc(G.deckNote)}</p>`:''}
   ${famStrip(G.deck)}${rulesList(t,G.deck)}${ok?'':'<div class="row"><button class="btn small" id="g-fix">Fix it for me</button></div>'}</div>`;}
 
-/* deck builder: the collection by family on the left, the race deck and its rules on the right, tune dials under them */
+/* Garage cards: the same face as a card in your hand (cardFace), with the full effect text and your counts.
+   The big number is the card's base chance before the race moves it (track, gap, tires...), or your own success rate once you've played it 3+ times. */
+const BASE_ODDS={};
+function baseOdds(id){if(id in BASE_ODDS)return BASE_ODDS[id];let v=null;
+ const stub={gapA:0.5,gapB:0.5,seg:{},track:TRACKS[0],car:{tires:80,damage:0},pos:10,lap:3,laps:20};
+ try{CARDS[id].read&&CARDS[id].read(stub,{b:x=>{throw {base:x};},a:()=>{}});}catch(e){if(e&&e.base!=null)v=e.base;}
+ return BASE_ODDS[id]=v;}
+function deckCard(id,o={}){const cd=CARDS[id],h=G.hist[id],mine=h&&h.plays>=3?Math.round(h.succ/h.plays*100):null,base=baseOdds(id);
+ const big=mine!=null?mine:base;const cls=big==null?'na':big>=60?'hi':big>=40?'md':'lo';
+ const tags=[cd.wreck?`<b class="dt-w" title="A critical failure can wreck you">${ic('wreck')}Can wreck</b>`:'',cd.noFail?'<b class="dt-s">Never fails</b>':'',`<b class="dt-r r-${cd.rar}">${cd.rar}</b>`].join('');
+ const toss=BAL.tossFx&&cd.toss?`<p class="dtoss">${ic(TOSS_IC[cd.toss.k])}<span><b>Toss:</b> ${esc(tossTxt(cd))}</span></p>`:'';
+ const act=o.mode==='build'?`<span class="dact"><button class="dbtn" data-out="${id}" ${o.inD?'':'disabled'} title="Take one out of the race deck">−</button><span class="dcount">${o.inD} / ${o.own}</span><button class="dbtn" data-in="${id}" ${o.why?`disabled title="${esc(o.why)}"`:'title="Put one in the race deck"'}>+</button></span>`:'';
+ return `<div class="hcard dcard${o.inD?' in':''}${o.dim?' dim':''}" data-card="${id}" style="--fc:${FAM[cd.fam].c}">${cardFace(cd,{})}
+  ${o.own>1&&o.mode!=='build'?`<span class="downed">×${o.own}</span>`:''}${o.mode==='build'&&o.inD?`<span class="dind">${ic('draw')}In deck ×${o.inD}</span>`:''}
+  <p class="dtxt">${esc(cd.txt)}</p>${toss}<div class="dtags">${tags}</div>${act}</div>`
+  .replace('<span class="pc"></span>',`<span class="pc ${cls}" title="${mine!=null?`Your success rate over ${h.plays} plays`:'Base chance before the race moves it'}">${big==null?'—':big+'%'}<small>${mine!=null?'yours':'base'}</small></span>`);}
+function cardGrid(ids,f){return `<div class="dgrid">${ids.map(f).join('')}</div>`;}
+// one card per id in a deck or collection, with counts, sorted by family then name
+function groupIds(arr){const n={};for(const id of arr)n[id]=(n[id]||0)+1;return Object.keys(n).sort((a,b)=>FAM_ORDER.indexOf(CARDS[a].fam)-FAM_ORDER.indexOf(CARDS[b].fam)||CARDS[a].n.localeCompare(CARDS[b].n)).map(id=>[id,n[id]]);}
+function deckCards(arr){return cardGrid(groupIds(arr),([id,n])=>deckCard(id,{own:n}));}
+
+/* deck builder: your collection as real cards (click + / −), the race deck and its rules beside it, tune dials under them */
 const DB={tab:'all',sort:'fam'};
 function showDeckBuilder(){
  ensureColl();const t=TRACKS[arcTi(G.raceIdx)],el=$('#deckb');$('#garage').innerHTML=''; // the garage has the same tune dials
@@ -2970,33 +3014,35 @@ function showDeckBuilder(){
   fit:(a,b)=>cardScore(b,t)-cardScore(a,t),succ:(a,b)=>rate(b)-rate(a),rar:(a,b)=>rarN[CARDS[b].rar]-rarN[CARDS[a].rar],name:(a,b)=>CARDS[a].n.localeCompare(CARDS[b].n)};
  ids.sort((a,b)=>S[DB.sort](a,b)||S.fam(a,b));
  const famsOwned=FAM_ORDER.filter(f=>G.coll.some(id=>CARDS[id].fam===f));
- const last=G.trackDecks&&G.trackDecks[t.id];
- el.innerHTML=`<div class="page-in">
+ const last=G.trackDecks&&G.trackDecks[t.id],ok=deckOk(t),sz=deckSize();
+ el.innerHTML=`<div class="page-in dbpage">
   <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Deck builder · race ${G.raceIdx+1} of ${SEASON_LEN}</span><h2>Race deck for ${esc(t.name)}</h2><span class="muted" style="font-size:13px">${t.type}. ${esc(t.blurb)}</span></div>
-   <div class="row"><button class="btn primary" id="d-done" ${deckOk(t)?'':'disabled'}>Done</button></div></div>
+   <div class="row"><span class="dbsize ${ok?'ok':'bad'}">${ic('draw')}<b>${G.deck.length}</b> / ${sz.max}</span><button class="btn primary" id="d-done" ${ok?'':'disabled'}>Done</button></div></div>
   <div class="grid dbgrid">
-   <div class="panel grid" style="gap:8px;align-content:start"><div class="row" style="justify-content:space-between"><h3>Collection (${G.coll.length})</h3>
+   <div class="panel grid" style="gap:10px;align-content:start"><div class="row" style="justify-content:space-between"><h3>Collection (${G.coll.length})</h3>
      <span class="row" style="gap:4px"><span class="eyebrow">Sort</span>${[['fam','Family'],['fit','Best here'],['succ','Your success'],['rar','Rarity'],['name','Name']].map(([k,n])=>`<button class="chip${DB.sort===k?' on':''}" data-sort="${k}">${n}</button>`).join('')}</span></div>
-    <div class="tabs">${[['all','All',G.coll.length],...famsOwned.map(f=>[f,FAM[f].n,famCount(G.coll,f)])].map(([k,n,c])=>`<button class="chip${DB.tab===k?' on':''}" data-tab="${k}">${k!=='all'?famDot(k):''}${n} ${c}</button>`).join('')}</div>
-    <div class="tw"><table class="dbtable"><thead><tr><th>Card</th><th>Family</th><th>Rarity</th><th>Cost</th><th>Your success</th><th class="num">Owned</th><th class="num">In deck</th><th></th></tr></thead><tbody>${ids.map(id=>{const cd=CARDS[id],inD=cnt(G.deck,id),why=addBlock(id,t);
-     return `<tr class="${inD?'in':''}"><td>${famDot(cd.fam)}<b>${esc(cd.n)}</b><div class="muted" style="font-size:12px">${esc(cd.txt)}</div></td><td>${FAM[cd.fam].n}</td><td>${cd.rar}</td><td class="num">${cardCost(cd)}</td><td class="num">${succTxt(id)}</td><td class="num">${own[id]}</td><td class="num"><b>${inD}</b></td>
-      <td><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn small" data-out="${id}" ${inD?'':'disabled'} title="Take one out">−</button><button class="btn small" data-in="${id}" ${why?`disabled title="${esc(why)}"`:'title="Add one"'}>+</button></span></td></tr>`;}).join('')}</tbody></table></div></div>
-   <div class="grid" style="gap:12px;align-content:start">
-    <div class="panel grid" style="gap:8px;${deckOk(t)?'':'border-color:var(--red)'}"><h3>Race deck · ${G.deck.length} cards</h3>${famStrip(G.deck)}${rulesList(t,G.deck)}
-     <div class="row" style="gap:6px"><button class="btn small" id="d-auto" title="Picks the cards that fit this track and your tune best">Auto-build for ${esc(t.short)}</button>${deckOk(t)?'':'<button class="btn small" id="d-fix">Fix rules</button>'}${last?`<button class="btn small" id="d-last" title="The deck you raced here last time">Last ${esc(t.short)} deck</button>`:''}<button class="btn small" id="d-all">Add all I can</button><button class="btn small" id="d-clear">Clear</button></div></div>
+    <div class="tabs">${[['all','All',G.coll.length],...famsOwned.map(f=>[f,FAM[f].n,famCount(G.coll,f)])].map(([k,n,c])=>`<button class="chip${DB.tab===k?' on':''}" data-tab="${k}" ${k!=='all'?`style="--c:${FAM[k].c}"`:''}>${k!=='all'?ic(k):''}${n} ${c}</button>`).join('')}</div>
+    <p class="muted" style="font-size:12px">Click a card or + to put it in the race deck, − to take it out. Green cards are in the deck.</p>
+    ${cardGrid(ids,id=>deckCard(id,{own:own[id],inD:cnt(G.deck,id),why:addBlock(id,t),mode:'build'}))}</div>
+   <div class="grid dbside" style="gap:12px;align-content:start">
+    <div class="panel grid" style="gap:8px;${ok?'':'border-color:var(--red)'}"><h3>Race deck · ${G.deck.length} cards</h3>${famStrip(G.deck)}${rulesList(t,G.deck)}
+     <div class="row" style="gap:6px"><button class="btn small" id="d-auto" title="Picks the cards that fit this track and your tune best">Auto-build for ${esc(t.short)}</button>${ok?'':'<button class="btn small" id="d-fix">Fix rules</button>'}${last?`<button class="btn small" id="d-last" title="The deck you raced here last time">Last ${esc(t.short)} deck</button>`:''}<button class="btn small" id="d-all">Fill to ${sz.max}</button><button class="btn small" id="d-clear">Clear</button></div>
+     <div class="dstack">${groupIds(G.deck).map(([id,n])=>`<button class="dmini" data-out="${id}" style="--fc:${FAM[CARDS[id].fam].c}" title="Take one out">${ic(CARDS[id].fam)}<span>${esc(CARDS[id].n)}</span>${n>1?`<b>×${n}</b>`:''}</button>`).join('')}</div></div>
     ${tunePanel(t)}
    </div></div></div>`;
- const re=()=>showDeckBuilder();
+ const re=()=>{const sc=el.scrollTop;showDeckBuilder();el.scrollTop=sc;};
+ const add=id=>{if(addBlock(id,t))return;G.deck.push(id);re();};
  el.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{DB.sort=b.dataset.sort;re();});
  el.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{DB.tab=b.dataset.tab;re();});
- el.querySelectorAll('[data-in]').forEach(b=>b.onclick=()=>{if(addBlock(b.dataset.in,t))return;G.deck.push(b.dataset.in);re();});
- el.querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{const i=G.deck.lastIndexOf(b.dataset.out);if(i>=0)G.deck.splice(i,1);re();});
+ el.querySelectorAll('[data-in]').forEach(b=>b.onclick=e=>{e.stopPropagation();add(b.dataset.in);});
+ el.querySelectorAll('[data-out]').forEach(b=>b.onclick=e=>{e.stopPropagation();const i=G.deck.lastIndexOf(b.dataset.out);if(i>=0)G.deck.splice(i,1);re();});
+ el.querySelectorAll('.dcard').forEach(b=>b.onclick=()=>add(b.dataset.card));
  el.querySelectorAll('[data-su]').forEach(b=>b.onclick=()=>{const k=b.dataset.su,v=b.dataset.v;setTune({[k]:k==='focus'?v:+v});re();});
  {const rs=$('#su-reset');if(rs)rs.onclick=()=>{G.tune=Object.assign({},ARCH[G.arch].tune);re();};}
  $('#d-auto').onclick=()=>{G.deck=autoDeck(t);re();};
  {const f=$('#d-fix');if(f)f.onclick=()=>{G.deck=fixDeck(t);re();};}
  {const l=$('#d-last');if(l)l.onclick=()=>{G.deck=fixDeck(t,last);re();};}
- $('#d-all').onclick=()=>{G.deck=fixDeck(t,G.deck,null,DECK_MAX);re();};
+ $('#d-all').onclick=()=>{G.deck=fixDeck(t,G.deck,null,deckSize().max);re();};
  $('#d-clear').onclick=()=>{G.deck=[];re();};
  $('#d-done').onclick=()=>{if(!deckOk(t))return;G.deckNote=null;showGarage();};
  showScreen('deckb');
@@ -3045,7 +3091,7 @@ function showEnd(dead){
  el.innerHTML=`<div class="page-in"><span class="eyebrow">${dead?'Run over: permadeath':'Season complete'}</span><h1>${esc(G.name)}</h1><p class="muted">${esc(ARCH[G.arch].n)} · ${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n} · average finish P${avg.toFixed(1)}</p>
  <div class="panel grid" style="gap:8px;border-color:${rk===1?'var(--amber)':'var(--line)'}"><h2>${dead?`Out after ${G.results.length} of ${SEASON_LEN} races · P${rk} in points`:rk===1?'Champion!':`P${rk} in the final standings`}</h2><p class="muted">${dead?'':rk===1?`You win the title with ${st[0].pts} points.`:`${esc(champ.name)} (${esc(TEAMS[champ.team].name)}) wins the title with ${st[0].pts} points, ${st[0].pts-st[rk-1].pts} ahead of you.`}</p>${standingsTable(10)}</div>
  <div class="panel grid" style="gap:6px">${G.results.map((r,i)=>`<div class="row"><b class="mono">${i+1}</b><span>${esc(r.track)}</span><span>P${r.finish}${r.dnf?' (DNF)':''} from P${r.start}, expected P${r.expected}</span><span class="tier t-${r.tier}">${r.tier}</span></div>`).join('')}</div>
- <div class="panel"><h3>Final deck</h3>${deckTable(false)}</div>
+ <div class="panel grid" style="gap:10px"><h3>Final race deck</h3>${deckCards(G.deck)}</div>
  <div class="row"><button class="btn primary" id="e-new" style="font-size:18px">New season</button></div></div>`;
  $('#e-new').onclick=()=>{G=null;renderTitle();};
  showScreen('reward');el.scrollTop=0;
@@ -3076,7 +3122,8 @@ function renderSheet(car){
  if(sheetTab==='gear'){const inv=G.relics.filter(id=>!Object.values(G.equipped).includes(id));
   body=`<p class="muted" style="font-size:13px">${canEquip?'Click an equipped part to remove it, or a part in your inventory to install it in its slot.':'Parts can only be swapped in the garage.'}</p><div class="grid g4">${SLOTS.map(s=>{const id=G.equipped[s];return id?`<button class="slot full" data-unequip="${s}" ${canEquip?'':'disabled'}><span class="sn">${s}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`:`<div class="slot"><span class="sn">${s}</span><p class="muted">Empty slot</p></div>`;}).join('')}</div>
   <h3>Inventory</h3>${inv.length?`<div class="grid g4">${inv.map(id=>`<button class="slot full" data-equip="${id}" ${canEquip?'':'disabled'}><span class="sn">${RELICS[id].slot}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`).join('')}</div>`:'<p class="muted">Nothing in storage. Earn parts with strong runs or buy them from the parts dealer.</p>'}`;}
- if(sheetTab==='deck')body=deckTable(false);
+ if(sheetTab==='deck'){const rest=[...G.coll];for(const id of G.deck)rest.splice(rest.indexOf(id),1);
+  body=`<p class="muted" style="font-size:13px">${G.deck.length} cards in your race deck. Change it in the garage deck builder.</p>${deckCards(G.deck)}${rest.length?`<h3>Rest of your collection (${rest.length})</h3>${deckCards(rest)}`:''}`;}
  box.innerHTML=`${head}${career}<div class="tabs">${tabs.map(([k,n])=>`<button class="chip${sheetTab===k?' on':''}" data-tab="${k}">${n}</button>`).join('')}</div>${body}`;
  box.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{sheetTab=b.dataset.tab;renderSheet(car);});
  box.querySelectorAll('[data-unequip]').forEach(b=>b.onclick=()=>{G.equipped[b.dataset.unequip]=null;renderSheet(car);});
@@ -3921,7 +3968,7 @@ Object.assign(GLOSS,{
 });
 
 setLook(LOOK);
-window.__gfd={autoDeck,fixDeck,deckRules,deckOk,slotCaps,showDeckBuilder,TRACK_MIN,DECK_MIN,DECK_MAX,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
+window.__gfd={autoDeck,fixDeck,deckRules,deckOk,slotCaps,deckSize,showDeckBuilder,TRACK_MIN,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
 /* ===== Garage tune x pit Setups (step 7b): a pit adjustment nudges this race's tune one notch. ===== */
 const TUNE_NUDGE={trackbar:['hand',-1,'tighter'],spring:['hand',1,'looser'],wedge:['aero',1,'less drag']};
 const _setupInstall7b=setupInstall;
