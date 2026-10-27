@@ -13,7 +13,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   return !g.race||{phase:r.phase,lap:g.lapOf?g.lapOf(g.meCar()):null,paused:r.paused,k};});
  const click=async sel=>{await p.click(sel);await p.waitForTimeout(80);};
  // step 16: Go racing opens qualifying; skip it (after a reload it shows the grid you already set) and start the race
- const goRace=async()=>{await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');};
+ const goRace=async()=>{if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');};
  await load();await p.evaluate(()=>localStorage.clear());await load();
  if(await p.$('#t-cont'))fail('continue shown with no save');
  await click('#t-go');

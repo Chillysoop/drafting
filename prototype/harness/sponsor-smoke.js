@@ -26,7 +26,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(!g1.sp||g1.objs.length!==3||!g1.objs[2].ask||g1.go||!g1.strip)fail('after signing '+JSON.stringify(g1));
   await p.evaluate(()=>document.querySelector('#garage .spstrip').scrollIntoView());await shot('signed');
   // play race 1 with every objective forced to pass: rewards move up a tier
-  await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
+  if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const fin=async force=>p.evaluate(force=>{const g=window.__gfd,r=g.race;window.__gfdHeadless=true;window.__gfdPitPolicy='human';let k=0;
    if(force==='pass')for(const o of g.OBJECTIVES)o._t=o._t||o.test,o.test=()=>true;
    while(g.race===r&&k++<30000){if(r.paused){r.paused=false;r._beatPaused=false;}g.update(0.05);if(force==='dnf'&&r.phase==='green'&&!g.meCar().dnf&&r.t>20){const c=g.meCar();c.dnf=true;c.dnfWhy='test';}}
@@ -54,11 +54,11 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await shot('season-end-walk');
   // a DNF never moves rewards up, even with every objective met
   await p.evaluate(()=>{const g=window.__gfd;g.G.sponsor={id:'pinecrest',per:1000,bonus:6000};g.G.sponsorOffers=null;g.G.nextObjectives=g.rollRaceObjectives();g.showGarage();});
-  await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
+  if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const d=await fin('pass');
   console.log('season 3 race 1:',JSON.stringify({tier:d.tier,from:d.from}));
   await click('#w-go');
-  await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
+  if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const dn=await fin('dnf');
   if(!dn.dnf||dn.from)fail('dnf bumped '+JSON.stringify(dn));
   // old save: objective ids as strings, no sponsor, no season
@@ -66,7 +66,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await click('#t-cont'); // the title reads the save when Continue is pressed
   const old=await p.evaluate(()=>({g:!document.getElementById('garage').hidden,offers:document.querySelectorAll('#g-spons [data-sign]').length,lines:document.querySelectorAll('#garage .objl').length}));
   if(!old.g||old.offers!==3||old.lines!==2)fail('old save '+JSON.stringify(old));
-  await click('#g-spons [data-sign]');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
+  await click('#g-spons [data-sign]');if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const o2=await fin('');if(o2.n!==3)fail('old save race '+JSON.stringify(o2));
   await p.close();
  }
