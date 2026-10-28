@@ -92,7 +92,7 @@ CI prints the mouse races in the run summary and uploads the HUD pictures with t
 - The HUD is drawn with Unity's immediate-mode GUI in a plain dark style; the slice's 90s dash look (bevels, rivets, LCD digits,
   icons) comes with the retro art pass in step 45, once the look is picked (board Q105).
 - The gauge is a bar, not the slice's half-dial with a needle.
-- The beat pause does not start while you are holding to play (the slice would stop the race under your finger).
+- The beat pause does not start while you are holding to play (the slice would stop the race under your finger; board Q106).
 - The red or green card edge leaves out the field strength odds changer, which is on every stock card and would paint the whole
   hand red.
 - Controller and keyboard-only play come in step 32, the radio lane (engineer, spotter and crew calls) in step 33, the reward and
