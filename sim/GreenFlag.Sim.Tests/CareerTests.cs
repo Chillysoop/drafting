@@ -224,7 +224,7 @@ namespace GreenFlag.Sim.Tests
             c.Continue();
             Assert.Null(c.Reward);
             Assert.Equal(1, c.RaceIdx);
-            Assert.Equal("pine", c.NextTrack.Id);
+            Assert.Equal(CareerRules.Calendar(Series.Stock)[1], c.NextTrack.Id);
             Assert.True(c.DeckOk());
         }
 
@@ -272,11 +272,11 @@ namespace GreenFlag.Sim.Tests
         public void A_track_rule_the_deck_breaks_gets_fixed_on_the_way_into_the_garage()
         {
             var c = Career.New("whisperer");
-            c.Deck = c.Deck.Where(id => CardBook.Get(id).Family != CardFamily.Defend).ToList(); // Millbrook wants 2 Defending
-            Assert.False(c.DeckOk(Tracks.Millbrook));
+            c.Deck = c.Deck.Where(id => CardBook.Get(id).Family != CardFamily.Draft).ToList(); // Talon Ridge (the opener) wants 3 Drafting
+            Assert.False(c.DeckOk(Tracks.Talon));
             c.EnterGarage();
             Assert.True(c.DeckOk());
-            Assert.Contains("Millbrook rule", c.DeckNote);
+            Assert.Contains("Talon rule", c.DeckNote);
         }
 
         // ------------------------------------------------------------------ the menus
@@ -293,7 +293,7 @@ namespace GreenFlag.Sim.Tests
             Assert.Equal(3, c.RaceIdx);
             Assert.True(c.Collection.Count >= 12 + 2, "a card from each race unless skipped");
             Assert.True(bot.Bought > 0, "the bot spends money in the shop");
-            Assert.Equal(new[] { "mill", "pine", "carver" }, c.Results.Select(r => r.TrackId));
+            Assert.Equal(CareerRules.Calendar(Series.Stock).Take(3), c.Results.Select(r => r.TrackId));
             Assert.True(c.DeckOk());
         }
 

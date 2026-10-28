@@ -123,6 +123,23 @@ namespace GreenFlag.Sim
             QualRunning = j["qualRunning"].Bool();
         }
 
+        /// <summary>The stock car calendar before step 42: Millbrook, Pinewood, Carver, Ridgeback and Talon Ridge.</summary>
+        public static readonly IReadOnlyList<string> StockCalendarV6 = new[] { "mill", "pine", "carver", "ridge", "talon", "mill", "pine", "carver", "ridge", "mill" };
+
+        /// <summary>
+        /// Save format 6 to 7 (step 42): the premier stock calendar (every kind of stock car track, Pinewood off it, board Q90).
+        /// A stock car season that already ran a race keeps the calendar it saved; one that hasn't started gets the new one. The
+        /// track rules need nothing saved.
+        /// </summary>
+        public static JsonValue MigrateV6(JsonValue c)
+        {
+            var series = c["series"].Enum(Series.Stock);
+            int season = c["season"].Int(1);
+            bool started = c["raceIdx"].Int() > 0 || c["results"].Items.Any(r => r["season"].Int() == season);
+            if (series == Series.Stock && !started) c.Set("calendar", JsonValue.Of(CareerRules.Calendar(series)));
+            return c;
+        }
+
         /// <summary>The late model calendar before step 41: Cedar Bowl, Millbrook and the figure-8.</summary>
         public static readonly IReadOnlyList<string> LateCalendarV5 = new[] { "cedar", "milll", "cross", "cedar", "milll", "cross", "cedar", "milll" };
 
@@ -158,7 +175,7 @@ namespace GreenFlag.Sim
             var series = c["series"].Enum(Series.Stock);
             int season = c["season"].Int(1);
             bool started = c["raceIdx"].Int() > 0 || c["results"].Items.Any(r => r["season"].Int() == season);
-            c.Set("calendar", JsonValue.Of(series == Series.Kart && started ? KartCalendarV4 : series == Series.Late ? LateCalendarV5 : CareerRules.Calendar(series)));
+            c.Set("calendar", JsonValue.Of(series == Series.Kart && started ? KartCalendarV4 : series == Series.Late ? LateCalendarV5 : series == Series.Stock ? StockCalendarV6 : CareerRules.Calendar(series)));
             if (series == Series.Kart)
                 foreach (var e in c["field"].Items)
                     if (e["trait"].Str() == nameof(Trait.Restarter)) e.Set("trait", nameof(Trait.Rookie));

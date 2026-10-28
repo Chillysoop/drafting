@@ -123,6 +123,8 @@ namespace GreenFlag.Harness
             Write("drafter-crew-xp", x);
             // step 41 (format 6): a career started in late models, three races into the new calendar
             Write("whisperer-late-models-race-4", MenuBot.Run(new CareerMenu { PickPersona = "whisperer", PickSeries = Series.Late, NewSeed = 23 }, 3));
+            // step 42 (format 7): a premier stock career three races into the new calendar, Ridgeback road course next
+            Write("bully-premier-race-4", MenuBot.Run(new CareerMenu { PickPersona = "bully", NewSeed = 24 }, 3));
             return 0;
         }
     }

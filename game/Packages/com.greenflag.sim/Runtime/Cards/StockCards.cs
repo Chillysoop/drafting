@@ -144,7 +144,7 @@ namespace GreenFlag.Sim
             {
                 Id = "bump_run", Name = "Bump and Run", Family = Pass, Rarity = Rarity.Common, TireCost = 3, Zone = DamageZone.Nose, Toss = TossKind.Cool,
                 Text = "Nudge him up the track and take the line.", Real = "Moving the car ahead with your front bumper on a short track.",
-                Can = c => c.Ahead == null ? NoAhead : c.GapA > 0.7 ? "Get to his bumper" : null,
+                Can = c => c.Ahead == null ? NoAhead : c.GapA > (c.R.RulesOn && c.Track.Kind == TrackKind.ShortTrack ? 1.0 : 0.7) ? "Get to his bumper" : null,
                 Read = (c, R) =>
                 {
                     R.B(44); if (c.Ahead == null) return;

@@ -25,6 +25,9 @@ namespace GreenFlag.Harness
     ///                                                through the menus, checked against the kart targets (CI); off = the slice's field
     ///   lateseason [n] [seasons] [seed] [on|off]     step 41: late model races per track, persona and style, the tire strategy check,
     ///                                                then whole late model seasons through the menus (CI); off = the slice's field
+    ///   stockseason [n] [seasons] [seed] [on|off]    step 42: premier stock races per track, persona and style, the best deck and setup
+    ///                                                on each kind of track, then whole premier seasons through the menus (CI);
+    ///                                                off = the slice's rules (no track rules)
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
     /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
     /// Policies with cards (a persona's starting deck, part, tune and driver; default drafter, its kart cousin on kart tracks):
@@ -56,9 +59,10 @@ namespace GreenFlag.Harness
                     case "menus": return MenuShots.Run(Arg(args, 1, "drafter"), uint.Parse(Arg(args, 2, "1")), Arg(args, 3, "menus.html"));
                     case "hud": return HudShots.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "hud.html"), int.Parse(Arg(args, 4, "6")));
                     case "kartseason": return KartSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
+                    case "stockseason": return StockSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
                     case "lateseason": return LateSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n] | career [races] [persona] [seed] | menus [persona] [seed] [out.html] | kartseason [n] [seasons] [seed] [on|off] | lateseason [n] [seasons] [seed] [on|off]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n] | career [races] [persona] [seed] | menus [persona] [seed] [out.html] | kartseason [n] [seasons] [seed] [on|off] | lateseason [n] [seasons] [seed] [on|off] | stockseason [n] [seasons] [seed] [on|off]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }
@@ -245,7 +249,7 @@ namespace GreenFlag.Harness
                     foreach (var st in styles.Split(','))
                     {
                         var rows = new List<RaceRow>();
-                        for (int i = 0; i < n; i++) rows.Add(Bots.Run(Tracks.All[int.Parse(ti)], seedBase + (uint)i, st, a).row);
+                        for (int i = 0; i < n; i++) rows.Add(Bots.Run(Tracks.All[int.Parse(ti)], seedBase + (uint)i, st, a, x => x.Bal.StockRules = false).row);
                         all[$"{a}|{ti}|{st}"] = rows;
                     }
             System.IO.File.WriteAllText(outPath, System.Text.Json.JsonSerializer.Serialize(all, new System.Text.Json.JsonSerializerOptions { IncludeFields = true }));

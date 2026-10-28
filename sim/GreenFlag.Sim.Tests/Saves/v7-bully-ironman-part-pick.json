@@ -1,0 +1,1226 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 7,
+  "build": "sample save (format 7)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "reward",
+  "summary": {
+    "name": "Rookie",
+    "persona": "bully",
+    "series": "Stock",
+    "season": 1,
+    "race": 1,
+    "of": 10,
+    "track": "Talon Ridge Superspeedway",
+    "money": 10584,
+    "races": 1,
+    "diff": "Normal",
+    "stakes": "Ironman",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "bully",
+    "series": "Stock",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Ironman",
+    "survive": 0,
+    "money": 10584,
+    "season": 1,
+    "raceIdx": 0,
+    "over": false,
+    "seed": 13,
+    "rng": 1486626747,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 3,
+        "durability": 5,
+        "racecraft": 5,
+        "defense": 5,
+        "consistency": 5,
+        "tireMgmt": 4
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 3,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 15,
+      "wits": 12,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["tuck_in", "side_draft", "dive_bomb", "block", "save_tires", "spotter_focus", "bump_run", "bump_run", "bump_draft", "block", "dive_bomb", "push_limit"],
+    "deck": ["bump_draft", "side_draft", "tuck_in", "block", "block", "push_limit", "spotter_focus", "save_tires", "bump_run", "bump_run", "dive_bomb", "dive_bomb"],
+    "partsOwned": ["chrome_horn"],
+    "equipped": {
+      "Chassis": "chrome_horn"
+    },
+    "tune": {
+      "hand": 0,
+      "aero": -2,
+      "focus": "Bumper"
+    },
+    "hist": {
+      "block": [4, 2],
+      "bump_draft": [5, 5],
+      "bump_run": [2, 2],
+      "dive_bomb": [3, 3],
+      "push_limit": [6, 5],
+      "reel_in": [6, 5],
+      "save_tires": [7, 6],
+      "side_draft": [6, 5],
+      "tuck_in": [5, 4]
+    },
+    "trackDecks": {
+      "talon": ["bump_draft", "side_draft", "tuck_in", "block", "block", "push_limit", "spotter_focus", "save_tires", "bump_run", "bump_run", "dive_bomb", "dive_bomb"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "talon",
+        "trackName": "Talon Ridge Superspeedway",
+        "start": 15,
+        "finish": 11,
+        "expected": 20,
+        "dnf": false,
+        "tier": "Victory",
+        "mul": 0.44000000000000006,
+        "purse": 2200,
+        "bonus": 1584,
+        "total": 7584,
+        "plays": 44,
+        "succ": 37,
+        "crits": 0,
+        "bestChain": 5,
+        "calls": 11,
+        "callsWon": 5,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 20,
+        "bestPos": 11,
+        "beatMate": true,
+        "beatRival": true,
+        "rival": "Ren Nakamura",
+        "objMet": 3,
+        "tierFrom": "Strong",
+        "sponsor": "summit",
+        "retainer": 800,
+        "salary": 0,
+        "pts": 26,
+        "ptsTotal": 26,
+        "rank": 11,
+        "rankBefore": 19,
+        "dmg": 0,
+        "drvMom": 0,
+        "hype": 2,
+        "hypeWhy": ["×4 combo", "9 spots over expected"],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 13,
+          "Spotter": 23,
+          "Engineer": 17,
+          "PitCrew": 9
+        },
+        "crewUp": [],
+        "objectives": [
+          {
+            "id": "top10",
+            "name": "Run in the top 12 at any point",
+            "ask": false,
+            "ok": true,
+            "pay": 900
+          },
+          {
+            "id": "combo3",
+            "name": "Land a ×4 combo",
+            "ask": false,
+            "ok": true,
+            "pay": 1100
+          },
+          {
+            "id": "mate",
+            "name": "Finish ahead of your teammate",
+            "ask": true,
+            "ok": true,
+            "pay": 1000
+          }
+        ]
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "slick_nose",
+      "rerolls": 0
+    },
+    "deckFor": 1000,
+    "deckNote": null,
+    "reward": {
+      "res": {
+        "season": 1,
+        "raceNo": 1,
+        "track": "talon",
+        "trackName": "Talon Ridge Superspeedway",
+        "start": 15,
+        "finish": 11,
+        "expected": 20,
+        "dnf": false,
+        "tier": "Victory",
+        "mul": 0.44000000000000006,
+        "purse": 2200,
+        "bonus": 1584,
+        "total": 7584,
+        "plays": 44,
+        "succ": 37,
+        "crits": 0,
+        "bestChain": 5,
+        "calls": 11,
+        "callsWon": 5,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 20,
+        "bestPos": 11,
+        "beatMate": true,
+        "beatRival": true,
+        "rival": "Ren Nakamura",
+        "objMet": 3,
+        "tierFrom": "Strong",
+        "sponsor": "summit",
+        "retainer": 800,
+        "salary": 0,
+        "pts": 26,
+        "ptsTotal": 26,
+        "rank": 11,
+        "rankBefore": 19,
+        "dmg": 0,
+        "drvMom": 0,
+        "hype": 2,
+        "hypeWhy": ["×4 combo", "9 spots over expected"],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 13,
+          "Spotter": 23,
+          "Engineer": 17,
+          "PitCrew": 9
+        },
+        "crewUp": [],
+        "objectives": [
+          {
+            "id": "top10",
+            "name": "Run in the top 12 at any point",
+            "ask": false,
+            "ok": true,
+            "pay": 900
+          },
+          {
+            "id": "combo3",
+            "name": "Land a ×4 combo",
+            "ask": false,
+            "ok": true,
+            "pay": 1100
+          },
+          {
+            "id": "mate",
+            "name": "Finish ahead of your teammate",
+            "ask": true,
+            "ok": true,
+            "pay": 1000
+          }
+        ],
+        "order": [
+          {
+            "pos": 1,
+            "id": 1,
+            "name": "Shane Sullivan",
+            "team": "Apex Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 2,
+            "id": 4,
+            "name": "Tobi Okafor",
+            "team": "Northline Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 3,
+            "id": 2,
+            "name": "Cal Bram",
+            "team": "Harlan-Reed Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 4,
+            "id": 0,
+            "name": "Wade Haskins",
+            "team": "Apex Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 5,
+            "id": 5,
+            "name": "Bruno Ferreira",
+            "team": "Northline Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 6,
+            "id": 7,
+            "name": "Remy Moreau",
+            "team": "Vantage Performance",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 7,
+            "id": 9,
+            "name": "Ivan Petrov",
+            "team": "Copperhead Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 8,
+            "id": 6,
+            "name": "Marco Castellano",
+            "team": "Vantage Performance",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 9,
+            "id": 10,
+            "name": "Liam Brennan",
+            "team": "Bluewater Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 10,
+            "id": 8,
+            "name": "Erik Lindqvist",
+            "team": "Copperhead Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 11,
+            "id": 18,
+            "name": "Rookie",
+            "team": "Lowline Motorsports",
+            "me": true,
+            "dnf": false
+          }
+        ],
+        "log": [
+          {
+            "lap": 1,
+            "card": "bump_draft",
+            "succ": 0.8636298996899782,
+            "tier": "Success",
+            "tags": [
+              [18, "Superspeedway", null],
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "tuck_in",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [14, "Superspeedway", null],
+              [-12, "Stock cars field", "field"],
+              [8, "In the draft", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "side_draft",
+            "succ": 0.6742260390218254,
+            "tier": "Neutral",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Superspeedway", null],
+              [8, "On the straight", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "bump_draft",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [18, "Superspeedway", null],
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "dive_bomb",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [18, "Corner entry", null],
+              [14, "Right on him", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "side_draft",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [16, "Nose at his quarter", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Superspeedway", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "tuck_in",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [22, "Tucked up close", null],
+              [14, "Superspeedway", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "side_draft",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [16, "Nose at his quarter", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Superspeedway", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "tuck_in",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [22, "Tucked up close", null],
+              [-22, "He is blocking", "block"],
+              [14, "Superspeedway", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "bump_draft",
+            "succ": 0.8636298996899782,
+            "tier": "Success",
+            "tags": [
+              [-22, "Not close enough", null],
+              [18, "Superspeedway", null],
+              [12, "Chrome Horn", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "save_tires",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "push_limit",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "dive_bomb",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [18, "Corner entry", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "push_limit",
+            "succ": 0.8898641733084078,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [12, "Combo ×3", "combo"],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "side_draft",
+            "succ": 0.8898641733084078,
+            "tier": "CritSuccess",
+            "tags": [
+              [12, "Combo ×4", "combo"],
+              [-12, "Stock cars field", "field"],
+              [10, "Superspeedway", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "bump_run",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [-18, "Too fast here", null],
+              [16, "On his bumper", null],
+              [14, "Short track", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "tuck_in",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [22, "Tucked up close", null],
+              [14, "Superspeedway", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "bump_draft",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [-28, "In the corner", null],
+              [18, "Superspeedway", null],
+              [12, "Chrome Horn", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "side_draft",
+            "succ": 0.7991839267630562,
+            "tier": "CritSuccess",
+            "tags": [
+              [-12, "Mid-corner", null],
+              [12, "Combo ×3", "combo"],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "block",
+            "succ": 0.5513339734833473,
+            "tier": "Neutral",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "save_tires",
+            "succ": 0.7405887269097834,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "side_draft",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Superspeedway", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "bump_draft",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [-22, "Not close enough", null],
+              [18, "Superspeedway", null],
+              [12, "Chrome Horn", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "push_limit",
+            "succ": 0.7405887269097834,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "tuck_in",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [14, "Superspeedway", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "dive_bomb",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [18, "Corner entry", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "save_tires",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [12, "Combo ×3", "combo"],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "bump_run",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [-18, "Too fast here", null],
+              [16, "On his bumper", null],
+              [14, "Short track", null]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "block",
+            "succ": 0.8772380142972466,
+            "tier": "Success",
+            "tags": [
+              [14, "He's on you", null],
+              [12, "Chrome Horn", null],
+              [12, "Combo ×5", "combo"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "reel_in",
+            "succ": 0.9,
+            "tier": "Neutral",
+            "tags": [
+              [12, "Combo ×6", "combo"],
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "push_limit",
+            "succ": 0.7405887269097834,
+            "tier": "Neutral",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "block",
+            "succ": 0.6506576628454411,
+            "tier": "Neutral",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "reel_in",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "block",
+            "succ": 0.7405887269097834,
+            "tier": "Success",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "save_tires",
+            "succ": 0.8167969959204923,
+            "tier": "Neutral",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "push_limit",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "reel_in",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "push_limit",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "save_tires",
+            "succ": 0.8167969959204923,
+            "tier": "CritSuccess",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "reel_in",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "reel_in",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "save_tires",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "reel_in",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "save_tires",
+            "succ": 0.8167969959204923,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          }
+        ]
+      },
+      "cards": ["stay_out", "save_tires", "tape_grille"],
+      "cardRerolls": 0,
+      "picked": null,
+      "inDeck": false,
+      "parts": ["long_run_tires", "spotter_headset"],
+      "partRerolls": 0,
+      "partPicked": null
+    },
+    "field": [
+      {
+        "id": 0,
+        "team": 0,
+        "rating": 9,
+        "num": 69,
+        "me": false,
+        "name": "Wade Haskins",
+        "trait": "Wall",
+        "stats": [9, 8, 9, 6, 8, 9, 8, 7],
+        "rec": [1, 0, 0, 1, 4]
+      },
+      {
+        "id": 1,
+        "team": 0,
+        "rating": 9,
+        "num": 11,
+        "me": false,
+        "name": "Shane Sullivan",
+        "trait": "Smooth",
+        "stats": [9, 9, 8, 5, 8, 10, 9, 8],
+        "rec": [1, 1, 1, 1, 1]
+      },
+      {
+        "id": 2,
+        "team": 1,
+        "rating": 8,
+        "num": 13,
+        "me": false,
+        "name": "Cal Bram",
+        "trait": "Closer",
+        "stats": [9, 8, 7, 6, 7, 8, 6, 7],
+        "rec": [1, 0, 0, 1, 3]
+      },
+      {
+        "id": 3,
+        "team": 1,
+        "rating": 8,
+        "num": 78,
+        "me": false,
+        "name": "Ana Ruiz",
+        "trait": "Veteran",
+        "stats": [7, 7, 8, 4, 8, 7, 7, 8],
+        "rec": [1, 0, 0, 0, 15]
+      },
+      {
+        "id": 4,
+        "team": 2,
+        "rating": 8,
+        "num": 98,
+        "me": false,
+        "name": "Tobi Okafor",
+        "trait": "Wall",
+        "stats": [9, 7, 7, 5, 8, 6, 6, 7],
+        "rec": [1, 0, 0, 1, 2]
+      },
+      {
+        "id": 5,
+        "team": 2,
+        "rating": 8,
+        "num": 38,
+        "me": false,
+        "name": "Bruno Ferreira",
+        "trait": "Closer",
+        "stats": [9, 9, 8, 4, 6, 7, 7, 7],
+        "rec": [1, 0, 0, 1, 5]
+      },
+      {
+        "id": 6,
+        "team": 3,
+        "rating": 7,
+        "num": 99,
+        "me": false,
+        "name": "Marco Castellano",
+        "trait": "Drafter",
+        "stats": [6, 7, 6, 4, 6, 6, 7, 6],
+        "rec": [1, 0, 0, 0, 8]
+      },
+      {
+        "id": 7,
+        "team": 3,
+        "rating": 7,
+        "num": 30,
+        "me": false,
+        "name": "Remy Moreau",
+        "trait": "Wall",
+        "stats": [8, 7, 7, 6, 6, 7, 7, 6],
+        "rec": [1, 0, 0, 0, 6]
+      },
+      {
+        "id": 8,
+        "team": 4,
+        "rating": 6,
+        "num": 65,
+        "me": false,
+        "name": "Erik Lindqvist",
+        "trait": "Smooth",
+        "stats": [5, 5, 6, 4, 8, 5, 5, 7],
+        "rec": [1, 0, 0, 0, 10]
+      },
+      {
+        "id": 9,
+        "team": 4,
+        "rating": 6,
+        "num": 61,
+        "me": false,
+        "name": "Ivan Petrov",
+        "trait": "Aggressive",
+        "stats": [6, 5, 7, 4, 7, 5, 7, 5],
+        "rec": [1, 0, 0, 0, 7]
+      },
+      {
+        "id": 10,
+        "team": 5,
+        "rating": 6,
+        "num": 96,
+        "me": false,
+        "name": "Liam Brennan",
+        "trait": "Smooth",
+        "stats": [5, 6, 6, 5, 6, 6, 8, 7],
+        "rec": [1, 0, 0, 0, 9]
+      },
+      {
+        "id": 11,
+        "team": 5,
+        "rating": 6,
+        "num": 34,
+        "me": false,
+        "name": "Kenta Tanaka",
+        "trait": "Smooth",
+        "stats": [6, 6, 7, 6, 5, 5, 6, 6],
+        "rec": [1, 0, 0, 0, 13]
+      },
+      {
+        "id": 12,
+        "team": 6,
+        "rating": 5,
+        "num": 93,
+        "me": false,
+        "name": "Luc Dubois",
+        "trait": "Restarter",
+        "stats": [4, 4, 6, 5, 7, 7, 5, 6],
+        "rec": [1, 0, 0, 0, 20]
+      },
+      {
+        "id": 13,
+        "team": 6,
+        "rating": 5,
+        "num": 39,
+        "me": false,
+        "name": "Diego Reyes",
+        "trait": "Rookie",
+        "stats": [4, 5, 4, 5, 8, 8, 7, 7],
+        "rec": [1, 0, 0, 0, 12]
+      },
+      {
+        "id": 14,
+        "team": 7,
+        "rating": 4,
+        "num": 84,
+        "me": false,
+        "name": "Jace Whitaker",
+        "trait": "Rookie",
+        "stats": [3, 4, 3, 4, 5, 4, 5, 6],
+        "rec": [1, 0, 0, 0, 14]
+      },
+      {
+        "id": 15,
+        "team": 7,
+        "rating": 4,
+        "num": 82,
+        "me": false,
+        "name": "Ren Nakamura",
+        "trait": "Veteran",
+        "stats": [3, 4, 5, 5, 5, 5, 5, 6],
+        "rec": [1, 0, 0, 0, 19]
+      },
+      {
+        "id": 16,
+        "team": 8,
+        "rating": 3,
+        "num": 16,
+        "me": false,
+        "name": "Rory McAllister",
+        "trait": "Aggressive",
+        "stats": [2, 4, 4, 6, 5, 4, 3, 4],
+        "rec": [1, 0, 0, 0, 16]
+      },
+      {
+        "id": 17,
+        "team": 8,
+        "rating": 3,
+        "num": 26,
+        "me": false,
+        "name": "Femi Adeyemi",
+        "trait": "Wall",
+        "stats": [4, 3, 4, 5, 3, 5, 5, 5],
+        "rec": [1, 0, 0, 0, 17]
+      },
+      {
+        "id": 18,
+        "team": 9,
+        "rating": 3,
+        "num": 77,
+        "me": true,
+        "name": null,
+        "trait": "None",
+        "stats": null,
+        "rec": [1, 0, 0, 0, 11]
+      },
+      {
+        "id": 19,
+        "team": 9,
+        "rating": 3,
+        "num": 10,
+        "me": false,
+        "name": "Kasey Kowalski",
+        "trait": "Veteran",
+        "stats": [3, 4, 4, 5, 5, 5, 4, 3],
+        "rec": [1, 0, 0, 0, 18]
+      }
+    ],
+    "pts": {
+      "0": 33,
+      "1": 40,
+      "2": 34,
+      "3": 22,
+      "4": 35,
+      "5": 32,
+      "6": 29,
+      "7": 31,
+      "8": 27,
+      "9": 30,
+      "10": 28,
+      "11": 24,
+      "12": 17,
+      "13": 25,
+      "14": 23,
+      "15": 18,
+      "16": 21,
+      "17": 20,
+      "18": 26,
+      "19": 19
+    },
+    "contract": {
+      "per": 0,
+      "team": 9,
+      "series": "Stock",
+      "since": 1,
+      "clauses": []
+    },
+    "sponsor": {
+      "id": "summit",
+      "per": 800,
+      "bonus": 4400,
+      "renew": false,
+      "since": 1,
+      "trust": 0
+    },
+    "sponsorOffers": null,
+    "objectives": null,
+    "rival": 15,
+    "past": [],
+    "review": null,
+    "offers": null,
+    "ladder": ["Stock"],
+    "calendar": ["talon", "carver", "mill", "ridge", "harbor", "iron", "talon", "copper", "mill", "harbor"],
+    "qual": {
+      "season": 1,
+      "race": 0,
+      "track": "talon",
+      "grid": [1, 5, 0, 2, 4, 7, 3, 6, 10, 8, 9, 11, 12, 13, 18, 19, 15, 14, 16, 17],
+      "times": [40.394, 40.629, 40.646, 40.911, 40.915, 41.289, 41.33, 41.449, 41.619, 41.645, 41.658, 41.721, 41.953, 41.957, 42.324, 42.4, 42.494, 42.496, 42.513, 42.668],
+      "pos": 15,
+      "time": 42.323680296130526,
+      "skip": false,
+      "card": null,
+      "avg": 1.364,
+      "best": 4,
+      "counts": [3, 4, 1, 0, 0]
+    },
+    "qualRunning": false,
+    "driver": {
+      "bg": "hero",
+      "attr": {
+        "Presence": 14,
+        "Wits": 12,
+        "Composure": 9,
+        "Savvy": 10,
+        "Rapport": 13,
+        "Grit": 15
+      },
+      "prof": ["Media", "Endure"],
+      "lvl": 1,
+      "xp": 25,
+      "pts": 0,
+      "hype": 2,
+      "fans": 35,
+      "respect": 35,
+      "img": [0, 0],
+      "trail": [],
+      "log": [],
+      "nextMom": 0
+    },
+    "event": null,
+    "eventsHeld": [],
+    "staff": [
+      {
+        "role": "CrewChief",
+        "name": "Dot Pickens",
+        "lvl": 3,
+        "xp": 13,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Spotter",
+        "name": "Hank Lowery",
+        "lvl": 3,
+        "xp": 23,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Engineer",
+        "name": "Nia Foster",
+        "lvl": 3,
+        "xp": 17,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "PitCrew",
+        "name": "Wes Calloway",
+        "lvl": 3,
+        "xp": 9,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      }
+    ],
+    "hire": [],
+    "hireFor": -1,
+    "poach": null,
+    "poached": 0
+  },
+  "retry": null
+}

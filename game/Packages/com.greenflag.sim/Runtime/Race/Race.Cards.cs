@@ -230,6 +230,7 @@ namespace GreenFlag.Sim
             int fv = Tune.FocusRead(cd, Track); if (fv != 0) R.A(fv, Tune.FocusName(Track.Kart), "tune");
             DamageOdds(cd, c.Car, R);
             ShapeOdds(cd, c, R);
+            RulesOdds(cd, c, R);
             if (Heat > 0 && (f == CardFamily.Pass || f == CardFamily.Risk)) R.A(-Heat * 3, $"Heat ×{Heat}", "heat");
             if ((f == CardFamily.Pass || f == CardFamily.Draft) && c.Ahead != null && c.Ahead.HasEffect(EffectKind.Block)) R.A(-22, "He is blocking", "block");
             DriverOdds(cd, c, R);

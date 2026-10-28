@@ -300,7 +300,8 @@ namespace GreenFlag.Sim.Tests
         {
             foreach (var t in Tracks.All)
             {
-                var (d, bot) = PadPlayer.Run(t, 61);
+                // step 42: a superspeedway deck is nearly dead on a short track by design, so the short tracks bring the short-track persona
+                var (d, bot) = PadPlayer.Run(t, 61, t.Kind == TrackKind.ShortTrack ? "bully" : "drafter");
                 var r = d.Race;
                 Assert.True(r.Done, t.Id);
                 Assert.Equal(0, bot.Lost);

@@ -516,6 +516,8 @@ namespace GreenFlag.View
             nx.Row("Expected finish (car ratings)", "P" + c.ExpectedFinish().ToString(inv));
             nx.Row("Points", c.SeasonResults.Count > 0 ? $"P{c.MyRank()} · {c.MyPoints} pts" : "Season starts here");
             nx.Row("Team", $"{c.TeamName} · rating {c.SeriesTeams[c.Team].Rating}{(c.Contract.Per > 0 ? " · " + Money(c.Contract.Per) + " a race" : " · no salary yet")}");
+            var rules = TrackRules.Text(t.Kind);
+            if (rules != null) nx.Text(rules);
             if (c.Series == Series.Late && !c.Results.Any(r => Tracks.ById(r.TrackId).Late))
                 nx.Text("New in late models: pit stops and tire strategy. Your crew chief plans a stop in the fuel window (press PIT on the plan lap, or leave it to the crew chief), and under caution you choose stay out, fuel, two or four tires. Fresh tires pass cars on old ones; staying out keeps track position.", Amber);
             if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
@@ -624,6 +626,7 @@ namespace GreenFlag.View
             var side = p.Section($"Race deck · {c.Deck.Count} cards", 1, null, ok ? (Rgb?)null : Red);
             side.Text(FamStrip(c.Deck));
             RulesRows(side, t);
+            if (TrackRules.Text(t.Kind) != null) side.Text(TrackRules.Text(t.Kind));
             side.Button("deck.auto", "Auto-build for " + DeckRules.ShortName(t), note: "Picks the cards that fit this track and your tune best");
             if (!ok) side.Button("deck.fix", "Fix rules");
             if (c.TrackDecks.ContainsKey(t.Id)) side.Button("deck.last", $"Last {DeckRules.ShortName(t)} deck", note: "The deck you raced here last time");

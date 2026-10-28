@@ -44,6 +44,11 @@ namespace GreenFlag.Sim
         /// (LateFresh per point of tire past LateFreshGap, up to LateFreshCap). Off = the browser slice's late model field.</summary>
         public bool LateField = true;
         public double LateFresh = 0.4, LateFreshGap = 15, LateFreshCap = 12;
+        /// <summary>Step 42: the premier stock series' track rules. Each kind of stock car track (superspeedway, intermediate,
+        /// short track, road course) moves card reads and the race its own way (Race.Rules.cs). Off = the browser slice's stock races.</summary>
+        public bool StockRules = true;
+        /// <summary>Extra pace lost per point of tire wear on an intermediate, and pace per notch of aero on a road course.</summary>
+        public double IntFalloff = 0.06, RoadAero = 0.002;
         public double LateCrossMe = 0.45, LateCrossAi = 0.004, LateCrossCd = 14, LateCrossWin = 0.6;
 
         // BAL: cards, beats, combos and Focus (only used when the race has a card layer, RaceSetup.Loadout)
