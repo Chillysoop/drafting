@@ -1,3 +1,4 @@
+using System.IO;
 using GreenFlag.Sim;
 using GreenFlag.View;
 using UnityEngine;
@@ -10,13 +11,16 @@ namespace GreenFlag.Presentation
     /// MenuHud. Go racing builds a RaceView for the career's next race; at the flag Enter or A brings the race back here for
     /// the payout and the reward screen, and the race view is torn down. Mouse, keyboard (arrows, Enter, Esc) and controller
     /// (d-pad or stick, A, B) all work in the menus.
+    /// Saves (step 35): three slots under persistentDataPath/saves. The menu writes a checkpoint when you go racing, at the
+    /// results, on every reward-screen press and when you leave the deck builder; anything else is flushed when the game is
+    /// paused, loses focus or quits. Quitting mid-race resumes in the garage before that race.
     /// </summary>
     public sealed class CareerFlow : MonoBehaviour
     {
         [Tooltip("0 = a new random career seed each run.")]
         public int seed;
 
-        public CareerMenu Menu { get; } = new CareerMenu();
+        public CareerMenu Menu { get; private set; }
         public MenuFocus Focus { get; } = new MenuFocus();
         /// <summary>The controller or the arrow keys moved last (draw the focus ring); the mouse hides it again.</summary>
         public bool PadActive;
@@ -27,6 +31,29 @@ namespace GreenFlag.Presentation
         readonly PadReader padReader = new PadReader();
         System.Action<PadStyle, PadButton, bool> onPad;
         Camera cam;
+
+        void Awake()
+        {
+            var store = SaveStore();
+            Menu = store != null ? new CareerMenu(new SaveSlots(store) { Build = Application.version }) : new CareerMenu();
+        }
+
+        /// <summary>Where saves live on this platform, or null to play without saving.</summary>
+        static ISaveStore SaveStore()
+        {
+#if UNITY_SWITCH && !UNITY_EDITOR
+            // The Switch needs the NintendoSDK save-data mount and a commit after each write; that store comes with the
+            // Switch developer account (roadmap step 14). Until then a Switch build plays without saving.
+            Debug.LogWarning("Green Flag Deck: no Switch save store yet, playing without saves");
+            return null;
+#else
+            return new FileSaveStore(Path.Combine(Application.persistentDataPath, "saves"));
+#endif
+        }
+
+        void OnApplicationPause(bool paused) { if (paused) Menu?.Flush(); }
+        void OnApplicationFocus(bool focused) { if (!focused) Menu?.Flush(); }
+        void OnApplicationQuit() => Menu?.Flush();
 
         void Start()
         {

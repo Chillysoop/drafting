@@ -1,0 +1,571 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 1,
+  "build": "step-35 sample (format 1)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "reward",
+  "summary": {
+    "name": "Rookie",
+    "persona": "bully",
+    "series": "Stock",
+    "season": 1,
+    "race": 1,
+    "of": 10,
+    "track": "Millbrook Speedway",
+    "money": 8742,
+    "races": 1,
+    "diff": "Normal",
+    "stakes": "Ironman",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "bully",
+    "series": "Stock",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Ironman",
+    "survive": 0,
+    "money": 8742,
+    "season": 1,
+    "raceIdx": 0,
+    "over": false,
+    "seed": 13,
+    "rng": 2156343917,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 3,
+        "durability": 5,
+        "racecraft": 5,
+        "defense": 5,
+        "consistency": 5,
+        "tireMgmt": 4
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 0,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 15,
+      "wits": 12,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["tuck_in", "side_draft", "dive_bomb", "block", "save_tires", "spotter_focus", "bump_run", "bump_run", "bump_draft", "block", "dive_bomb", "push_limit"],
+    "deck": ["block", "block", "bump_run", "bump_run", "dive_bomb", "dive_bomb", "push_limit", "save_tires", "spotter_focus", "bump_draft", "side_draft", "tuck_in"],
+    "partsOwned": ["chrome_horn"],
+    "equipped": {
+      "Chassis": "chrome_horn"
+    },
+    "tune": {
+      "hand": 0,
+      "aero": -2,
+      "focus": "Bumper"
+    },
+    "hist": {
+      "block": [6, 6],
+      "bump_run": [4, 4],
+      "dive_bomb": [5, 4],
+      "push_limit": [4, 3],
+      "reel_in": [3, 2],
+      "save_tires": [4, 4],
+      "side_draft": [1, 1]
+    },
+    "trackDecks": {
+      "mill": ["block", "block", "bump_run", "bump_run", "dive_bomb", "dive_bomb", "push_limit", "save_tires", "spotter_focus", "bump_draft", "side_draft", "tuck_in"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "mill",
+        "trackName": "Millbrook Speedway",
+        "start": 20,
+        "finish": 4,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Strong",
+        "mul": 0.44000000000000006,
+        "purse": 3278,
+        "bonus": 2464,
+        "total": 5742,
+        "plays": 27,
+        "succ": 24,
+        "crits": 0,
+        "bestChain": 5,
+        "calls": 7,
+        "callsWon": 5,
+        "penalty": null,
+        "lostPart": null
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "sticker_tires",
+      "rerolls": 0
+    },
+    "deckFor": 1000,
+    "deckNote": null,
+    "reward": {
+      "res": {
+        "season": 1,
+        "raceNo": 1,
+        "track": "mill",
+        "trackName": "Millbrook Speedway",
+        "start": 20,
+        "finish": 4,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Strong",
+        "mul": 0.44000000000000006,
+        "purse": 3278,
+        "bonus": 2464,
+        "total": 5742,
+        "plays": 27,
+        "succ": 24,
+        "crits": 0,
+        "bestChain": 5,
+        "calls": 7,
+        "callsWon": 5,
+        "penalty": null,
+        "lostPart": null,
+        "order": [
+          {
+            "pos": 1,
+            "id": 6,
+            "name": "Femi Adeyemi",
+            "team": "Vantage Performance",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 2,
+            "id": 11,
+            "name": "Marco Castellano",
+            "team": "Bluewater Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 3,
+            "id": 12,
+            "name": "Erik Lindqvist",
+            "team": "Ridgeway Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 4,
+            "id": 18,
+            "name": "Rookie",
+            "team": "Lowline Motorsports",
+            "me": true,
+            "dnf": false
+          },
+          {
+            "pos": 5,
+            "id": 0,
+            "name": "Shane Sullivan",
+            "team": "Apex Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 6,
+            "id": 2,
+            "name": "Ren Nakamura",
+            "team": "Harlan-Reed Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 7,
+            "id": 8,
+            "name": "Liam Brennan",
+            "team": "Copperhead Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 8,
+            "id": 1,
+            "name": "Kenta Tanaka",
+            "team": "Apex Motorsports",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 9,
+            "id": 13,
+            "name": "Ivan Petrov",
+            "team": "Ridgeway Racing",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 10,
+            "id": 15,
+            "name": "Luc Dubois",
+            "team": "Granite State Motorsports",
+            "me": false,
+            "dnf": false
+          }
+        ],
+        "log": [
+          {
+            "lap": 1,
+            "card": "dive_bomb",
+            "succ": 0.3981786164505148,
+            "tier": "Success",
+            "tags": [
+              [14, "Right on him", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "bump_run",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [16, "On his bumper", null],
+              [14, "Short track", null],
+              [12, "Middle of the corner", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "block",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [14, "He's on you", null],
+              [12, "Chrome Horn", null],
+              [12, "Combo ×3", "combo"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "dive_bomb",
+            "succ": 0.09846940828168382,
+            "tier": "Fail",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [-6, "Mid-corner", null]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "dive_bomb",
+            "succ": 0.8334133682922437,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Corner entry", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "push_limit",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "bump_run",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [16, "On his bumper", null],
+              [14, "Short track", null],
+              [12, "Middle of the corner", null]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "dive_bomb",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [-22, "He is blocking", "block"],
+              [18, "Corner entry", null],
+              [14, "Right on him", null]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "save_tires",
+            "succ": 0.8898641733084078,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [12, "Combo ×5", "combo"],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "block",
+            "succ": 0.8898641733084078,
+            "tier": "Success",
+            "tags": [
+              [14, "He's on you", null],
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "block",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "save_tires",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "block",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "bump_run",
+            "succ": 0.6506576628454411,
+            "tier": "Success",
+            "tags": [
+              [14, "Short track", null],
+              [12, "Middle of the corner", null],
+              [12, "Chrome Horn", null]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "dive_bomb",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [18, "Corner entry", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "block",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "side_draft",
+            "succ": 0.8772380142972466,
+            "tier": "Success",
+            "tags": [
+              [16, "Nose at his quarter", null],
+              [12, "Combo ×3", "combo"],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "bump_run",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [16, "On his bumper", null],
+              [14, "Short track", null],
+              [12, "Middle of the corner", null]
+            ]
+          },
+          {
+            "lap": 15,
+            "card": "push_limit",
+            "succ": 0.6742260390218254,
+            "tier": "Fail",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 15,
+            "card": "block",
+            "succ": 0.8898641733084078,
+            "tier": "Success",
+            "tags": [
+              [14, "He's on you", null],
+              [12, "Chrome Horn", null],
+              [-12, "Stock cars field", "field"]
+            ]
+          },
+          {
+            "lap": 15,
+            "card": "push_limit",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 16,
+            "card": "save_tires",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 16,
+            "card": "reel_in",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 17,
+            "card": "reel_in",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 18,
+            "card": "push_limit",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [16, "Fresh tires", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 18,
+            "card": "save_tires",
+            "succ": 0.7610479703301001,
+            "tier": "CritSuccess",
+            "tags": [
+              [14, "Early in the run", null],
+              [-12, "Stock cars field", "field"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 21,
+            "card": "reel_in",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [-12, "Stock cars field", "field"],
+              [10, "Fresh tires", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          }
+        ]
+      },
+      "cards": ["tape_grille", "dive_bomb", "bump_run"],
+      "cardRerolls": 0,
+      "picked": null,
+      "inDeck": false,
+      "parts": ["clutch_radio", "momentum_wheel"],
+      "partRerolls": 0,
+      "partPicked": null
+    }
+  },
+  "retry": null
+}

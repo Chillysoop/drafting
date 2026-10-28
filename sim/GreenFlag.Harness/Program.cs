@@ -18,6 +18,8 @@ namespace GreenFlag.Harness
     ///   wrecks [track] [seed] [out.html] [style] [n] close-ups of the first n wrecks as the view plays them out (step 30)
     ///   career [races] [persona] [seed]              a career through the menus (step 34): MenuBot shops and picks rewards, the mouse bot races
     ///   menus  [persona] [seed] [out.html]           the career screens as HTML, laid out as MenuHud draws them (step 34)
+    ///   saves  [races] [persona] [seed] [stakes]     a career straight vs closing and reopening the game after every press (step 35)
+    ///   savefixtures [dir]                           writes this build's sample saves for the old-saves-load test (step 35)
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
     /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
     /// Policies with cards (a persona's starting deck, part, tune and driver; default drafter, its kart cousin on kart tracks):
@@ -44,6 +46,8 @@ namespace GreenFlag.Harness
                     case "mouse": return HudShots.Mouse(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")));
                     case "pad": return HudShots.Pad(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")), Arg(args, 5, "xbox"));
                     case "career": return CareerCmd(int.Parse(Arg(args, 1, "10")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")));
+                    case "saves": return SaveCmds.Saves(int.Parse(Arg(args, 1, "6")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")), Arg(args, 4, "standard"));
+                    case "savefixtures": return SaveCmds.Fixtures(Arg(args, 1, "sim/GreenFlag.Sim.Tests/Saves"));
                     case "menus": return MenuShots.Run(Arg(args, 1, "drafter"), uint.Parse(Arg(args, 2, "1")), Arg(args, 3, "menus.html"));
                     case "hud": return HudShots.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "hud.html"), int.Parse(Arg(args, 4, "6")));
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));

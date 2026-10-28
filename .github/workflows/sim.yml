@@ -90,6 +90,17 @@ jobs:
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
           dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- menus drafter 3 "$RUNNER_TEMP/frames/career-screens.html"
+      - name: Saves (step 35, closing and reopening the game after every press must change nothing; old saves load in the tests above)
+        run: |
+          set -o pipefail
+          {
+            echo '### Saves: a career straight vs reloaded after every press and race'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- saves 6 drafter 1 standard
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- saves 7 brawler 1 ironman
+            echo '```'
+            echo "Sample saves loaded by OldSavesLoadAndPlayOn: $(ls sim/GreenFlag.Sim.Tests/Saves | tr '\n' ' ')"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: race-view-frames

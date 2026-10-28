@@ -54,6 +54,7 @@ namespace GreenFlag.View
                 case CareerScreen.Reward:
                 {
                     var R = c.Reward;
+                    if (R.Res.Penalty == "dead") return "reward.go"; // Permadeath: no rewards, the run is over
                     if (R.Picked == null)
                     {
                         if (R.Cards.Count == 0) return "reward.skip";
@@ -89,6 +90,43 @@ namespace GreenFlag.View
             }
             // leave the last reward screen so the loop ends back in the garage
             for (int i = 0; i < 20 && m.Screen == CareerScreen.Reward && bot.Step(m); i++) { }
+            return m;
+        }
+
+        /// <summary>
+        /// Run, but after every press and every race the game is closed and opened again: the menu flushes its save (as the
+        /// engine does when the game quits) and a fresh menu loads the slot back (step 35). Leaving the deck builder is the only
+        /// press that isn't reloaded in between, since the deck builder reopens in the garage. Reload says how often it did it.
+        /// </summary>
+        public static CareerMenu RunReloading(CareerMenu m, int races, Func<RaceSetup, Race> play = null, MenuBot bot = null, Action<CareerMenu> reloaded = null, int maxPresses = 100000)
+        {
+            if (m.Saves == null) throw new ArgumentException("RunReloading needs a menu with save slots");
+            bot = bot ?? new MenuBot();
+            play = play ?? (s => MousePlayer.Play(new Race(s)).desk.Race);
+            int done = 0;
+            CareerMenu Reload(CareerMenu x)
+            {
+                if (x.Career == null || x.Screen == CareerScreen.DeckBuilder) return x;
+                x.Flush();
+                var n = new CareerMenu(x.Saves) { NewSeed = x.NewSeed, PickPersona = x.PickPersona, PickDiff = x.PickDiff, PickStakes = x.PickStakes, PickSlot = x.PickSlot };
+                if (!n.Load(x.Slot)) throw new InvalidOperationException("Reload failed: " + n.Toast);
+                reloaded?.Invoke(n);
+                return n;
+            }
+            for (int i = 0; i < maxPresses && done < races; i++)
+            {
+                if (m.RaceWanted != null)
+                {
+                    var race = play(m.TakeRace());
+                    m.RaceFinished(race);
+                    done++;
+                    m = Reload(m);
+                    continue;
+                }
+                if (!bot.Step(m)) break;
+                if (m.RaceWanted == null) m = Reload(m);
+            }
+            for (int i = 0; i < 20 && m.Screen == CareerScreen.Reward && bot.Step(m); i++) m = Reload(m);
             return m;
         }
     }

@@ -10,6 +10,10 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
+    <!-- sample saves from every save format version (step 35): CI loads each one in this build -->
+    <None Include="Saves/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../GreenFlag.Sim/GreenFlag.Sim.csproj" />
     <ProjectReference Include="../GreenFlag.View/GreenFlag.View.csproj" />
   </ItemGroup>

@@ -1,0 +1,1185 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 1,
+  "build": "step-35 sample (format 1)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "reward",
+  "summary": {
+    "name": "Rookie",
+    "persona": "brawler",
+    "series": "Kart",
+    "season": 1,
+    "race": 3,
+    "of": 6,
+    "track": "Pinewood Kart Park",
+    "money": 3428,
+    "races": 3,
+    "diff": "Normal",
+    "stakes": "Standard",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "brawler",
+    "series": "Kart",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Standard",
+    "survive": 0,
+    "money": 3428,
+    "season": 1,
+    "raceIdx": 2,
+    "over": false,
+    "seed": 12,
+    "rng": 1268743458,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 3,
+        "durability": 5,
+        "racecraft": 5,
+        "defense": 5,
+        "consistency": 5,
+        "tireMgmt": 4
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 0,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 15,
+      "wits": 12,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["k_tow", "k_show", "k_switch", "k_outside", "k_cover", "k_board", "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake", "k_switch", "k_owninside"],
+    "deck": ["k_owninside", "k_switch", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_outside", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"],
+    "partsOwned": ["nerf_bar"],
+    "equipped": {
+      "Chassis": "nerf_bar"
+    },
+    "tune": {
+      "hand": 1,
+      "aero": -1,
+      "focus": "Bumper"
+    },
+    "hist": {
+      "k_board": [26, 20],
+      "k_cover": [21, 21],
+      "k_door": [20, 16],
+      "k_latebrake": [2, 2],
+      "k_outside": [3, 1],
+      "k_owninside": [1, 1],
+      "k_push": [12, 8],
+      "k_show": [22, 16],
+      "k_smooth": [19, 14],
+      "k_switch": [24, 19],
+      "k_tow": [14, 11],
+      "reel_in": [8, 8]
+    },
+    "trackDecks": {
+      "hollow": ["k_push", "k_tow", "k_latebrake", "k_switch", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_cover", "k_outside", "k_board", "k_smooth"],
+      "pinek": ["k_owninside", "k_switch", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_outside", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "pinek",
+        "trackName": "Pinewood Kart Park",
+        "start": 17,
+        "finish": 15,
+        "expected": 17,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 540,
+        "bonus": 120,
+        "total": 660,
+        "plays": 63,
+        "succ": 50,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 8,
+        "callsWon": 6,
+        "penalty": null,
+        "lostPart": null
+      },
+      {
+        "season": 1,
+        "raceNo": 2,
+        "track": "hollow",
+        "trackName": "Hollow Creek Kartway",
+        "start": 19,
+        "finish": 17,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 435,
+        "bonus": 60,
+        "total": 495,
+        "plays": 46,
+        "succ": 38,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 6,
+        "callsWon": 4,
+        "penalty": null,
+        "lostPart": null
+      },
+      {
+        "season": 1,
+        "raceNo": 3,
+        "track": "pinek",
+        "trackName": "Pinewood Kart Park",
+        "start": 18,
+        "finish": 14,
+        "expected": 17,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 593,
+        "bonus": 180,
+        "total": 773,
+        "plays": 63,
+        "succ": 49,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 4,
+        "callsWon": 2,
+        "penalty": null,
+        "lostPart": null
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "clutch_radio",
+      "rerolls": 0
+    },
+    "deckFor": 1002,
+    "deckNote": null,
+    "reward": {
+      "res": {
+        "season": 1,
+        "raceNo": 3,
+        "track": "pinek",
+        "trackName": "Pinewood Kart Park",
+        "start": 18,
+        "finish": 14,
+        "expected": 17,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 593,
+        "bonus": 180,
+        "total": 773,
+        "plays": 63,
+        "succ": 49,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 4,
+        "callsWon": 2,
+        "penalty": null,
+        "lostPart": null,
+        "order": [
+          {
+            "pos": 1,
+            "id": 2,
+            "name": "Jace Whitaker",
+            "team": "Brickyard Juniors",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 2,
+            "id": 5,
+            "name": "Luc Dubois",
+            "team": "Tri-County Karting",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 3,
+            "id": 1,
+            "name": "Kasey Kowalski",
+            "team": "Velocity Kart Works",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 4,
+            "id": 0,
+            "name": "Rory McAllister",
+            "team": "Velocity Kart Works",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 5,
+            "id": 4,
+            "name": "Diego Reyes",
+            "team": "Tri-County Karting",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 6,
+            "id": 7,
+            "name": "Kenta Tanaka",
+            "team": "Hotshoe Karts",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 7,
+            "id": 3,
+            "name": "Tobi Okafor",
+            "team": "Brickyard Juniors",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 8,
+            "id": 6,
+            "name": "Bruno Ferreira",
+            "team": "Hotshoe Karts",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 9,
+            "id": 9,
+            "name": "Liam Brennan",
+            "team": "Kingpin Kart Club",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 10,
+            "id": 10,
+            "name": "Ren Nakamura",
+            "team": "Rattlesnake Karts",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 14,
+            "id": 18,
+            "name": "Rookie",
+            "team": "Garage 77 Karting",
+            "me": true,
+            "dnf": false
+          }
+        ],
+        "log": [
+          {
+            "lap": 1,
+            "card": "k_tow",
+            "succ": 0.6506576628454411,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Train of 4", null],
+              [6, "In the tow", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_door",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [10, "Wheel to wheel", null],
+              [10, "Bent Nerf Bar", null],
+              [6, "Tight club track", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_show",
+            "succ": 0.5,
+            "tier": "Neutral",
+            "tags": [
+              [8, "In his mirrors", null],
+              [-3, "Handling", null],
+              [3, "Downforce", "tune"]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [10, "Corner exit", null],
+              [8, "Right on him", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_owninside",
+            "succ": 0.6506576628454411,
+            "tier": "CritSuccess",
+            "tags": [
+              [10, "Hairpin braking zone", "shape"],
+              [8, "Corner entry", null],
+              [6, "Alongside", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_cover",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [12, "He's on you", null],
+              [11, "Combo ×2", "combo"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_push",
+            "succ": 0.8999999999999999,
+            "tier": "Fail",
+            "tags": [
+              [10, "On the straight", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_door",
+            "succ": 0.5257204373044694,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null],
+              [-9, "Heat ×3", "heat"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [8, "Hard to pass in the chicane", "shape"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_show",
+            "succ": 0.5767352226539162,
+            "tier": "Neutral",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [10, "Read the Board", "boost"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_switch",
+            "succ": 0.8636298996899782,
+            "tier": "Neutral",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-12, "Heat ×4", "heat"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_tow",
+            "succ": 0.8636298996899782,
+            "tier": "Success",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-12, "Edge of the tow", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_show",
+            "succ": 0.8636298996899782,
+            "tier": "Success",
+            "tags": [
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"],
+              [8, "In his mirrors", null]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_switch",
+            "succ": 0.6971178639518723,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-10, "No corner to cut back", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_switch",
+            "succ": 0.6971178639518723,
+            "tier": "Success",
+            "tags": [
+              [10, "Corner exit", null],
+              [10, "Momentum ×5", "mom"],
+              [-9, "Heat ×3", "heat"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_cover",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_tow",
+            "succ": 0.9000000000000001,
+            "tier": "Neutral",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [6, "In the tow", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_door",
+            "succ": 0.6506576628454411,
+            "tier": "Success",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_door",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [20, "Side by side through the esses", null],
+              [-12, "No room in the esses", "shape"],
+              [-12, "Heat ×4", "heat"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_switch",
+            "succ": 0.7991839267630562,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [11, "Combo ×2", "combo"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_smooth",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [-10, "Pressure behind", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "CritSuccess",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_switch",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [22, "Read the Board", "boost"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_cover",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_smooth",
+            "succ": 0.6742260390218254,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [10, "Read the Board", "boost"],
+              [-8, "Hairpin: nothing to carry", null]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "reel_in",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_show",
+            "succ": 0.6264935044315415,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [8, "Tossed Switchback", "boost"],
+              [-6, "Heat ×2", "heat"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [18, "Read the Board", "boost"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_door",
+            "succ": 0.6971178639518723,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "Side by side through the esses", null],
+              [-12, "No room in the esses", "shape"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_push",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [-10, "Not close enough", null],
+              [10, "On the straight", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_show",
+            "succ": 0.6264935044315415,
+            "tier": "Success",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [8, "In his mirrors", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-12, "Heat ×4", "heat"],
+              [11, "Combo ×2", "combo"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_smooth",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_show",
+            "succ": 0.5513339734833473,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [8, "In his mirrors", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_switch",
+            "succ": 0.9,
+            "tier": "Fail",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-15, "Heat ×5", "heat"],
+              [11, "Combo ×2", "combo"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_cover",
+            "succ": 0.2594112730902166,
+            "tier": "Success",
+            "tags": [
+              [-10, "Early", null],
+              [10, "Momentum ×5", "mom"],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_door",
+            "succ": 0.8167969959204923,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "Side by side through the esses", null],
+              [-15, "Heat ×5", "heat"],
+              [-12, "No room in the esses", "shape"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_cover",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_smooth",
+            "succ": 0.7805918933901785,
+            "tier": "Success",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [-8, "Hairpin: nothing to carry", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "CritSuccess",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_smooth",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [22, "Read the Board", "boost"],
+              [10, "Momentum ×5", "mom"],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_show",
+            "succ": 0.4232647773460838,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-9, "Heat ×3", "heat"],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [11, "Combo ×2", "combo"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_switch",
+            "succ": 0.8772380142972466,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-12, "Heat ×4", "heat"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_tow",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"],
+              [6, "In the tow", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_door",
+            "succ": 0.6971178639518723,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_push",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_door",
+            "succ": 0.8334133682922437,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [4, "Close behind", null]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_show",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_door",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_push",
+            "succ": 0.9,
+            "tier": "Fail",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "On the straight", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_door",
+            "succ": 0.6971178639518723,
+            "tier": "Fail",
+            "tags": [
+              [20, "Side by side through the esses", null],
+              [-15, "Heat ×5", "heat"],
+              [-12, "No room in the chicane", "shape"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "CritSuccess",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [22, "Read the Board", "boost"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [4, "Close behind", null]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_tow",
+            "succ": 0.6264935044315415,
+            "tier": "Success",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Momentum ×5", "mom"],
+              [-10, "No draft in a hairpin", "shape"]
+            ]
+          }
+        ]
+      },
+      "cards": ["k_door", "k_latebrake", "k_switch"],
+      "cardRerolls": 1,
+      "picked": null,
+      "inDeck": false,
+      "parts": null,
+      "partRerolls": 0,
+      "partPicked": null
+    }
+  },
+  "retry": {
+    "seed": 1792589367,
+    "career": {
+      "name": "Rookie",
+      "persona": "brawler",
+      "series": "Kart",
+      "diff": "Normal",
+      "info": "Full",
+      "stakes": "Standard",
+      "survive": 0,
+      "money": 4155,
+      "season": 1,
+      "raceIdx": 2,
+      "over": false,
+      "seed": 12,
+      "rng": 132954512,
+      "base": {
+        "car": {
+          "power": 3,
+          "handling": 3,
+          "aero": 3,
+          "durability": 5,
+          "racecraft": 5,
+          "defense": 5,
+          "consistency": 5,
+          "tireMgmt": 4
+        },
+        "crewChief": 3,
+        "spotter": 3,
+        "engineer": 3,
+        "pitCrew": 0,
+        "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+        "grit": 15,
+        "wits": 12,
+        "radio": true,
+        "crew": {
+          "laneCut": 0,
+          "chance": 0,
+          "tireOdds": 0,
+          "fuelOdds": 0,
+          "pitHand": 0,
+          "prep": 0,
+          "releaseWindow": 0,
+          "bodyMen": false,
+          "chief": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "spotter": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "engineer": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "chanceAll": 0,
+          "momAll": 0,
+          "softAll": 1,
+          "rate": 1,
+          "reroll": false,
+          "xp": 0
+        }
+      },
+      "collection": ["k_tow", "k_show", "k_switch", "k_outside", "k_cover", "k_board", "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake", "k_switch", "k_owninside"],
+      "deck": ["k_owninside", "k_switch", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_outside", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"],
+      "partsOwned": ["nerf_bar"],
+      "equipped": {
+        "Chassis": "nerf_bar"
+      },
+      "tune": {
+        "hand": 1,
+        "aero": -1,
+        "focus": "Bumper"
+      },
+      "hist": {
+        "k_board": [18, 15],
+        "k_cover": [13, 13],
+        "k_door": [10, 7],
+        "k_latebrake": [2, 2],
+        "k_outside": [3, 1],
+        "k_push": [8, 6],
+        "k_show": [14, 11],
+        "k_smooth": [14, 10],
+        "k_switch": [11, 8],
+        "k_tow": [9, 8],
+        "reel_in": [7, 7]
+      },
+      "trackDecks": {
+        "hollow": ["k_push", "k_tow", "k_latebrake", "k_switch", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_cover", "k_outside", "k_board", "k_smooth"],
+        "pinek": ["k_door", "k_door", "k_switch", "k_switch", "k_outside", "k_show", "k_latebrake", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"]
+      },
+      "results": [
+        {
+          "season": 1,
+          "raceNo": 1,
+          "track": "pinek",
+          "trackName": "Pinewood Kart Park",
+          "start": 17,
+          "finish": 15,
+          "expected": 17,
+          "dnf": false,
+          "tier": "Solid",
+          "mul": 0.15,
+          "purse": 540,
+          "bonus": 120,
+          "total": 660,
+          "plays": 63,
+          "succ": 50,
+          "crits": 0,
+          "bestChain": 3,
+          "calls": 8,
+          "callsWon": 6,
+          "penalty": null,
+          "lostPart": null
+        },
+        {
+          "season": 1,
+          "raceNo": 2,
+          "track": "hollow",
+          "trackName": "Hollow Creek Kartway",
+          "start": 19,
+          "finish": 17,
+          "expected": 18,
+          "dnf": false,
+          "tier": "Solid",
+          "mul": 0.15,
+          "purse": 435,
+          "bonus": 60,
+          "total": 495,
+          "plays": 46,
+          "succ": 38,
+          "crits": 0,
+          "bestChain": 3,
+          "calls": 6,
+          "callsWon": 4,
+          "penalty": null,
+          "lostPart": null
+        }
+      ],
+      "shop": {
+        "rolled": true,
+        "part": "clutch_radio",
+        "rerolls": 0
+      },
+      "deckFor": 1002,
+      "deckNote": null,
+      "reward": null
+    }
+  }
+}
