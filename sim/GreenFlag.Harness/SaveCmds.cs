@@ -107,6 +107,20 @@ namespace GreenFlag.Harness
             var n = ToSeasonEnd(new CareerMenu { PickPersona = "linepainter", NewSeed = 19 });
             if (!n.Press("neg:0")) throw new InvalidOperationException("couldn't negotiate");
             Write("linepainter-season-end-negotiated", n);
+            // step 39 (format 4): Crew HQ built up (training, a perk, a hire on a wage, an upgraded pit card) and a rival's
+            // offer for the crew chief waiting after a talk
+            var w = MenuBot.Run(new CareerMenu { PickPersona = "gambler", NewSeed = 20 }, 4);
+            w.Press("crew");
+            for (int i = 0; i < 4 && w.Career.Staff[CrewRole.CrewChief].Lvl < 6; i++) w.Press("crew.train:CrewChief");
+            w.Press("crew.perk:CrewChief:0:2"); w.Press("crew.perk:CrewChief:0:2");
+            var hi = w.Career.Hires().FindIndex(h => h.Role != CrewRole.CrewChief && h.Fee <= w.Career.Money);
+            if (hi >= 0) { w.Press("crew.hire:" + hi); w.Press("crew.hire:" + hi); }
+            w.Press("crew.pitup:0");
+            if (w.Career.RollPoach(force: true, role: CrewRole.CrewChief) == null) throw new InvalidOperationException("no offer");
+            w.Press("crew.talk");
+            Write("gambler-crew-offer-waiting", w);
+            var x = MenuBot.Run(new CareerMenu { PickPersona = "drafter", NewSeed = 22 }, 6);
+            Write("drafter-crew-xp", x);
             return 0;
         }
     }

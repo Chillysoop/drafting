@@ -139,6 +139,8 @@ namespace GreenFlag.Sim
 
         static void Add(PitCardDef d) { byId[d.Id] = d; all.Add(d); }
 
+        public static bool Exists(string id) => byId.ContainsKey(id);
+
         public static PitCardDef Get(string id)
         {
             if (byId.TryGetValue(id, out var d)) return d;

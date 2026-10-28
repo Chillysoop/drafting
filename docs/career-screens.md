@@ -34,7 +34,7 @@ The reward screen offers 3 cards (2 after a rough day; persona cards 1.8× as li
 
 ## Not here yet
 
-Race objectives, sponsors, salary, points, standings, qualifying and the season wrap came in step 37 ([season.md](season.md)). Still to come: the driver sheet, XP and Hype (38), Crew HQ, crew wages and pit card upgrades (39). The deck builder shows your own success rate on a card once you've played it 3 times; the slice's "base chance" number isn't shown yet.
+Race objectives, sponsors, salary, points, standings, qualifying and the season wrap came in step 37 ([season.md](season.md)). The driver sheet, XP and Hype came in step 38 ([driver.md](driver.md)); Crew HQ, crew wages and pit card upgrades in step 39 ([crew.md](crew.md)). The deck builder shows your own success rate on a card once you've played it 3 times; the slice's "base chance" number isn't shown yet.
 
 ## What is not verified
 

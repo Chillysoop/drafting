@@ -122,6 +122,22 @@ namespace GreenFlag.Sim
         /// <summary>A seat's level (the slice's G.stats[role]).</summary>
         public int Level(CrewRole r) => r == CrewRole.Spotter ? Spotter : r == CrewRole.Engineer ? Engineer : r == CrewRole.PitCrew ? PitSkill : CrewChief;
 
+        /// <summary>A crew call's chance to work: base + level x per, the Clutch Radio, perks and traits (Clutch only when late
+        /// is true: the last 30% of the race). 5 to 95. The race and Crew HQ both read it.</summary>
+        public int CallChance(RadioCallDef d, bool late)
+        {
+            var fx = Crew.For(d.Role);
+            double v = d.Base + Level(d.Role) * d.Per + PartSum(p => p.RadioBonus) + fx.Chance + Crew.ChanceAll + (late ? fx.Late : 0);
+            return (int)SimMath.Clamp(v, 5, 95);
+        }
+
+        /// <summary>A better crew talks more: the gap between calls is 2% shorter per average level above 3, times perks.</summary>
+        public double CrewRate()
+        {
+            double a = (Math.Max(0, CrewChief - 3) + Math.Max(0, Spotter - 3) + Math.Max(0, Engineer - 3)) / 3.0;
+            return Math.Max(0.5, (1 - 0.02 * a) * Crew.Rate);
+        }
+
         /// <summary>Lock in a Crew HQ perk: tier 0, 1 or 2 (levels 4, 6, 8), option a or b. Returns why not, or null.</summary>
         public string PickPerk(CrewRole role, int tier, bool b)
         {

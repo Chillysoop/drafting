@@ -48,7 +48,7 @@ namespace GreenFlag.Sim
     {
         public const string Format = "green-flag-deck-career";
         /// <summary>The format this build writes. Bump it whenever the JSON layout changes, and add a migration.</summary>
-        public const int Version = 3;
+        public const int Version = 4;
 
         /// <summary>Version n to n + 1, in order.</summary>
         public static readonly IReadOnlyList<SaveMigration> Migrations = new SaveMigration[]
@@ -62,6 +62,11 @@ namespace GreenFlag.Sim
             {
                 From = 2, What = "Step 38: the driver sheet and off-track events",
                 Up = root => { foreach (var c in Careers(root)) Career.MigrateV2(c); return root; },
+            },
+            new SaveMigration
+            {
+                From = 3, What = "Step 39: Crew HQ (the crew as people, candidates, rivals' offers)",
+                Up = root => { foreach (var c in Careers(root)) Career.MigrateV3(c); return root; },
             },
         };
 

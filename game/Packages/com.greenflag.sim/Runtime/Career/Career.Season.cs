@@ -247,6 +247,9 @@ namespace GreenFlag.Sim
             foreach (var e in Field) e.SeasonWins = 0;
             Objectives = null; Qual = null; QualRunning = false;
             Event = null; EventsHeld.Clear();
+            // silly season: rivals come for your crew twice as often
+            Poached = 0;
+            RollPoach(2);
             return rv;
         }
 
@@ -288,17 +291,14 @@ namespace GreenFlag.Sim
             if (o.Kind != OfferKind.Stay)
             {
                 Seat(o.Team);
-                // the car is the new team's car (plus your persona's bonus); the crew is the new team's crew
+                // the car is the new team's car (plus your persona's bonus)
                 var b = Personas.Get(Persona).Bonus;
                 int B(string k) => b.TryGetValue(k, out var v) ? v : 0;
                 var c = Base.Car;
                 c.Power = Clamp10(o.Rating + B("power")); c.Handling = Clamp10(o.Rating + B("handling")); c.Aero = Clamp10(o.Rating + B("aero"));
                 c.Durability = Clamp10(4 + B("durability"));
-                int cb = SeasonRules.CrewBase(o.Rating);
-                Base.CrewChief = cb; Base.Spotter = cb; Base.Engineer = cb; Base.PitCrew = cb;
-                Base.Crew = new CrewPerks();
-                Base.PitDeck = new List<string>(PitCards.StartingDeck);
-                notes.Insert(0, $"Car: power, handling and aero {o.Rating}. Crew level {cb}; perks and pit cards start over.");
+                // the crew is the new team's, except the people who follow you (step 39)
+                notes.Insert(0, $"Car: power, handling and aero {o.Rating}. {MoveCrew(o.Rating)}");
             }
             Contract = new Contract { Per = o.Per, Team = o.Team, Series = o.Series, Since = Season };
             Offers = null;
