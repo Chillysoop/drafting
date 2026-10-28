@@ -1347,7 +1347,7 @@ function tossTxt(cd){const t=cd.toss;if(!t)return '';
   focus:`Focus +${Math.round(t.v*100)}%.`,cool:'Heat −1.',setup:'Your Setups stay fresh one more lap.'}[t.k]+(['chain','cool','setup','focus'].includes(t.k)?' (Nothing to feed: an extra charge.)':'');}
 /* Does the toss do its main thing right now? (vs. the extra-charge fallback) */
 function tossLive(cd){const t=cd.toss,r=race;if(!t||!BAL.tossFx||!r)return false;
- if(t.k==='chain')return !!(r.chainFam&&r.t-r.chainAt<=comboWin()&&LINK[r.chainFam].includes(cd.fam));
+ if(t.k==='chain')return !!(r.chainFam&&r.t-r.chainAt<=comboWin()&&linksTo(r,cd));
  if(t.k==='cool')return r.heat>0;
  if(t.k==='setup')return !!(r.setups&&r.setups.length);
  if(t.k==='focus')return BAL.focusSec&&r.focusMeter<1;
@@ -1355,7 +1355,7 @@ function tossLive(cd){const t=cd.toss,r=race;if(!t||!BAL.tossFx||!r)return false
 function tossEffect(cd){const t=cd.toss,r=race;if(!t||!BAL.tossFx)return null;r.stats.tossFx=(r.stats.tossFx||0)+1;
  if(!tossLive(cd)){boardAdd(1);return 'Extra Crew Board charge';}
  r.stats.tossLive=(r.stats.tossLive||0)+1;
- if(t.k==='chain'){r.chainFam=cd.fam;r.chainId=cd.id;r.chainAt=r.t;return `Combo kept alive · next: ${LINK[cd.fam].map(f=>FAM[f].n).join(' / ')}`;}
+ if(t.k==='chain'){r.chainFam=cd.fam;r.chainId=cd.id;r.chainAt=r.t;return `Combo kept alive · next: ${nextNames(r).join(' / ')}`;}
  if(t.k==='buff'){r.tossBuffs=(r.tossBuffs||[]).filter(b=>b.fam!==t.fam);r.tossBuffs.push({fam:t.fam,v:TOSS_BUFF.v,src:`Tossed ${cd.n}`,until:r.t+TOSS_BUFF.sec});return `Next ${FAM[t.fam].n} card +${TOSS_BUFF.v}`;}
  if(t.k==='charge'){boardAdd(1);return 'Extra Crew Board charge';}
  if(t.k==='draw'){draw(1,true);return 'Drew a card';}
@@ -1445,7 +1445,7 @@ function tuneFx(u){u=u||tuneOf();const out=[];const pct=x=>(x>=1?'+':'−')+Math
    Downforce +1 per notch (more grip, room for more tools), Low drag −1 per notch (a lean car). A family minimum for each track, and slot caps that your tune moves:
    Attack (Passing + High risk) 6 + Handling, Defense (Defending + Car) 6 − Handling, Drafting 5 + Aero; the combo focus adds 1 slot to its group.
    A minimum or the size floor relaxes when your collection can't meet it. */
-const CAR_TYPES={stock:{n:'Stock car',min:12,max:16}};
+const CAR_TYPES={stock:{n:'Stock car',min:12,max:16},kart:{n:'Kart',min:10,max:13}};
 const carType=()=>CAR_TYPES[(G&&G.carType)||'stock'];
 function deckSize(u){u=u||(G&&G.tune)||{hand:0,aero:0,focus:null};const ct=carType();return {min:ct.min,max:ct.max-u.aero};}
 // harness (Oct 27): a full auto deck beat a 12-card one by ~0.8 places, so auto-build fills to the max
@@ -1527,7 +1527,7 @@ const OBJECTIVES=[
  {id:'land4',n:'Land 12 successful cards',pay:2000,test:r=>r.succ>=12},
  {id:'mate',n:'Finish ahead of your teammate',pay:1500,test:r=>r.beatMate},
  {id:'rival',n:'Finish ahead of your rival',pay:2500,test:r=>r.beatRival},
- {id:'combo3',n:'Land a ×4 combo',pay:2500,test:r=>(r.bestChain||0)>=4,v:17}
+ {id:'combo3',n:()=>isKart()?'Land a ×3 combo':'Land a ×4 combo',pay:2500,test:r=>(r.bestChain||0)>=(r.kart?3:4),v:17}
 ];
 // targets: finish 3 spots better than the car's expected spot; run inside the top (expected - 8) at some point
 const finTop=e=>Math.max(1,e-3),runTop=e=>Math.max(3,e-8);
@@ -1626,7 +1626,7 @@ const titleSel={sched:'mixed',arch:'drafter',diff:'normal',info:'full',stakes:'s
 function newCareer(){
  const a=ARCH[titleSel.arch];
  G={name:titleSel.name.trim()||'Rookie',arch:titleSel.arch,diff:titleSel.diff,info:titleSel.info,stakes:titleSel.stakes,survive:titleSel.stakes==='permadeath'?1:0,showOdds:titleSel.info==='full',money:6000,raceIdx:0,results:[],
-  deck:[...BASE_DECK,...a.add],relics:[a.relic],equipped:{engine:null,aero:null,chassis:null,tires:null,crew:null},
+  deck:[...(a.kart?KART_BASE:BASE_DECK),...a.add],series:a.kart?'kart':'stock',carType:a.kart?'kart':'stock',relics:[a.relic],equipped:{engine:null,aero:null,chassis:null,tires:null,crew:null},
   stats:{power:3,handling:3,aero:3,durability:4,racecraft:4,defense:4,consistency:4,tireMgmt:4,crewChief:3,engineer:3,spotter:3},
   hist:{},sched:titleSel.sched||'mixed',cars:[],pts:{},inRace:null,relicShop:null,shopRerolls:0,tune:Object.assign({},a.tune||{hand:0,aero:0,focus:null})};
  G.coll=[...G.deck];G.trackDecks={};
@@ -1643,7 +1643,7 @@ function buildField(){
   const isMe=t.player&&k===0;const d=isMe?4:clamp(Math.round(t.r*0.6+rand(1,4)),2,9);
   const car={id:G.cars.length,team:ti,isMe,num:isMe?77:nums[ni++],name:isMe?G.name:names.pop(),trait:isMe?null:pick(traits),
    stats:isMe?G.stats:{power:clamp(t.r+randi(-1,1),1,10),handling:clamp(t.r+randi(-1,1),1,10),aero:clamp(t.r+randi(-1,1),1,10),durability:clamp(5+randi(-1,1),1,10),racecraft:clamp(d+randi(-1,1),1,10),defense:clamp(d+randi(-1,1),1,10),consistency:clamp(d+randi(-1,1),1,10),tireMgmt:clamp(d+randi(-1,1),1,10)},
-   gear:isMe?[]:shuffle(Object.keys(RELICS)).slice(0,t.r>=7?2:1),career:{starts:0,wins:0,top5:0,best:99}};
+   gear:isMe?[]:shuffle(Object.keys(RELICS).filter(k=>!(G.series==='kart'?RELICS[k].stock:RELICS[k].kart))).slice(0,t.r>=7?2:1),career:{starts:0,wins:0,top5:0,best:99}};
   G.cars.push(car);}});
  if(typeof assignRivals==='function')assignRivals(); // step 20: six named rivals take seats in the field
 }
@@ -1742,7 +1742,7 @@ const LINK_AB={draft:'DRAFT',pass:'PASS',defend:'DEF',car:'CAR',crew:'CREW',risk
 const famCol=f=>f==='risk'?'#ff7b7f':f==='crew'?'#a9b7c9':f==='defend'?'#a98bff':FAM[f].c;
 const COACH={draft:'Good tow!',pass:'Clear! You got him.',defend:'You held him off.',car:'Car is working now.',crew:'Copy that.',restart:'Great launch!',risk:'It stuck!',pit:'Good stop.'};
 function comboCoach(kind,cd){if(typeof document==='undefined'||window.__gfdHeadless||!BAL.chainDraw||TUT||(G.results&&G.results.length))return;const r=race;r.coach=r.coach||{start:0,hit:0,miss:0};let line=null;
- if(kind==='start'&&r.coach.start<2){r.coach.start++;line=`"${COACH[cd.fam]||'Nice.'} That sets up ${LINK[cd.fam].slice(0,2).map(f=>FAM[f].n).join(' or ')}. Play a card that glows blue in the next ${BAL.comboWin} seconds and it's a combo."`;}
+ if(kind==='start'&&r.coach.start<2){r.coach.start++;line=`"${COACH[cd.fam]||'Nice.'} That sets up ${nextNames(r,cd.id,cd.fam).slice(0,2).join(' or ')}. Play a card that glows blue in the next ${BAL.comboWin} seconds and it's a combo."`;}
  else if(kind==='hit'&&r.coach.hit<1){r.coach.hit++;line=`"That's a combo! Every link adds +${BAL.comboBonus} to the next move. Keep it going."`;}
  else if(kind==='miss'&&r.coach.miss<1){r.coach.miss++;line='"We let that combo go. When a card glows blue, it chains off your last move."';}
  if(line)toast(kind==='hit'?'Combo!':kind==='miss'?'Combo dropped':'Chain started',line.replace(/^"|"$/g,''),'#0e5b80','#e9f7ff');}
@@ -1750,12 +1750,17 @@ function renderCombo(r){const el=$('#combo');if(!el)return;if(!BAL.chainDraw||r.
  const live=r.chainFam&&r.t-r.chainAt<=comboWin();const key=(live?`L${r.chain}|${r.chainFam}`:`I${r.phase}|${r.stats.bestChain||0}`)+'|'+(r.board||0);
  const bd=BAL.board?`<div class="cbd" data-kw="crewboard">Crew board ${[...Array(BAL.board).keys()].map(i=>`<i class="${i<(r.board||0)?'on':''}"></i>`).join('')}</div>`:'';
  if(live)r.missNoted=false;else if(r.chainFam&&!r.missNoted&&!r.attempt){r.missNoted=true;comboCoach('miss');}
- if(el._k!==key){el._k=key;el.className=live?'':'idle';const fams=live?LINK[r.chainFam].map(f=>`<u style="color:${famCol(f)}">${FAM[f].n}</u>`).join(' / '):'';
-  el.innerHTML=live?`<div class="ct"><b>${r.chain>1?'Combo ×'+r.chain:'Chain started'}</b><span>next +${Math.min(3,r.chain)*BAL.comboBonus}</span></div><div class="cw"><i></i></div><div class="cn">Next: ${fams}</div>${bd}`
+ if(el._k!==key){el._k=key;el.className=live?'':'idle';const pvc=CARDS[r.chainId],fams=!live?'':pvc&&pvc.next?pvc.next.map(k=>`<u style="color:${famCol(CARDS[k].fam)}">${CARDS[k].n}</u>`).join(' / '):LINK[r.chainFam].map(f=>`<u style="color:${famCol(f)}">${FAM[f].n}</u>`).join(' / ');
+  el.innerHTML=live?`<div class="ct"><b>${r.chain>1?'Combo ×'+r.chain:'Chain started'}</b><span>next +${Math.min(3,r.chain)*(BAL.comboBonus+(r.track.kart?KART.bonus:0))}</span></div><div class="cw"><i></i></div><div class="cn">Next: ${fams}</div>${bd}`
    :`<div class="ct"><b>${r.phase==='caution'?'Combo paused':'No combo'}</b><span>${r.stats.bestChain?'best ×'+r.stats.bestChain:''}</span></div><div class="cn">Land a card, then play what it sets up ▸</div>${bd}`;}
  if(el._h!==el.offsetHeight){el._h=el.offsetHeight;layoutBugs();}
  if(live){const i=el.querySelector('.cw i');if(i)i.style.width=Math.max(0,100*(1-(r.t-r.chainAt)/comboWin()))+'%';}}
-function comboFor(cd){return BAL.chainDraw&&race.chainFam&&(!BAL.comboNew||cd.id!==race.chainId)&&race.t-race.chainAt<=comboWin()&&LINK[race.chainFam].includes(cd.fam)?race.chain:0;}
+/* Step 21: kart cards chain card to card (CARDS[id].next, plus an optional linkOk test); stock cards chain family to family (LINK).
+   A kart chain caps at ×3: after three links the next card starts a new chain. */
+function isKart(){if(race&&race.track)return !!race.track.kart;if(screen==='title'||!G)return !!(SCHED[titleSel.sched]||{}).series;return G.series==='kart';}
+function linksTo(r,cd){const pv=r.chainId&&CARDS[r.chainId];if(pv&&pv.next)return pv.next.includes(cd.id)&&(!cd.linkOk||cd.linkOk(r));return !!r.chainFam&&LINK[r.chainFam].includes(cd.fam);}
+function nextNames(r,id,fam){const pv=CARDS[id||r.chainId];return pv&&pv.next?pv.next.map(k=>CARDS[k].n):LINK[fam||r.chainFam].map(f=>FAM[f].n);}
+function comboFor(cd){return BAL.chainDraw&&race.chainFam&&(!BAL.comboNew||cd.id!==race.chainId)&&race.t-race.chainAt<=comboWin()&&!(race.track.kart&&race.chain>=3)&&linksTo(race,cd)?race.chain:0;}
 function boardAdd(n){if(!BAL.board||!n)return;race.board=(race.board||0)+n;let k=0;while(race.board>=BAL.board){race.board-=BAL.board;k++;}if(k){draw(BAL.boardDraw*k,true);race.stats.boardFires=(race.stats.boardFires||0)+k;if(typeof document!=='undefined'&&!window.__gfdHeadless)toast('Crew board full',`The crew turned your spare cards into ${BAL.boardDraw*k} fresh ones.`,'#2a5bd7');}}
 function buff(v,fam,src){race.buffs=[{v,fam,src}];}
 /* Draws read the race: cards you can use right now are far more likely to come up than ones you can't.
@@ -1766,7 +1771,8 @@ function drawWeight(id,c){
  const situational=cd.fam==='restart'||cd.fam==='pit';
  if(situational)return caution?4:0.04;
  if(blk)return 0.12;
- return (0.5+computeOdds(id,c).succ)*(race._favor&&race._favor.includes(cd.fam)?BAL.linkW*(focusHas(cd.fam)?1.5:1):1)*tuneDraw(cd.fam);
+ const pv=race._favor&&CARDS[race.chainId];
+ return (0.5+computeOdds(id,c).succ)*(race._favor&&(pv&&pv.next?pv.next.includes(id):race._favor.includes(cd.fam))?BAL.linkW*(focusHas(cd.fam)?1.5:1):1)*tuneDraw(cd.fam);
 }
 const HAND_MAX=8;
 function draw(n,silent){
@@ -1821,7 +1827,7 @@ function computeOdds(cardId,c){
  for(const x of setupReads(cd))R.a(x[0],x[1],'setup');
  for(const b of race.buffs)if(!b.fam||b.fam===cd.fam)R.a(b.v,b.src,'boost');
  if(race.tossBuffs)for(const b of race.tossBuffs)if(b.fam===cd.fam&&race.t<=b.until)R.a(b.v,b.src,'boost');
- {const k=comboFor(cd);if(k)R.a(Math.min(BAL.comboCap,Math.min(3,k)*(BAL.comboBonus+(focusHas(race.chainRoot||race.chainFam)?TUNE_BONUS:0))),`Combo ×${k+1}`,'combo');}
+ {const k=comboFor(cd);if(k)R.a(Math.min(BAL.comboCap+(race.track.kart?KART.bonus*2:0),Math.min(3,k)*(BAL.comboBonus+(race.track.kart?KART.bonus:0)+(focusHas(race.chainRoot||race.chainFam)?TUNE_BONUS:0))),`Combo ×${k+1}`,'combo');}
  {const u=tuneOf();const hv=Math.round(TUNE.hand.read(u.hand,cd));if(hv)R.a(hv,u.hand>0?'Loose tune':'Tight tune','tune');const av=TUNE.aero.read(u.aero,cd,c);if(av)R.a(av,u.aero>0?'Low drag':'Downforce','tune');}
  {const fo=FOCUS[tuneOf().focus];if(fo&&fo.read){const v=fo.read(cd,race.track);if(v)R.a(v,fo.n,'tune');}}
  dzOdds(cd,c.car,R);shapeOdds(cd,c,R);
@@ -1882,7 +1888,7 @@ function resolveAttempt(){
  if((tier==='f'||tier==='cf')&&!race.luckyUsed&&relicSum('reroll')){race.luckyUsed=true;commentate('Lucky Lug Nut! You get a second shot.');tier=sampleTier(o.p);}
  race.stats.plays++;
  // Heat: every aggressive move makes the field more willing to block and retaliate. Decks stacked with passing cards pay for it.
- if(cd.fam==='pass'||cd.fam==='risk'||cd.id==='bump_draft'){race.heat=Math.min(5,race.heat+(tier==='cf'?2:1));race.heatAt=race.t;if(BAL.overdrive&&race.heat>=3&&race.t-(race.overAt||-99)>30){race.overAt=race.t;race.radio={kind:'advice',who:'Crew chief',line:'"You\'re overdriving it. Heat\'s up: they\'ll block you and come after you. Let it cool off for a bit."',until:race.t+7,dur:7};renderRadio();}}
+ if((cd.fam==='pass'||cd.fam==='risk'||cd.id==='bump_draft')&&!cd.noHeat){race.heat=Math.min(5,race.heat+(tier==='cf'?2:1));race.heatAt=race.t;if(BAL.overdrive&&race.heat>=3&&race.t-(race.overAt||-99)>30){race.overAt=race.t;race.radio={kind:'advice',who:'Crew chief',line:'"You\'re overdriving it. Heat\'s up: they\'ll block you and come after you. Let it cool off for a bit."',until:race.t+7,dur:7};renderRadio();}}
  const H=G.hist[a.id]||(G.hist[a.id]={plays:0,succ:0,wrecks:0});H.plays++;
  {const ok=tier==='s'||tier==='cs',tc=cd.cost.tire?cd.cost.tire*BAL.tireCost*(ok&&BAL.refund?1-BAL.refund:1):0;if(tc>0)car.tires=Math.max(5,car.tires-tc);}
  if(tier==='s'||tier==='cs'){race.stats.succ++;H.succ++;if(tier==='cs')mom(1);if(['pass','draft','restart','risk'].includes(cd.fam))addFx(car,{type:'hold',until:race.t+(tier==='cs'?120:75)});}
@@ -2501,7 +2507,7 @@ const RADIO_CALLS=[
  // step 19 (Q13): bigger calls a levelled crew member unlocks. lvl = the level that unlocks it.
  {who:'Spotter',nm:'Bump and run',lvl:6,kind:'mech',w:2,when:c=>c.ahead&&c.gapA<0.5,line:'"He\u2019s loose off two. Move him. He\u2019d do it to you."',stat:'spotter',base:24,per:6,s:'Moved him: you take the spot, he loses time.',f:'He didn\u2019t budge: −0.6 s, body −6 and +1 Heat.',onS:(c,q)=>{const a=aheadOf(c);overtake(c,1);if(a)slow(a,0.6*q);mom(1);},onF:(c,q)=>{slow(c,0.6/q);dmg(c,6/q);race.heat=Math.min(5,race.heat+1);race.heatAt=race.t;}},
  {who:'Spotter',nm:'Three-wide hole',lvl:8,kind:'mech',w:2,when:c=>c.ahead&&c.gapA<0.9&&c.pos>2,line:'"Hole opening three-wide! Go now and you clear two of them."',stat:'spotter',base:12,per:6,s:'Through the hole: two spots in one move.',f:'It closed on you: −1 s and body −5.',onS:c=>{overtake(c,2);mom(1);},onF:(c,q)=>{slow(c,1/q);dmg(c,5/q);}},
- {who:'Crew chief',nm:'Fuel stretch',lvl:6,kind:'mech',w:2,line:'"Save fuel this run and we can short the next stop."',stat:'crewChief',base:24,per:6,s:'Fuel saved: your next stop is 1.5 s shorter.',f:'Saved nothing, lost speed: −1.5% for 15 s.',onS:(c,q)=>{race.pitBonus=(race.pitBonus||0)+1.5*q;},onF:(c,q)=>pace(c,1-0.015/q,15)},
+ {who:'Crew chief',nm:'Fuel stretch',pit:1,lvl:6,kind:'mech',w:2,line:'"Save fuel this run and we can short the next stop."',stat:'crewChief',base:24,per:6,s:'Fuel saved: your next stop is 1.5 s shorter.',f:'Saved nothing, lost speed: −1.5% for 15 s.',onS:(c,q)=>{race.pitBonus=(race.pitBonus||0)+1.5*q;},onF:(c,q)=>pace(c,1-0.015/q,15)},
  {who:'Crew chief',nm:'All in',lvl:8,kind:'mech',w:3,when:c=>lapOf(c.car)>=race.track.laps*0.7,line:'"This is it. Use everything the car has left."',stat:'crewChief',base:12,per:6,s:'All in: +3% speed for 25 s and +1 Momentum.',f:'Cooked the tires: wear +50% for 30 s.',onS:(c,q)=>{pace(c,1+0.03*q,25);mom(1);},onF:(c,q)=>wearFx(c,1+0.5/q,30)},
  {who:'Engineer',nm:'Engine map',lvl:6,kind:'mech',w:2,line:'"I can turn the motor up for a few laps. It\u2019ll run hot."',stat:'engineer',base:24,per:6,s:'Motor turned up: +4% speed for 12 s.',f:'It ran hot: body −8.',onS:(c,q)=>pace(c,1+0.04*q,12),onF:(c,q)=>dmg(c,8/q)},
  {who:'Engineer',nm:'Setup trick',lvl:8,kind:'mech',w:1,line:'"Found something in the data. Want to try it live?"',stat:'engineer',base:12,per:6,s:'It works: +1.2% speed for the rest of the race.',f:'Wrong direction: −3% speed for 20 s.',onS:(c,q)=>{c.permPace*=1+0.012*q;},onF:(c,q)=>pace(c,1-0.03/q,20)},
@@ -2514,7 +2520,7 @@ function crewQ(stat){return 1+Math.max(0,(G.stats[stat]||3)-3)*0.1;}
 function armCall(o){o.chance=clamp(o.base+G.stats[o.stat]*o.per+relicSum('radioBonus')+(typeof crewChance==='function'?crewChance(o.stat):0),5,95);o.q=crewQ(o.stat)*(typeof crewPay==='function'?crewPay(o.stat):1);o.qf=o.q/(typeof crewSoft==='function'?crewSoft(o.stat):1);return o;}
 function spawnRadio(){
  const r=race,car=meCar();if(car.dnf)return;const c=ctxFor(car);
- let opts=RADIO_CALLS.filter(x=>(!x.lvl||G.stats[x.stat]>=x.lvl)&&(!x.when||x.when(c)));
+ let opts=RADIO_CALLS.filter(x=>!(x.pit&&race.track.kart)&&(!x.lvl||G.stats[x.stat]>=x.lvl)&&(!x.when||x.when(c)));
  if(typeof crewWeight==='function')opts=opts.map(x=>{const k=crewWeight(x);return k===1?x:{...x,w:(x.w||1)*k};});
  let call=wpick(opts);
  if(call.kind==='advice'){const a=adviceLine(c);if(!a){r.radioNext=r.t+10;return;}call={kind:'advice',who:a[0],line:a[1]};}
@@ -2922,7 +2928,7 @@ function cardFace(cd,h){
  const cx=(tc?`<b title="${BAL.refund>=1?`Uses ${tc}% tire only if it misses`:`Uses ${tc}% tire${BAL.refund?`, ${Math.round(tc*(1-BAL.refund))}% if it succeeds`:''}`}">${ic('tire')}${tc}%</b>`:'')+(cd.cost.mom?`<b title="Costs ${cd.cost.mom} Momentum">${ic('mom')}${cd.cost.mom}</b>`:'')+(HEAT_FAMS(cd)?`<b class="ht" title="Builds 1 Heat when played">${ic('heat')}+1</b>`:'');
  const ef=(CARD_FX[cd.id]||[]).map(([k,v])=>`<b title="${esc(FX_NAME[k]||'')}">${ic(k)}${esc(v)}</b>`).join('');
  const tk=BAL.tossFx&&cd.toss?TOSS_IC[cd.toss.k]:null;
- const lk=BAL.chainDraw&&LINK[cd.fam]?`<span class="lk" title="Sets up: ${LINK[cd.fam].map(f=>FAM[f].n).join(', ')}">▸ ${LINK[cd.fam].slice(0,3).map(f=>`<span style="color:${FAM[f].c}">${ic(f)}</span>`).join('')}</span>`:'';
+ const lk=BAL.chainDraw&&cd.next?`<span class="lk" title="Sets up: ${cd.next.map(k=>CARDS[k].n).join(', ')}">▸ ${cd.next.slice(0,3).map(k=>`<span style="color:${FAM[CARDS[k].fam].c}">${ic(CARDS[k].fam)}</span>`).join('')}</span>`:BAL.chainDraw&&LINK[cd.fam]?`<span class="lk" title="Sets up: ${LINK[cd.fam].map(f=>FAM[f].n).join(', ')}">▸ ${LINK[cd.fam].slice(0,3).map(f=>`<span style="color:${FAM[f].c}">${ic(f)}</span>`).join('')}</span>`:'';
  return `<kbd></kbd><span class="burn" role="button" title="${BAL.tossFx&&cd.toss?esc('Toss: '+tossTxt(cd)+' Also charges the Crew Board.'):BAL.board?'Toss: charges the crew board':'Discard: next card comes 10 s sooner'}">✕${tk?ic(tk):' toss'}</span>`+
   `<span class="ct"><span class="fi" title="${FAM[cd.fam].n}">${ic(cd.fam)}</span><span class="cx">${cx}</span></span><span class="pc"></span><span class="obr"><i class="ob"></i><span class="wx"></span></span><span class="mods"></span>`+
   `<span class="nm">${esc(cd.n)}</span>${ef?`<span class="ef">${ef}</span>`:''}${lk}${h.follow?'<span class="fu">FOLLOW-UP</span>':''}`;
@@ -3143,12 +3149,12 @@ function stakesPenalty(res,dnf){
  }
 }
 function rollCards(tier){
- const a=ARCH[G.arch];const pool=Object.values(CARDS).filter(cd=>cd.rar!=='special').map(cd=>({id:cd.id,w:(cd.rar==='common'?6:cd.rar==='uncommon'?3:1.2)*((a.add.includes(cd.id))?1.8:1)*(tier==='victory'&&cd.rar!=='common'?2:1)*(tier==='rough'&&cd.rar==='rare'?0.2:1)}));
+ const a=ARCH[G.arch];const pool=Object.values(CARDS).filter(cd=>cd.rar!=='special'&&!!cd.kart===isKart()).map(cd=>({id:cd.id,w:(cd.rar==='common'?6:cd.rar==='uncommon'?3:1.2)*((a.add.includes(cd.id))?1.8:1)*(tier==='victory'&&cd.rar!=='common'?2:1)*(tier==='rough'&&cd.rar==='rare'?0.2:1)}));
  const n=tier==='rough'?2:3;const out=[];let guard=0;while(out.length<n&&guard++<100){const p=wpick(pool).id;if(!out.includes(p))out.push(p);}
- if((tier==='strong'||tier==='victory')&&!out.some(id=>CARDS[id].rar!=='common')){const rs=Object.values(CARDS).filter(c=>c.rar!=='common'&&!out.includes(c.id));out[0]=pick(rs).id;}
+ if((tier==='strong'||tier==='victory')&&!out.some(id=>CARDS[id].rar!=='common')){const rs=Object.values(CARDS).filter(c=>c.rar!=='common'&&c.rar!=='special'&&!!c.kart===isKart()&&!out.includes(c.id));out[0]=pick(rs).id;}
  return out;
 }
-function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includes(k));return shuffle(pool).slice(0,n);}
+function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includes(k)&&!(isKart()?RELICS[k].stock:RELICS[k].kart));return shuffle(pool).slice(0,n);}
 const rerollCost=k=>DIFF[G.diff].reroll+k*1000;
 
 /* ================= screens ================= */
@@ -3173,8 +3179,8 @@ function renderTitle(){
   ${(()=>{const sv=readSave();if(!sv)return '';const g=sv.G,n=Math.min(g.results.length+1,SEASON_LEN);return `<div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Saved season</span><h2>${esc(g.name)} · ${esc(ARCH[g.arch]?ARCH[g.arch].n:g.arch)}</h2><p class="muted">${g.reward?`After race ${g.results.length}`:`Race ${n}`} of ${SEASON_LEN} · P${myRank(g)} in points with ${(g.pts||{})[g.cars.find(c=>c.isMe).id]||0} · ${money(g.money)} · saved ${savedAgo(sv.at)}${g.inRace?(g.stakes==='standard'?' · the race in progress starts over':' · the race in progress counts as a DNF ('+esc(STAKES[g.stakes].n)+')'):''}</p><div class="row"><button class="btn primary" id="t-cont" style="font-size:18px">Continue season</button><button class="btn small" id="t-del">Delete save</button></div></div>`;})()}
   <div class="panel grid" style="gap:10px"><h3>Driver name</h3><input id="t-name" value="${esc(titleSel.name)}" maxlength="18" style="background:var(--panel3);border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:4px;font:inherit;max-width:280px"></div>
   <div class="panel grid" style="gap:8px"><h3>Look <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· style test, roadmap step 11. Press L in a race to flip between them.</span></h3><div class="lookpick">${LOOK_ORDER.map(k=>`<button class="panel sel${LOOK===k?' on':''}" data-look="${k}"><b>${LOOKS[k].n}</b><small>${LOOKS[k].d}</small></button>`).join('')}</div></div>
-  <div class="grid" style="gap:10px"><h2>Pick a persona</h2><p class="muted" style="font-size:13px">A persona is a deck lean, not a class: it sets your starting cards, one signature relic and a default car tune. Card rewards and the garage can take you anywhere.</p><div class="grid g4 personas">${Object.entries(ARCH).map(([k,a])=>`<button class="panel sel arch${titleSel.arch===k?' on':''}" data-arch="${k}"><span class="eyebrow">${esc(a.tag)}</span><h3 style="margin:4px 0">${esc(a.n)}</h3><p style="font-size:13px">${esc(a.desc)}</p><p style="font-size:13px;margin-top:6px"><b>Relic:</b> ${esc(RELICS[a.relic].n)}. ${esc(RELICS[a.relic].txt)}</p><p style="font-size:13px;margin-top:6px"><b>Tune:</b> ${esc(tuneLabel(a.tune))}</p><p style="font-size:12px;margin-top:4px" class="muted">Strong: ${esc(a.strong)} · Weak: ${esc(a.weak)}</p><div class="minis">${a.add.map(id=>`<span>${esc(CARDS[id].n)}</span>`).join('')}</div></button>`).join('')}</div>
-  <p class="muted" style="font-size:13px">Every deck also starts with: ${BASE_DECK.map(id=>CARDS[id].n).join(', ')}.</p></div>
+  <div class="grid" style="gap:10px"><h2>Pick a persona</h2><p class="muted" style="font-size:13px">A persona is a deck lean, not a class: it sets your starting cards, one signature relic and a default car tune. Card rewards and the garage can take you anywhere.</p><div class="grid g4 personas">${Object.entries(ARCH).filter(([k,a])=>!!a.kart===isKart()).map(([k,a])=>`<button class="panel sel arch${titleSel.arch===k?' on':''}" data-arch="${k}"><span class="eyebrow">${esc(a.tag)}</span><h3 style="margin:4px 0">${esc(a.n)}</h3><p style="font-size:13px">${esc(a.desc)}</p><p style="font-size:13px;margin-top:6px"><b>Relic:</b> ${esc(RELICS[a.relic].n)}. ${esc(RELICS[a.relic].txt)}</p><p style="font-size:13px;margin-top:6px"><b>Tune:</b> ${esc(tuneLabel(a.tune))}</p><p style="font-size:12px;margin-top:4px" class="muted">Strong: ${esc(a.strong)} · Weak: ${esc(a.weak)}</p><div class="minis">${a.add.map(id=>`<span>${esc(CARDS[id].n)}</span>`).join('')}</div></button>`).join('')}</div>
+  <p class="muted" style="font-size:13px">Every deck also starts with: ${(isKart()?KART_BASE:BASE_DECK).map(id=>CARDS[id].n).join(', ')}.</p></div>
   ${typeof bgPickHTML==='function'?bgPickHTML():''}
   <div class="grid" style="gap:10px"><h2>Difficulty</h2><p class="muted" style="font-size:13px">Three separate dials. Pick a preset or set each one. Harder Information and Stakes settings pay bigger purses.</p>
    <div class="row">${Object.entries(PRESETS).map(([k,p])=>{const on=p.diff===titleSel.diff&&p.info===titleSel.info&&p.stakes===titleSel.stakes;return `<button class="chip${on?' on':''}" data-preset="${k}" style="font-size:15px;padding:6px 14px">${p.n}</button>`;}).join('')}</div>
@@ -3187,12 +3193,12 @@ function renderTitle(){
  el.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{titleSel.bg=b.dataset.bg;titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-look]').forEach(b=>b.onclick=()=>{setLook(b.dataset.look);titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-dial]').forEach(b=>b.onclick=()=>{titleSel[b.dataset.dial]=b.dataset.val;titleSel.name=$('#t-name').value;renderTitle();});
- el.querySelectorAll('[data-sched]').forEach(b=>b.onclick=()=>{titleSel.sched=b.dataset.sched;titleSel.name=$('#t-name').value;renderTitle();});
+ el.querySelectorAll('[data-sched]').forEach(b=>b.onclick=()=>{titleSel.sched=b.dataset.sched;if(!!ARCH[titleSel.arch].kart!==isKart()){titleSel.arch=Object.keys(ARCH).find(k=>!!ARCH[k].kart===isKart());titleSel.bg=null;}titleSel.name=$('#t-name').value;renderTitle();});
  el.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=PRESETS[b.dataset.preset];Object.assign(titleSel,{diff:p.diff,info:p.info,stakes:p.stakes,name:$('#t-name').value});renderTitle();});
  // two-tap confirm in the page: window.confirm() is blocked in sandboxed frames (the artifact viewer), where it returns false
  const arm=(b,label,fn)=>{if(!b)return;const txt=b.innerHTML;b.onclick=()=>{if(b.dataset.armed){fn();return;}b.dataset.armed='1';b.innerHTML=label;b.classList.add('armed');setTimeout(()=>{if(b.isConnected){delete b.dataset.armed;b.innerHTML=txt;b.classList.remove('armed');}},4000);};};
  const hasSave=!!readSave();
- const goTut=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollRaceObjectives();startTutorial();};
+ const goTut=()=>{clearSave();titleSel.name=$('#t-name').value;if(isKart()){titleSel.sched='mixed';titleSel.arch='drafter';}newCareer();G.nextObjectives=rollRaceObjectives();startTutorial();};
  const goNew=()=>{clearSave();titleSel.name=$('#t-name').value;newCareer();G.nextObjectives=rollRaceObjectives();showGarage();};
  {const c=$('#t-cont');if(c)c.onclick=()=>{continueSeason();};arm($('#t-del'),'Tap again to delete',()=>{clearSave();titleSel.name=$('#t-name').value;renderTitle();});}
  if(hasSave){arm($('#t-tut'),'Tap again: replaces your saved season',goTut);arm($('#t-go'),'Tap again: replaces your saved season',goNew);}
@@ -3259,7 +3265,7 @@ function tunePanel(t){const u=G.tune||{hand:0,aero:0,focus:null},a=ARCH[G.arch];
  return `<div class="panel grid tune-panel" style="gap:10px"><div class="row" style="justify-content:space-between"><h3>Car tune</h3><span class="row" style="gap:8px"><span class="sufit ${fit[0]}">${fit[1]}: ${esc(t.short)}</span>${isDef?'<span class="muted" style="font-size:12px">Persona tune</span>':'<button class="btn small" id="su-reset">Reset to persona tune</button>'}</span></div>
   <p class="muted" style="font-size:13px">Your tune shapes your deck for this race: which families you draw more of, a few odds points, and one combo type that chains longer. Every choice has a cost.</p>
   <div class="grid g2" style="gap:10px">${dial('hand')}${dial('aero')}</div>
-  <div class="grid" style="gap:4px"><span class="eyebrow">Combo focus</span><div class="sudial">${Object.entries(FOCUS).map(([k,p])=>`<button class="chip${u.focus===k?' on':''}" data-su="focus" data-v="${k}" title="${esc(p.txt)}">${esc(p.n)}</button>`).join('')}</div></div>
+  <div class="grid" style="gap:4px"><span class="eyebrow">Combo focus</span><div class="sudial">${Object.entries(FOCUS).filter(([k])=>!(k==='restart'&&isKart())).map(([k,p])=>`<button class="chip${u.focus===k?' on':''}" data-su="focus" data-v="${k}" title="${esc(p.txt)}">${esc(p.n)}</button>`).join('')}</div></div>
   <div class="sufx">${tuneFx(u).map(([k,v])=>`<div><b>${k}</b> ${esc(v)}</div>`).join('')}</div></div>`;}
 function addRelic(id){if(!G.relics.includes(id))G.relics.push(id);const s=RELICS[id].slot;if(!G.equipped[s])G.equipped[s]=id;}
 // what the garage changed when it fixed your deck for a new track
@@ -4371,7 +4377,7 @@ function prPanelHTML(){
   ${k('Cards land',S.rate==null?'—':Math.round(S.rate*100)+'%')}${k('Odds said',S.exp==null?'—':Math.round(S.exp*100)+'%')}${k('Wrecks',S.wrecks)}
   ${k('Combos ×2+',S.chains)}${k('Longest',S.longest?'×'+S.longest:'—')}${k('Avg chain',S.avgChain?'×'+S.avgChain.toFixed(1):'—')}</div>
  <div class="row2"><button class="ctl" data-pr="reset" title="Fresh tires, full fuel, no damage">Reset car</button><button class="ctl${P.showTune?' on':''}" data-pr="tune">Tune</button><button class="ctl${PRACTICE_OPTS.cautions?' on':''}" data-pr="caut" title="Random cautions on or off">Cautions ${PRACTICE_OPTS.cautions?'on':'off'}</button><button class="ctl" data-pr="end">End</button></div>
- ${P.showTune?`<div class="grid" style="gap:4px">${dial('hand')}${dial('aero')}<div class="eb">Combo focus</div><div class="sudial">${Object.entries(FOCUS).map(([kk,p])=>`<button class="chip${u.focus===kk?' on':''}" data-prsu="focus" data-v="${kk}" title="${esc(p.txt)}">${esc(p.n.split(' ')[0])}</button>`).join('')}</div><div class="muted" style="font-size:11px">${esc(tuneLabel(u))}. Applies now; the lap you change it on doesn't count as clean.${P.from==='garage'?' You keep this tune when you leave.':''}</div></div>`:''}
+ ${P.showTune?`<div class="grid" style="gap:4px">${dial('hand')}${dial('aero')}<div class="eb">Combo focus</div><div class="sudial">${Object.entries(FOCUS).filter(([kk])=>!(kk==='restart'&&isKart())).map(([kk,p])=>`<button class="chip${u.focus===kk?' on':''}" data-prsu="focus" data-v="${kk}" title="${esc(p.txt)}">${esc(p.n.split(' ')[0])}</button>`).join('')}</div><div class="muted" style="font-size:11px">${esc(tuneLabel(u))}. Applies now; the lap you change it on doesn't count as clean.${P.from==='garage'?' You keep this tune when you leave.':''}</div></div>`:''}
  ${prTables(8)}`;
 }
 function prTables(n){
@@ -4783,7 +4789,7 @@ function tossTiles(r){
  for(const b of r.tossBuffs||[])if(r.t<=b.until)out.push({id:'tb'+b.fam,k:'buff',ic:'boost',fam:b.fam,lb:`+${b.v} ${FAM[b.fam].n}`,sub:b.src,left:b.until-r.t,dur:TOSS_BUFF.sec,glow:!!pcd&&pcd.fam===b.fam,tag:`+${b.v} on this card`});
  const tc=r.tossChain;
  if(tc&&r.chainId===tc.id&&r.chainAt===tc.at&&r.chainFam&&r.t-r.chainAt<=comboWin())
-  out.push({id:'tc'+tc.at,k:'chain',ic:'combo',lb:'Combo kept',sub:'next: '+LINK[r.chainFam].map(f=>FAM[f].n).join(' / '),left:comboWin()-(r.t-r.chainAt),dur:comboWin(),glow:!!pcd&&comboFor(pcd)>0,tag:'chains off it'});
+  out.push({id:'tc'+tc.at,k:'chain',ic:'combo',lb:'Combo kept',sub:'next: '+nextNames(r).join(' / '),left:comboWin()-(r.t-r.chainAt),dur:comboWin(),glow:!!pcd&&comboFor(pcd)>0,tag:'chains off it'});
  const ts=r.tossSetup;
  if(ts&&ts.fresh===r.setupFresh&&r.setups&&r.setups.length){const left=staleLaps()-(lapOf(meCar())-r.setupFresh);
   out.push({id:'ts'+ts.fresh,k:'setup',ic:'setup',lb:'Setups fresh',sub:`Tossed ${ts.n}`,wait:left>0?`${left} LAP${left>1?'S':''}`:'READY',glow:false});}
@@ -5944,4 +5950,250 @@ function rivalRewardPanel(res){if(!res.rivals||(!res.rivals.length&&!res.inboxNe
    <span class="row" style="gap:6px"><span class="rvwhy">${x.why.map(([k,v])=>`<span class="muted" style="font-size:12px">${esc(k)}</span>${ch(Math.round(v*4)/4)}`).join(' ')}</span><span class="mono" style="font-size:13px"><b style="color:${t0[1]}">${x.g0}</b> → <b style="color:${t1[1]}">${x.g1}</b> ${esc(t1[0])}</span></span></div>`;}).join('')}</div>`;}
 if(G)ensureRivals();
 Object.assign(window.__gfd,{RIVALS,gTier,assignRivals,ensureRivals,grudge,addGrudge,rivalPickId,rivalObjective,rivalWeek,rivalAttack,paybackChance,rivalLean,rivalBlock,rivalOdds,rivalEndRace,rvReply,rvSync,rivalRound,autoMove:typeof autoMove==='function'?autoMove:undefined});
+</script>
+<style id="kart-css">
+#pitmod .km-row{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.04em}
+#pitmod .km-row>span{width:62px;color:#c9b27a}
+#pitmod .km-pips{display:flex;gap:4px}
+#pitmod .km-pips i{width:16px;height:16px;border-radius:50%;border:2px solid #36c5ff;background:transparent}
+#pitmod .km-pips i.on{background:#36c5ff;box-shadow:0 0 6px #36c5ff}
+#pitmod .km-pips.fair i{border-radius:3px;border-color:#e9b52f}
+#pitmod .km-pips.fair i.on{background:#e9b52f;box-shadow:none}
+#pitmod .km-pips.fair.out i{border-color:var(--red)}
+#pitmod .km-pips.fair.out i.on{background:var(--red)}
+#pitmod .km-note{font-size:11px;font-weight:700;text-transform:none;color:#9fb0c8;line-height:1.25;font-family:var(--body)}
+#pitmod .km-note b{color:#e9f7ff}
+body.kart-race #setups{display:none!important}
+.kart-tag{display:inline-block;background:#36c5ff;color:#05202e;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:12px;padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:2px}
+.fair-pen{border-color:var(--amber)!important}
+</style>
+<script id="kart-js">
+/* ================= Kart rung (roadmap step 21) =================
+   The first rung of the ladder speaks its own combo language (design: combo chains, Rung 1 · Karts).
+   - Its own deck: 13 kart cards (CARDS with kart:1). A kart career starts from KART_BASE plus its persona's six cards,
+     and the deck is 10 to 13 cards (CAR_TYPES.kart). Rewards, the dealer and relics only offer kart things in a kart career.
+   - Chains go card to card instead of family to family (CARDS[id].next, linksTo in the core): a 5 s window, capped at ×3.
+     Signature combos read the other kart: Show the Inside marks the kart ahead as covering and Switchback gets +20 on a
+     covering kart; Around the Outside links into Own the Inside only when the next corner turns the other way; Tuck In the Tow
+     feeds Tow pips that Pull Out and Late Brake spend; a Late Brake that lands with a poor exit can be crossed back.
+   - Tow pips (0-3): from Tuck In the Tow and from sitting in a train of karts; they fade when you leave the tow.
+   - Fairing: a scruffy contact move (a neutral or failed Bump Draft, Door to Door or tangle) pushes your front fairing in. The third push (fourth with the Bent Nerf Bar) is a +5 s penalty at the flag.
+   - Karts don't pit and kart races have no cautions: a wreck is a local yellow, no fuel, no pit road. Short sprints (11-12 laps).
+   - Two kart circuits: Pinewood Kart Park (the step 8c layout, kart version) and Hollow Creek Kartway (long back straight for
+     the tow, a hairpin, a chicane and left-right pairs for Around the Outside). The tune dials read as kart setup:
+     Chassis (Tight/Loose) and Gearing (Short/Tall).
+   - Kart personas: Brawler, Line Painter, Pack Rat, Late Braker (each maps to a stock persona for the step 22 promotion: up). */
+const KART={spec:0.35,bonus:3,win:3,cap:3,fairMax:3,fairPen:5,towMax:3,towEvery:4,towFade:8,repass:0.55};
+TRACKS.push(
+ Object.assign({},TRACKS.find(t=>t.id==='pine'),{id:'pinek',kart:1,type:'Kart circuit',len:'0.9 mi',laps:13,lapTime:28,draft:0.008,draftRange:0.45,draftBias:-0.6,wear:0.6,_pg:undefined,
+  blurb:'The kart park, raced as a kart sprint. Zig-zags and two hairpins: show the inside, switch back on the exit, and keep your fairing straight.'}),
+ {id:'hollow',kart:1,aiWreckK:0.7,name:'Hollow Creek Kartway',short:'Hollow Creek',type:'Kart circuit',len:'1.1 mi',laps:14,lapTime:25,R:0.5,draft:0.014,draftRange:0.55,draftBias:0.2,wear:0.6,contact:1.3,passDiff:1.05,handlingW:1.6,beatAt:[1,9],
+  path:[{s:1.8},{a:90,r:0.5},{s:0.7588},{a:-90,r:0.45},{s:0.5},{a:90,r:0.45},{s:0.6},{a:90,r:0.5},{s:6.3698},{a:180,r:0.38,n:'Creek Hairpin'},{s:0.6},{a:-50,r:0.4},{a:50,r:0.4},{s:0.5},{a:-100,r:0.55},{s:0.4},{a:100,r:1,n:'Hollow Sweeper'}],
+  blurb:'A long back straight where the tow train forms, then the Creek Hairpin to cash it in. Left-right pairs reward the outside line that turns into the inside.'});
+for(const t of TRACKS)if(t.path&&t.kart)t.S=TG(t).S;
+Object.assign(BAL.lapBeats,{pinek:{pts:2,draw:2},hollow:{pts:2,draw:2}});
+Object.assign(PIT.fuelRange,{pinek:99,hollow:99});
+Object.assign(TRACK_MIN,{pinek:{pass:2},hollow:{draft:1}});
+Object.assign(QL.sweep,{pinek:1.5,hollow:1.45});
+SCHED.kart={n:'Kart series',series:'kart',ids:['pinek','hollow','pinek','hollow','pinek','hollow','pinek','hollow','pinek','hollow']};
+
+/* ---------- kart cards ---------- */
+const kAhead=()=>race.track.kart;
+function kFair(n){const r=race;if(!r||!r.track.kart)return;const mx=KART.fairMax+relicSum('fairMax');const was=r.fair||0;r.fair=Math.min(mx,was+n);
+ if(r.fair>=mx&&was<mx){r.fairOut=true;commentate(`Your front fairing is pushed in. That's a ${KART.fairPen}-second penalty at the flag.`);toast('Fairing pushed in',`+${KART.fairPen} s at the flag. Keep the bumper off people.`,'#b8860b');}
+ else if(was<mx)pop(meCar(),`FAIRING ${r.fair}/${mx}`,'#e9b52f',1.6,10);}
+function kTow(n){const r=race;r.tow=clamp((r.tow||0)+n,0,KART.towMax);if(n>0)r.towAt=r.t;}
+const covering=car=>!!car&&car.kCover>race.t;
+function kTrain(car){let n=0,a=aheadOf(car),b=car;while(a&&n<3&&!a.dnf&&gapSec(a,b)<race.track.draftRange){n++;b=a;a=aheadOf(a);}return n;}
+const kOutFresh=r=>r.kOut&&r.t-r.kOut.at<9;
+const KART_CARDS={
+ k_tow:{n:'Tuck In the Tow',fam:'draft',rar:'common',cost:{},next:['k_pullout','k_push','k_latebrake','k_show'],
+  txt:'Slot into the train: +3% speed for 12 s and a Tow pip (2 on a critical).',real:'Sitting in the slipstream of the kart ahead, nose to his rear bumper.',
+  can:c=>c.ahead?0:'No car ahead',
+  read(c,R){R.b(56);const d=c.track.draftRange;if(c.gapA<d*0.5)R.a(18,'Tucked up close');else if(c.gapA<d)R.a(6,'In the tow');else if(c.gapA<d*2.5)R.a(-12,'Edge of the tow');else R.a(-35,'Too far back');const tr=kTrain(c.car);if(tr>1)R.a(5*(tr-1),`Train of ${tr+1}`);},
+  fx:{cs:c=>{pace(c.car,1.04,15);kTow(2);mom(1);},s:c=>{pace(c.car,1.03,12);kTow(1);},n:c=>pace(c.car,1.01,6),f:c=>slow(c.car,0.3)}},
+ k_push:{n:'Push Your Partner',fam:'draft',rar:'common',cost:{tire:3},fair:1,next:['k_pullout','k_door','k_latebrake'],
+  txt:'Shove the kart ahead so you both pull away. He may push you back later. A clean one is fine; a scruffy one pushes your fairing in.',real:'Pushing the kart ahead down a straight so the pair gains on the field.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>0.6?'Get to his bumper':0,
+  read(c,R){R.b(52);if(c.gapA<0.2)R.a(16,'On his bumper');else if(c.gapA>0.4)R.a(-10,'Not close enough');if(c.seg.turn)R.a(-24,'Mid-corner');else if(c.seg.straight)R.a(10,'On the straight');if(c.seg.long)R.a(6,'Long straight');},
+  fx:{cs:c=>{pace(c.car,1.05,8);pace(c.ahead,1.03,8);kTow(1);mom(1);kPartner(c.ahead,0.85);},s:c=>{pace(c.car,1.04,6);pace(c.ahead,1.03,6);kPartner(c.ahead,0.55);},n:c=>{pace(c.car,1.01,4);kFair(1);},f:c=>{slow(c.car,0.4);dmg(c.car,4);kFair(2);}}},
+ k_pullout:{n:'Pull Out',fam:'draft',rar:'common',cost:{},next:['k_latebrake','k_owninside','k_switch'],
+  txt:'Spend a Tow pip to pull out of the tow and pass the kart ahead. +6 per pip.',real:'Breaking the tow at the right moment and using the speed to draw alongside.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>0.9?'Get in the tow first':(race.tow||0)<1?'Needs a Tow pip':0,
+  read(c,R){R.b(50);R.a(6*(race.tow||0),`Tow ×${race.tow||0}`);if(c.seg.approach)R.a(10,'End of the straight');else if(c.seg.turn)R.a(-14,'Mid-corner');if(c.gapA>0.5)R.a(-8,'A bit far back');},
+  fx:{cs:c=>{kTow(-1);overtake(c.car,1);mom(2);},s:c=>{kTow(-1);overtake(c.car,1);mom(1);race.kAlong={car:c.ahead,at:race.t};},n:c=>kTow(-1),f:c=>{kTow(-1);slow(c.car,0.3);}}},
+ k_show:{n:'Show the Inside',fam:'pass',rar:'common',cost:{},noHeat:1,next:['k_switch','k_outside','k_door'],
+  txt:'Fake a dive. The kart ahead covers the inside for 6 s: Switchback +20 and Around the Outside +12 against him.',real:'A feint into the braking zone that makes the driver ahead defend the wrong line.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>1.2?'Too far back':0,
+  read(c,R){R.b(58);if(c.gapA<0.5)R.a(8,'In his mirrors');if(c.seg.approach)R.a(10,'Braking zone');else if(c.seg.straight)R.a(-8,'Nothing to sell yet');if(!c.ahead)return;if(c.ahead.trait==='veteran')R.a(-10,'He has seen it before');if(c.ahead.trait==='rookie')R.a(8,'Rookie bites');},
+  fx:{cs:c=>{c.ahead.kCover=race.t+7;slow(c.ahead,0.3);pop(c.ahead,'COVERING','#9fd0ff',2,8);},s:c=>{c.ahead.kCover=race.t+6;pop(c.ahead,'COVERING','#9fd0ff',2,8);},n:c=>{c.ahead.kCover=race.t+3;},f:c=>slow(c.car,0.3)}},
+ k_switch:{n:'Switchback',fam:'pass',rar:'common',cost:{tire:4},next:['k_cover','k_smooth','k_show'],
+  txt:'Cross under him on the exit. +20 against a kart that is covering the inside.',real:'Going in wide, then cutting back under the defender as he runs wide on exit.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>1?'Too far back':0,
+  read(c,R){R.b(52);if(c.gapA>0.7)R.a(-8,'Not close yet');if(covering(c.ahead))R.a(20,'He is covering the inside');if(c.seg.turn)R.a(10,'Corner exit');else if(c.seg.straight)R.a(-10,'No corner to cut back');if(c.gapA<0.4)R.a(8,'Right on him');},
+  fx:{cs:c=>{overtake(c.car,1);mom(2);},s:c=>{overtake(c.car,1);mom(1);},n:()=>{},f:c=>slow(c.car,0.6),cf:c=>wreck(c.car,c.ahead,'clips his rear bumper on the switchback')}},
+ k_outside:{n:'Around the Outside',fam:'pass',rar:'common',cost:{tire:3},next:['k_owninside','k_switch'],
+  txt:'Pass him the long way round a corner. If the next corner turns the other way, the outside line sets up Own the Inside.',real:'Running the outside line through one corner to get the inside for the next.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>0.9?'Too far back':0,
+  read(c,R){R.b(48);if(covering(c.ahead))R.a(12,'He covered the inside: outside is open');if(c.seg.turn)R.a(10,'Mid-corner');else if(c.seg.straight)R.a(-14,'No corner to go round');if(c.seg.kind==='sweeper')R.a(8,'Fast corner');if(c.seg.kind==='hairpin')R.a(-10,'Too tight round the outside');if(c.gapA<0.4)R.a(6,'Alongside');},
+  fx:{cs:c=>{overtake(c.car,1);race.kOut={dir:c.seg.dir||1,at:race.t};mom(2);},s:c=>{overtake(c.car,1);race.kOut={dir:c.seg.dir||1,at:race.t};mom(1);},n:()=>{},f:c=>slow(c.car,0.5)}},
+ k_owninside:{n:'Own the Inside',fam:'pass',rar:'uncommon',cost:{},next:['k_cover','k_tow'],
+  linkOk:r=>{if(!kOutFresh(r))return false;const s=segOf(meCar().dist);return !!s.dir&&!s.straight&&s.dir!==r.kOut.dir;},
+  txt:'Take the inside line into the next corner. +22 right after Around the Outside if this corner turns the other way.',real:'The payoff of the outside line: the next corner turns back and you are on the inside.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>0.9?'Too far back':0,
+  read(c,R){R.b(46);if(kOutFresh(race)&&c.seg.dir&&!c.seg.straight){if(c.seg.dir!==race.kOut.dir)R.a(22,'Outside line became the inside');else R.a(-10,'Same way: no inside line');}if(c.seg.approach)R.a(8,'Corner entry');if(c.gapA<0.4)R.a(6,'Alongside');},
+  fx:{cs:c=>{overtake(c.car,1);blockFor(c.car,6);mom(2);race.kOut=null;},s:c=>{overtake(c.car,1);mom(1);race.kOut=null;},n:()=>{race.kOut=null;},f:c=>{slow(c.car,0.5);race.kOut=null;}}},
+ k_latebrake:{n:'Late Brake',fam:'risk',rar:'uncommon',cost:{tire:8},next:['k_cover','k_owninside'],
+  txt:'The hairpin divebomb. Spends every Tow pip (+5 each). Pass 1, 2 on a critical, but a poor exit can get you crossed back.',real:'Braking later than the kart ahead into a slow corner and diving to the inside.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>1.2?'Too far back':0,
+  read(c,R){R.b(44);if(c.gapA>0.8)R.a(-8,'Long way to dive');if(c.seg.approach&&c.seg.kind==='hairpin')R.a(18,'Hairpin braking zone');else if(c.seg.approach)R.a(6,'Braking zone');else R.a(-14,'Nowhere to brake');R.a(5*(race.tow||0),`Tow ×${race.tow||0}`);if(race.kAlong&&race.kAlong.car===c.ahead&&race.t-race.kAlong.at<6)R.a(10,'Already alongside');if(covering(c.ahead))R.a(-10,'He covered the inside');if(c.tires<45)R.a(-12,'Worn tires');},
+  fx:{cs:c=>{race.tow=0;overtake(c.car,2);mom(2);},s:c=>{race.tow=0;overtake(c.car,1);mom(1);if(Math.random()<0.45)race.kRepass={car:c.ahead,at:race.t+2};},n:()=>{race.tow=0;},f:c=>{race.tow=0;slow(c.car,0.8);dmg(c.car,6);},cf:c=>{race.tow=0;wreck(c.car,c.ahead,'locks the fronts and takes him out');}}},
+ k_door:{n:'Door to Door',fam:'pass',rar:'common',cost:{tire:5},fair:1,next:['k_cover','k_switch'],
+  txt:'Lean on him side by side until he gives. Good in the esses. A clean one is fine; a scruffy one pushes your fairing in.',real:'Banging wheels through a sequence of corners until one of you lifts.',
+  can:c=>!c.ahead?'No car ahead':c.gapA>0.6?'Get alongside first':0,
+  read(c,R){R.b(48);if(c.gapA<0.25)R.a(10,'Wheel to wheel');if(c.seg.kind==='esses')R.a(20,'Side by side through the esses');if(c.track.contact>1.2)R.a(6,'Tight club track');if(c.ahead&&c.ahead.trait==='wall')R.a(-8,'He races hard');},
+  fx:{cs:c=>{overtake(c.car,1);slow(c.ahead,0.6);mom(2);},s:c=>{overtake(c.car,1);mom(1);},n:()=>kFair(1),f:c=>{slow(c.car,0.5);dmg(c.car,5);kFair(2);},cf:c=>{kFair(2);wreck(c.car,c.ahead,'gets tangled door to door');}}},
+ k_cover:{n:'Cover the Inside',fam:'defend',rar:'common',cost:{},next:['k_smooth','k_tow','k_show'],
+  txt:'Shut the door into the corner. Karts behind barely get by you for 18 s, and it shuts down a cutback after your Late Brake.',real:'Moving to the inside before the braking zone so nobody can dive under you.',
+  can:c=>!c.behind?'No one behind':c.gapB>1?'No one close behind':0,
+  read(c,R){R.b(54);if(c.gapB<0.3)R.a(12,"He's on you");else if(c.gapB<0.7)R.a(4,'Close behind');else R.a(-10,'Early');if(c.seg.approach)R.a(10,'Corner entry');if(race.kRepass)R.a(10,'He wants it back');},
+  fx:{cs:c=>{blockFor(c.car,25);race.kRepass=null;mom(1);},s:c=>{blockFor(c.car,18);race.kRepass=null;},n:c=>blockFor(c.car,6),f:c=>{if(c.behind)overtake(c.behind,1);}}},
+ k_smooth:{n:'Carry the Speed',fam:'car',rar:'common',cost:{},next:['k_tow','k_outside','k_show','k_switch'],
+  txt:'Clean lines and no scrubbing: +3% speed for 12 s and tire wear −40%.',real:'Rolling more speed through the corner instead of sliding the kart.',
+  read(c,R){R.b(60);if(c.seg.kind==='sweeper')R.a(10,'Carry speed through the sweeper');else if(c.seg.kind==='hairpin')R.a(-8,'Hairpin: nothing to carry');if(c.behind&&c.gapB<0.35)R.a(-10,'Pressure behind');},
+  fx:{cs:c=>{pace(c.car,1.04,14);wearFx(c.car,0.5,20);mom(1);},s:c=>{pace(c.car,1.03,12);wearFx(c.car,0.6,15);},n:c=>pace(c.car,1.01,6),f:c=>pace(c.car,0.98,6)}},
+ k_limit:{n:'On the Limit',fam:'car',rar:'common',cost:{tire:8},next:['k_outside','k_latebrake'],
+  txt:'Wring its neck: +5% speed for 9 s.',real:'Driving every corner on the edge of grip.',
+  read(c,R){R.b(56);if(c.tires>75)R.a(14,'Fresh tires');else if(c.tires<45)R.a(-22,'Worn tires');if(c.car.damage>20)R.a(-10,'Bent kart');},
+  fx:{cs:c=>{pace(c.car,1.06,10);mom(1);},s:c=>pace(c.car,1.05,9),n:c=>pace(c.car,1.02,6),f:c=>{slow(c.car,0.5);dmg(c.car,6);},cf:c=>wreck(c.car,null,'spins it into the tire wall')}},
+ k_board:{n:'Read the Board',fam:'crew',rar:'common',cost:{},next:['k_show','k_outside','k_tow','k_latebrake','k_switch'],
+  txt:'Your crew hangs the pit board on the fence. Your next card gets +18.',real:'Gaps and laps chalked on a board held over the fence.',
+  read(c,R){R.b(70);R.a((G.stats.spotter-5)*2,'Crew skill');},
+  fx:{cs:()=>{buff(22,null,'Read the Board');mom(1);},s:()=>buff(18,null,'Read the Board'),n:()=>buff(10,null,'Read the Board')}}
+};
+for(const k in KART_CARDS){const d=KART_CARDS[k];d.id=k;d.kart=1;d.wreck=!!d.fx.cf;d.noFail=!d.fx.f&&!d.fx.cf;CARDS[k]=d;}
+Object.assign(CARD_FX,{k_tow:[['speed','+3%'],['tow','+1']],k_push:[['speed','+4%']],k_pullout:[['speed','+4%']],k_show:[['slow','covering']],k_switch:[['pos','+1']],k_outside:[['speed','+3%']],k_owninside:[['pos','+1']],k_latebrake:[['pos','+1']],k_door:[['pos','+1']],k_cover:[['shield','18 s']],k_smooth:[['speed','+3%']],k_limit:[['speed','+5%']],k_board:[['boost','+15']]});
+FX_NAME.tow=FX_NAME.tow||'Tow pips';
+Object.assign(TOSS,{k_tow:{k:'chain'},k_push:{k:'buff',fam:'draft'},k_pullout:{k:'charge'},k_show:{k:'chain'},k_switch:{k:'buff',fam:'pass'},k_outside:{k:'setup'},k_owninside:{k:'charge'},k_latebrake:{k:'cool'},k_door:{k:'cool'},k_cover:{k:'chain'},k_smooth:{k:'focus',v:0.25},k_limit:{k:'chain'},k_board:{k:'focus',v:0.3}});
+for(const k in KART_CARDS)CARDS[k].toss=TOSS[k];
+const KART_BASE=['k_tow','k_show','k_switch','k_outside','k_cover','k_board'];
+
+/* ---------- kart relics and personas ---------- */
+Object.assign(RELICS,{
+ nerf_bar:{n:'Bent Nerf Bar',slot:'chassis',kart:1,txt:'Push Your Partner and Door to Door +10. Your fairing takes 4 pushes before it goes in.',read:cd=>['k_push','k_door'].includes(cd.id)?10:0,fairMax:1},
+ big_rotors:{n:'Drilled Rotors',slot:'chassis',kart:1,txt:'Late Brake +10, and its critical failures are halved.',read:cd=>cd.id==='k_latebrake'?10:0,cf:cd=>cd.id==='k_latebrake'?0.5:1},
+ chalk_line:{n:'Chalk Line',slot:'tires',kart:1,txt:'Around the Outside and Own the Inside +10. Tire wear −15%.',read:cd=>['k_outside','k_owninside'].includes(cd.id)?10:0,wear:0.85},
+ tow_hitch:{n:'Tow Bar Sticker',slot:'aero',kart:1,txt:'Start every race with a Tow pip. Drafting cards +4.',read:cd=>cd.fam==='draft'?4:0,startTow:1}
+});
+for(const k of ['launch_control','pit_clipboard','fast_gun'])RELICS[k].stock=1;
+Object.assign(ARCH,{
+ brawler:{kart:1,up:'bully',n:'The Brawler',tag:'Club-track scrapper',strong:'Pinewood',weak:'Hollow Creek',desc:'Pushes, switchbacks and door-to-door. Big swings: every scruffy push bends the fairing. Signature combo: Show the Inside → Switchback.',add:['k_push','k_door','k_door','k_switch','k_smooth','k_latebrake'],relic:'nerf_bar',bonus:{durability:1,racecraft:1,defense:1},tune:{hand:1,aero:-1,focus:'bumper'}},
+ linepainter:{kart:1,up:'whisperer',n:'The Line Painter',tag:'Clean and consistent',strong:'Hollow Creek',weak:'Pinewood',desc:'Clean lines, around the outside, rarely wrecks. Signature combo: Around the Outside → Own the Inside when the next corner turns back.',add:['k_outside','k_owninside','k_smooth','k_smooth','k_limit','k_cover'],relic:'chalk_line',bonus:{consistency:1,handling:1,tireMgmt:1},tune:{hand:-1,aero:0,focus:'longrun'}},
+ packrat:{kart:1,up:'drafter',n:'The Pack Rat',tag:'Lives in the tow',strong:'Hollow Creek',weak:'Pinewood',desc:'Rides the train, makes alliances, then pulls out at the end of the straight. Signature combo: Tuck In the Tow → Pull Out → Late Brake.',add:['k_tow','k_smooth','k_push','k_pullout','k_pullout','k_latebrake'],relic:'tow_hitch',bonus:{aero:1,racecraft:1},tune:{hand:0,aero:1,focus:'draft'}},
+ latebraker:{kart:1,up:'restart',n:'The Late Braker',tag:'Hairpin hunter',strong:'Pinewood',weak:'Hollow Creek',desc:'Divebombs into the hairpins on a full tow. Exits are fragile, so cover the cutback. Signature combo: Pull Out → Late Brake → Cover the Inside.',add:['k_latebrake','k_latebrake','k_pullout','k_smooth','k_cover','k_limit'],relic:'big_rotors',bonus:{racecraft:1,handling:1},tune:{hand:1,aero:-1,focus:'bumper'}}
+});
+Object.assign(BG_FOR,{brawler:'hero',linepainter:'dirt',packrat:'sim',latebraker:'crew'});
+
+/* ---------- kart setup words: the same three dials, read as a kart ---------- */
+{const lbl=(o,k,kart,stock)=>Object.defineProperty(o,k,{get:()=>isKart()?kart:stock,configurable:true});
+ lbl(TUNE.hand,'n','Chassis','Handling');lbl(TUNE.aero,'n','Gearing','Aero');lbl(TUNE.aero,'lo','Short gear','Downforce');lbl(TUNE.aero,'hi','Tall gear','Low drag');
+ lbl(FOCUS.draft,'n','Tow focus','Draft focus');lbl(FOCUS.bumper,'n','Brawl focus','Bumper focus');lbl(FOCUS.longrun,'n','Line focus','Long-run focus');}
+
+/* ---------- race hooks ---------- */
+function kPartner(car,p){if(car&&!car.dnf)race.kPartner={car,until:race.t+20,p,passed:false};}
+{const _sr=startRace;startRace=function(){_sr.apply(this,arguments);const r=race;if(!r)return;
+  if(typeof document!=='undefined')document.body.classList.toggle('kart-race',!!r.track.kart);
+  if(!r.track.kart)return;r.tow=relicSum('startTow');r.fair=0;r.fairOut=false;r.kOut=null;r.kRepass=null;r.kPartner=null;r.kAlong=null;r.towT=0;r.fadeT=0;
+  r.ticker=r.ticker.map(s=>s.replace(/^Welcome to (.*?)\. (\d+) laps on the .*$/,(m,n,l)=>`Welcome to ${n}. A ${l}-lap kart sprint: no pit stops, no cautions.`));
+  if(typeof document!=='undefined'&&!window.__gfdHeadless)renderPitMod(true);}}
+// karts are close to spec: car and driver stats move pace half as much as in a stock car, so the pack stays together
+{const _pm=paceMult;paceMult=function(car){const m=_pm(car),t=race.track;if(!t.kart)return m;const s=car.stats,sp=1+(s.power-5)*0.0032+(s.handling-5)*0.0024*t.handlingW+(s.racecraft-5)*0.0012;return m/sp*(1+(sp-1)*KART.spec);};}
+{const _sc=startCaution;startCaution=function(reason){if(race&&race.track.kart){race.pendingCaution=null;return;}return _sc(reason);};}
+{const _pc=pitCall;pitCall=function(c){if(race&&race.track.kart)return null;return _pc(c);};}
+{const _pb=pitButton;pitButton=function(){if(race&&race.track.kart)return;return _pb();};}
+{const _cw=comboWin;comboWin=function(){const v=_cw();return race&&race.track&&race.track.kart?v-KART.win:v;};}
+// tow pips, the cutback after a Late Brake, and the partner who pushes back
+// karts run nose to tail: a move that gets you ahead of your target but right onto the next kart's bumper is done
+// (in a stock car the target stays unclamped until you clear it by a car length, which in a kart pack never happens and the two flicker)
+function kSettle(){const r=race;for(const c of r.order){const o=c.overtake;if(!o||c.dnf)continue;const tg=o.target;if(tg.dnf||idx(c)>idx(tg))continue;const a=aheadOf(c);
+  if(a&&a!==tg&&a.dist-c.dist>r.minGap*1.05)continue;
+  c.overtake=null;c.passes++;if(tg.isMe){r.lostAt=r.t;r.lostTo=c;}tg.dist=Math.min(tg.dist,c.dist-r.minGap);
+  if(o.left>0){const na=aheadOf(c);if(na&&gapSec(na,c)<0.6)c.overtake={target:na,until:r.t+2+r.track.lapTime*0.25,left:o.left-1};}}
+ r.order.sort((a,b)=>(a.dnf-b.dnf)||(b.dist-a.dist));}
+function kartTick(dt){const r=race;if(!r||!r.track||!r.track.kart)return;if(r.phase!=='finished')kSettle();if(r.phase!=='green')return;const m=meCar();if(!m||m.dnf)return;
+  const a=aheadOf(m),d=r.track.draftRange,tr=a&&gapSec(a,m)<d*0.9?kTrain(m):0;
+  if(tr){r.towT+=dt*(tr>=2?1:0.5);r.fadeT=0;if(r.towT>=KART.towEvery){r.towT=0;if((r.tow||0)<KART.towMax){kTow(1);if(typeof document!=='undefined'&&!window.__gfdHeadless)pop(m,'+1 TOW','#7fd4ff',1.4,6);}}}
+  else{r.fadeT+=dt;if(r.fadeT>=KART.towFade&&r.tow>0){r.fadeT=0;kTow(-1);}}
+  const rp=r.kRepass;if(rp&&r.t>=rp.at){r.kRepass=null;const b=behindOf(m);
+   if(b===rp.car&&!b.dnf&&gapSec(m,b)<0.8&&!m.effects.some(e=>e.type==='block')&&Math.random()<KART.repass){overtake(b,1);r.stats.repassed=(r.stats.repassed||0)+1;commentate(`Poor exit! ${b.ref.name} crosses back under you.`,true);if(typeof document!=='undefined'&&!window.__gfdHeadless)toast('Crossed back','Your Late Brake ran wide on exit and he cut back under. Cover the Inside stops it.','#5b6476');}}
+  const P=r.kPartner;if(P){if(r.t>P.until||P.car.dnf)r.kPartner=null;else{const b=behindOf(m);
+   if(!P.passed&&idx(P.car)>idx(m)){P.passed=true;if(P.car.ref.rival&&typeof addGrudge==='function'&&r.lastPlayAt>r.t-4)addGrudge(P.car.id,0.5,'used his push to pass him');}
+   if(b===P.car&&gapSec(m,b)<0.5&&segOf(m.dist).straight){r.kPartner=null;if(Math.random()<P.p){pace(m,1.04,5);r.stats.pushBack=(r.stats.pushBack||0)+1;commentate(`${b.ref.name} returns the favor and pushes you down the straight.`,true);if(typeof document!=='undefined'&&!window.__gfdHeadless)pop(m,'PARTNER PUSH','#7fd4ff',1.8,8);}}}}
+ }
+{const _up=update;update=function(dt){_up(dt);kartTick(dt);};}
+// which links your combos actually land, for the harness (race.stats.pairs 'from>to' = landed links; stock cars count families)
+{const _ra=resolveAttempt;resolveAttempt=function(){const r=race,a=r&&r.attempt;const from=a&&a.combo?(r.track.kart?r.chainId:r.chainFam):null,n=r?r.log.length:0;_ra.apply(this,arguments);
+  if(!from||!race||race.log.length===n)return;const L=race.log[race.log.length-1];if(L.tier==='s'||L.tier==='cs'){const cd=CARDS[a.id],k=from+'>'+(race.track.kart?cd.id:cd.fam);const P=race.stats.pairs=race.stats.pairs||{};P[k]=(P[k]||0)+1;}};}
+// the fairing penalty: +5 s at the flag drops you behind everyone who finished within 5 s of you
+function kFairPenalty(){const r=race;if(!r||!r.track.kart||!r.fairOut||r.fairApplied||!r.finalOrder)return;r.fairApplied=true;
+ const fo=r.finalOrder,m=fo.find(c=>c.isMe);if(!m||m.dnf)return;const i=fo.indexOf(m),cut=m.dist-KART.fairPen/r.track.lapTime;
+ let j=i;while(j+1<fo.length&&!fo[j+1].dnf&&fo[j+1].dist>=cut)j++;
+ fo.splice(i,1);fo.splice(j,0,m);r.fairLost=j-i;
+ if(r.fairLost)commentate(`Fairing penalty: +${KART.fairPen} s drops you from P${i+1} to P${j+1}.`);}
+{const _er=endRace;endRace=function(){if(race&&race.track&&race.track.kart&&!race.practice)kFairPenalty();return _er.apply(this,arguments);};}
+{const _re=rivalEndRace;rivalEndRace=function(res,r,fo){if(r&&r.track.kart){res.kart=1;if(r.fairOut)res.fair={lost:r.fairLost||0,pen:KART.fairPen};res.tow=r.stats.towSpent||0;}return _re.apply(this,arguments);};}
+{const _sw=showReward;showReward=function(){_sw.apply(this,arguments);const res=G.reward&&G.reward.res;if(!res||!res.fair)return;const el=$('#reward .page-in');if(!el||el.querySelector('.fair-pen'))return;
+  const d=document.createElement('div');d.className='panel fair-pen';d.innerHTML=`<h3 style="color:var(--amber)">Fairing penalty</h3><p>Your front fairing was pushed in, so ${res.fair.pen} s went on your time at the flag${res.fair.lost?`: that cost you ${res.fair.lost} place${res.fair.lost>1?'s':''}`:', but nobody was close enough to gain from it'}. Fewer pushes and less door-to-door keeps the fairing straight.</p>`;
+  const first=el.children[1];el.insertBefore(d,first||null);};}
+
+/* ---------- HUD: the kart module takes the pit stop module's place ---------- */
+{const _rp=renderPitMod;renderPitMod=function(force){const r=race;if(!r||!r.track||!r.track.kart)return _rp(force);const el=$('#pitmod');if(!el)return;
+  const mx=KART.fairMax+relicSum('fairMax'),tw=r.tow||0,fr=r.fair||0;
+  const pips=(n,on,cls)=>`<span class="km-pips ${cls||''}">${[...Array(n).keys()].map(i=>`<i class="${i<on?'on':''}"></i>`).join('')}</span>`;
+  const note=r.fairOut?`<b>Fairing in:</b> +${KART.fairPen} s at the flag`:tw?`<b>Tow ×${tw}:</b> Pull Out +${6*tw}, Late Brake +${5*tw}`:'Sit in a train of karts or play Tuck In the Tow for Tow pips';
+  const html=`<span class="plate"><span>Kart</span></span><div class="km-row" data-kw="tow"><span>TOW</span>${pips(KART.towMax,tw)}</div><div class="km-row" data-kw="fairing"><span>FAIRING</span>${pips(mx,fr,'fair'+(r.fairOut?' out':''))}</div><div class="km-note">${note}</div>`;
+  if(force||el._h!==html){el._h=html;el.innerHTML=html;}};}
+Object.assign(GLOSS,{tow:['Tow pips','Karts chain off the tow. Sitting in a train of karts, or landing Tuck In the Tow, fills up to 3 pips. Pull Out spends one (+6 per pip), Late Brake spends them all (+5 each). They fade when you drop out of the tow.'],
+ fairing:['Fairing',`Kart rules: a contact move that doesn't come off cleanly (Push Your Partner or Door to Door landing neutral or worse) pushes your front fairing in. The ${KART.fairMax}rd push is a ${KART.fairPen}-second penalty added at the flag.`]});
+
+/* ---------- a kart, not a stock car ---------- */
+{const _dc=drawCar;drawCar=function(c,p){const r=race;if(!r.track.kart||c.isPace)return _dc(c,p);
+ const t=r.track,u=uOf(visDist(c)),p2=worldPos(t,u+0.002,c.laneVis),v=V(c);let ang=Math.atan2(p2.z-p.z,p2.x-p.x)+v.yawVis;const tx=Math.cos(ang),tz=Math.sin(ang),nx=-tz,nz=tx,k=r.camK;
+ const at=(a,b)=>proj(p.x+tx*a+nx*b,p.z+tz*a+nz*b),L=CAR_L*0.42,Wd=CAR_W*0.42;
+ const team=TEAMS[c.team],col=c.dnf?'#555c6b':team.c;g.globalAlpha=c.dnf?0.6:1;
+ if(v.glow>r.t&&!c.dnf){const f=(v.glow-r.t)/1.1,ctr=proj(p.x,p.z);g.save();g.globalAlpha=Math.min(1,f*1.6)*0.55;g.fillStyle=v.glowCol;g.shadowColor=v.glowCol;g.shadowBlur=18;g.beginPath();g.ellipse(ctr[0],ctr[1],CAR_L*k*0.6,CAR_L*k*0.6*TILT,0,0,Math.PI*2);g.fill();g.restore();g.globalAlpha=c.dnf?0.6:1;}
+ const quad=(a0,b0,a1,b1)=>[at(a0,b0),at(a0,b1),at(a1,b1),at(a1,b0)];
+ poly(quad(L*1.05,Wd*1.1,-L*1.05,-Wd*1.1).map(q=>[q[0]+2,q[1]+2]),'rgba(0,0,0,.35)');
+ // four exposed wheels, a flat chassis tray, side pods and the nose fairing in team colors, the driver's helmet on top
+ for(const [a,b] of [[L*0.62,Wd],[L*0.62,-Wd],[-L*0.7,Wd*1.05],[-L*0.7,-Wd*1.05]])poly(quad(a+L*0.2,b+Wd*0.16,a-L*0.2,b-Wd*0.16),'#16181d');
+ poly(quad(L*0.85,Wd*0.55,-L*0.95,-Wd*0.55),shade(col,-0.5));
+ poly(quad(L*1.02,Wd*0.62,L*0.72,-Wd*0.62),c.isMe&&r.fairOut?'#8a6d1a':col);
+ for(const s of [1,-1])poly(quad(L*0.25,s*Wd*0.95,-L*0.45,s*Wd*0.55),col);
+ const h=CAR_H*k*0.55,hc=at(-L*0.15,0);g.fillStyle=team.c2;g.beginPath();g.ellipse(hc[0],hc[1]-h,Math.max(2,CAR_W*k*0.2),Math.max(2,CAR_W*k*0.2),0,0,Math.PI*2);g.fill();
+ g.fillStyle='rgba(20,30,45,.85)';g.beginPath();g.ellipse(hc[0]+tx*0.01*k,hc[1]-h-tz*0.004*k,Math.max(1,CAR_W*k*0.1),Math.max(1,CAR_W*k*0.07),ang,0,Math.PI*2);g.fill();
+ if(r.t-v.hitAt<0.18&&!c.dnf){g.globalAlpha=0.55*(1-(r.t-v.hitAt)/0.18);poly(quad(L,Wd,-L,-Wd),'#ffffff');}
+ g.globalAlpha=1;const cx=hc[0],cy=hc[1]-h;
+ if(k>380&&!c.dnf){g.fillStyle='#fff';g.font=`700 ${Math.max(9,k*0.02)}px "Saira Condensed",sans-serif`;g.textAlign='center';g.fillText(c.ref.num,cx,cy-8);}
+ if(c.isMe){const y=cy-(k>380?20:10);g.fillStyle='#e9b52f';g.beginPath();g.moveTo(cx-7,y-10);g.lineTo(cx+7,y-10);g.lineTo(cx,y-1);g.closePath();g.fill();g.font='800 12px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText('YOU',cx,y-13);}
+ {const tg=!c.dnf&&k>300&&(typeof rivalTag==='function'?rivalTag(c):c===race.rival?['RIVAL','#ff7b7f']:null);if(tg){g.fillStyle=tg[1];g.font='700 11px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText(tg[0],cx,cy-10);}}
+ if(covering(c)&&!c.dnf&&k>200){g.fillStyle='#9fd0ff';g.font='700 10px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText('COVERING',cx,cy+14);}
+};}
+
+/* ---------- title, test track and garage ---------- */
+{const _rt=renderTitle;renderTitle=function(){if(!!ARCH[titleSel.arch].kart!==isKart())titleSel.arch=Object.keys(ARCH).find(k=>!!ARCH[k].kart===isKart());_rt.apply(this,arguments);
+  {const pp=$('#title .personas'),hd=pp&&pp.parentNode.querySelector('h2');if(hd&&!$('#title .series-pick')){const d=document.createElement('div');d.className='row series-pick';d.style.gap='8px';
+   d.innerHTML=`<span class="eyebrow">Start in</span>${[['mixed','Stock cars'],['kart','Karts · rung 1']].map(([k,n])=>`<button class="chip${(k==='kart')===isKart()?' on':''}" data-series="${k}" style="font-size:15px;padding:6px 14px">${n}</button>`).join('')}`;
+   hd.parentNode.insertBefore(d,hd.nextSibling);d.querySelectorAll('[data-series]').forEach(b=>b.onclick=()=>{const k=b.dataset.series;if((k==='kart')===isKart())return;titleSel.sched=k;titleSel.name=$('#t-name').value;titleSel.bg=null;renderTitle();});}}
+  if(!isKart())return;const h=$('#title .personas');if(h&&!$('#title .kart-intro')){const p=document.createElement('p');p.className='muted kart-intro';p.style.fontSize='13px';
+   p.innerHTML=`<span class="kart-tag">Rung 1 · Karts</span>Short kart sprints with a 10 to 13 card kart deck. Kart combos chain card to card in 5 s windows, up to ×3, and read the kart ahead: show him the inside, then switch back under him. Karts have no pit stops and no cautions. Watch your Tow pips and keep your fairing straight: the third push is +${KART.fairPen} s at the flag.`;h.parentNode.insertBefore(p,h);}};}
+{const _pc=prTrackChips;prTrackChips=function(sel){const ok=TRACKS.map((t,i)=>!!t.kart===isKart()?i:-1).filter(i=>i>=0);if(!ok.includes(sel))sel=ok[0];
+  return TRACKS.map((t,i)=>!!t.kart!==isKart()?'':`<button class="chip${sel===i?' on':''}" data-prt="${i}">${esc(t.name)} <span class="muted" style="font-size:12px">${esc(t.type)}</span></button>`).join('');};}
+{const _sp=startPractice;startPractice=function(ti,from){if(TRACKS[ti]&&!!TRACKS[ti].kart!==isKart())ti=TRACKS.findIndex(t=>!!t.kart===isKart());return _sp(ti,from);};}
+// saves from before step 21 are stock car careers
+{const _rl=relinkG;relinkG=function(){_rl.apply(this,arguments);if(G&&!G.series)G.series='stock';};}
+window.__gfdKart={KART,KART_CARDS,KART_BASE,kFairPenalty,kTrain};
+// the harness calls these through window.__gfd, so it gets the kart-aware versions
+// (its update stays the one it had, plus the kart tick, so seeded stock car runs are unchanged)
+{const _gu=window.__gfd.update;Object.assign(window.__gfd,{update:dt=>{_gu(dt);kartTick(dt);},startRace,pitButton,isKart,linksTo,kartTick,KART,KART_BASE});}
+if(screen==='title'&&typeof document!=='undefined')renderTitle(); // the title was drawn before the kart series existed
 </script>
