@@ -60,12 +60,17 @@ jobs:
           for t in mill carver; do
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- wrecks $t 61 "$RUNNER_TEMP/frames/wrecks-$t.html" spam 3
           done
-      - name: Hand and beats HUD (races played with the mouse only, through the HUD's layout and input)
+      - name: Hand and beats HUD (races played with the mouse only, then with a controller only, through the HUD's layout and input)
         run: |
           {
             echo '### Mouse-only races (step 31 HUD: drag, click, hold to play, toss bin, pit stop clicks)'
             echo '```'
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- mouse all 2
+            echo '```'
+            echo '### Controller-only races (step 32: d-pad focus, A to pick and play, trigger hold, X toss, Y pit, stall with buttons)'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- pad all 2
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- pad carver,ridge,hollow 1 drafter 62 nintendo
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           for t in carver ridge; do

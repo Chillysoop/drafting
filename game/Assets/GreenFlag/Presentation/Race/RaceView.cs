@@ -11,7 +11,8 @@ namespace GreenFlag.Presentation
     /// Everything that decides where things are lives in the engine-free GreenFlag.View package (tested in CI); this class only
     /// turns it into GameObjects (step 30 adds body lean, damage, glow and streaks on the cars, and sparks, smoke and skid marks
     /// in FxView). Step 31 hands you the car: PlayDesk runs the hand and beats rules and HandHud draws the hand, the console,
-    /// the dash, the gauge, the beat clock and the pit stop hand (see HandHud for the keys).
+    /// the dash, the gauge, the beat clock and the pit stop hand (see HandHud for the keys). Step 32 adds the controller:
+    /// PadReader reads the pad, PadInput moves a focus over the HUD, and the arrow keys and Enter do the same without a mouse.
     /// Keys: C camera, [ and ] speed, R new race, T / Shift+T track, L look, F fast-forward to the flag, A autoplay.
     /// </summary>
     public sealed class RaceView : MonoBehaviour
@@ -31,6 +32,9 @@ namespace GreenFlag.Presentation
         public HudReadouts Readouts { get; } = new HudReadouts();
         public HudLayout Layout { get; } = new HudLayout();
         public HudInput HudInput { get; private set; }
+        /// <summary>Controller and keyboard-only play (step 32): the focus over the HUD and what pad buttons do.</summary>
+        public PadInput Pad { get; private set; }
+        readonly PadReader padReader = new PadReader();
         /// <summary>The mouse player drives the HUD (A): a demo, and a quick way to watch a whole race played with cards.</summary>
         public bool Autoplay;
         MousePlayer bot;
@@ -68,13 +72,14 @@ namespace GreenFlag.Presentation
         public void NewRace()
         {
             var t = Tracks.ById(trackId);
-            if (handsOff) { Driver = new RaceDriver(new Race(RaceSetup.Quick(t, (uint)seed))); Desk = null; HudInput = null; bot = null; }
+            if (handsOff) { Driver = new RaceDriver(new Race(RaceSetup.Quick(t, (uint)seed))); Desk = null; HudInput = null; Pad = null; bot = null; }
             else
             {
                 int speed = Driver?.SpeedIndex ?? 0;
                 Driver = new RaceDriver(PlayDesk.NewRace(t, (uint)seed, persona)) { SpeedIndex = speed };
                 Desk = new PlayDesk(Driver);
                 HudInput = new HudInput(Desk, Layout);
+                Pad = new PadInput(Desk, Layout, HudInput) { Style = padReader.LastStyle, Active = Pad?.Active ?? false };
                 bot = new MousePlayer(Desk, Layout, Readouts, HudInput);
             }
             Rebuild();
@@ -139,7 +144,11 @@ namespace GreenFlag.Presentation
             {
                 Desk.Frame(dt);
                 Readouts.Update(Desk);
-                if (Autoplay) { Layout.Update(Screen.width, Screen.height, Desk, Readouts); bot.Frame(); }
+                Layout.Update(Screen.width, Screen.height, Desk, Readouts);
+                if (Autoplay) bot.Frame();
+                else padReader.Read(Pad, dt);
+                Pad.Frame();
+                if (Desk.Race.Done && padReader.ConfirmOrStart) { Restart(true); return; }
             }
             else Driver.Advance(dt);
             double now = Driver.ViewT;
@@ -165,7 +174,7 @@ namespace GreenFlag.Presentation
             hand?.Draw();   // the hand and beats HUD on top
         }
 
-        void OnApplicationFocus(bool focused) { if (!focused) hand?.LostFocus(); }
+        void OnApplicationFocus(bool focused) { if (!focused) { hand?.LostFocus(); padReader.Release(Pad); } }
 
         void OnDestroy()
         {

@@ -18,6 +18,8 @@ namespace GreenFlag.Presentation
         GUIStyle txt, txtC, txtR, small, smallC, tiny, tinyC, big, bigC, huge, plate, wrap;
         float sc = -1;
         bool mouseHeld;
+        Vector2 lastMouse = new Vector2(-1, -1);
+        readonly System.Collections.Generic.HashSet<KeyCode> keysDown = new System.Collections.Generic.HashSet<KeyCode>();
 
         static readonly Color PanelC = new Color(0.043f, 0.07f, 0.125f, 0.9f), CardC = new Color(0.078f, 0.1f, 0.15f, 0.97f), Line = new Color(1, 1, 1, 0.12f);
         static readonly Color Gold = new Color(0.91f, 0.71f, 0.18f), Dim = new Color(0.6f, 0.64f, 0.71f), GreenC = new Color(0.18f, 0.7f, 0.42f), RedC = new Color(0.9f, 0.28f, 0.3f), Amber = new Color(0.94f, 0.54f, 0.14f), Blue = new Color(0.29f, 0.66f, 1f), FocusC = new Color(0.5f, 0.83f, 1f);
@@ -118,7 +120,12 @@ namespace GreenFlag.Presentation
             Styles((float)lay.S);
             Events(desk, lay);
             if (Event.current.type != EventType.Repaint) return;
-            if (!mouseHeld && !view.Autoplay) view.HudInput.Move(Event.current.mousePosition.x, Event.current.mousePosition.y);
+            var pad = view.Pad;
+            var mp = Event.current.mousePosition;
+            // a pointer that moves takes over from the pad: the focus ring hides and hover follows the mouse again
+            if (lastMouse.x >= 0 && (mp - lastMouse).sqrMagnitude > 9 && pad != null) pad.Active = false;
+            lastMouse = mp;
+            if (!mouseHeld && !view.Autoplay && (pad == null || !pad.Active)) view.HudInput.Move(mp.x, mp.y);
 
             if (desk.Slowing) SlowTint();
             Dash(ro.Dash, lay);
@@ -132,6 +139,7 @@ namespace GreenFlag.Presentation
             Pause(desk, lay);
             ToastBox(desk, lay);
             DragGhost(desk, lay);
+            if (pad != null && pad.Active && !view.Autoplay) { FocusRing(desk, pad, lay); Prompts(desk, pad, lay); }
         }
 
         void Events(PlayDesk desk, HudLayout lay)
@@ -142,6 +150,7 @@ namespace GreenFlag.Presentation
             switch (e.type)
             {
                 case EventType.MouseDown when e.button == 0:
+                    if (view.Pad != null) view.Pad.Active = false;
                     mouseHeld = true; inp.Move(e.mousePosition.x, e.mousePosition.y); inp.Down(e.mousePosition.x, e.mousePosition.y);
                     if (lay.HitTest(e.mousePosition.x, e.mousePosition.y, desk).Kind != HitKind.None || desk.Drag != null || desk.Aim != null) e.Use();
                     break;
@@ -152,15 +161,36 @@ namespace GreenFlag.Presentation
                 case EventType.KeyDown:
                 case EventType.KeyUp:
                     bool down = e.type == EventType.KeyDown;
+                    var pad = view.Pad;
+                    // arrows repeat while held (the OS key repeat); the other keys act once per press
+                    void Kb(PadButton b)
+                    {
+                        if (pad == null) return;
+                        e.Use();
+                        bool dir = b == PadButton.Up || b == PadButton.Down || b == PadButton.Left || b == PadButton.Right;
+                        if (!dir && down && !keysDown.Add(e.keyCode)) return;
+                        if (!down) keysDown.Remove(e.keyCode);
+                        pad.Style = PadStyle.Keyboard;
+                        pad.Press(b, down);
+                    }
                     switch (e.keyCode)
                     {
+                        // keyboard-only play (step 32): arrows move the focus, Enter does what a click would (it drops the
+                        // jack in the stall, where RELEASE is all there is), X tosses, Tab sorts, Q filters
+                        case KeyCode.UpArrow: Kb(PadButton.Up); break;
+                        case KeyCode.DownArrow: Kb(PadButton.Down); break;
+                        case KeyCode.LeftArrow: Kb(PadButton.Left); break;
+                        case KeyCode.RightArrow: Kb(PadButton.Right); break;
+                        case KeyCode.Return: case KeyCode.KeypadEnter: if (pad != null) Kb(PadButton.Confirm); else { inp.Key(HudKey.Release, down); e.Use(); } break;
+                        case KeyCode.X: Kb(PadButton.Toss); break;
+                        case KeyCode.Tab: Kb(PadButton.Sort); break;
+                        case KeyCode.Q: Kb(PadButton.Filter); break;
+                        case KeyCode.Escape: if (pad != null) { pad.Press(PadButton.Back, down, false); e.Use(); } else { inp.Key(HudKey.Escape, down); e.Use(); } break;
                         case KeyCode.Space: inp.Key(HudKey.Space, down, e.shift); e.Use(); break;
                         case KeyCode.LeftShift: case KeyCode.RightShift: inp.Key(HudKey.Shift, down); break;
-                        case KeyCode.Escape: inp.Key(HudKey.Escape, down); e.Use(); break;
                         case KeyCode.P: inp.Key(HudKey.Pause, down); e.Use(); break;
                         case KeyCode.O: inp.Key(HudKey.Odds, down); e.Use(); break;
                         case KeyCode.B: inp.Key(HudKey.Pit, down); e.Use(); break;
-                        case KeyCode.Return: case KeyCode.KeypadEnter: inp.Key(HudKey.Release, down); e.Use(); break;
                         default:
                             if (e.keyCode >= KeyCode.Alpha1 && e.keyCode <= KeyCode.Alpha9) { inp.Key(HudKey.Digit, down, false, e.keyCode - KeyCode.Alpha0); e.Use(); }
                             break;
@@ -170,7 +200,50 @@ namespace GreenFlag.Presentation
         }
 
         /// <summary>The window lost focus: drop a held card or a held Play button.</summary>
-        public void LostFocus() { mouseHeld = false; view.HudInput?.Cancel(); }
+        public void LostFocus() { mouseHeld = false; keysDown.Clear(); view.HudInput?.Cancel(); }
+
+        // ------------------------------------------------------------------ controller focus and prompts (step 32)
+
+        void FocusRing(PlayDesk desk, PadInput pad, HudLayout lay)
+        {
+            if (!(pad.FocusBox is Box fb)) return;
+            float s = sc;
+            // a card is drawn lifted when it is hovered or picked, so ring the card where it is drawn
+            var b = pad.Focus.Kind == HitKind.Card && lay.CardBox(pad.Focus.Arg) is Box cb ? cb : fb;
+            var r = R(b.Inflate(4 * s));
+            float pulse = 0.65f + 0.35f * Mathf.Sin((float)desk.Clock * 6f);
+            Outline(r, A(Color.white, pulse), 3 * s);
+            Outline(new Rect(r.x - 2 * s, r.y - 2 * s, r.width + 4 * s, r.height + 4 * s), A(FocusC, 0.5f * pulse), 1.5f * s);
+        }
+
+        /// <summary>The button prompts for what the focus is on, in a strip across the top (above the race banners).</summary>
+        void Prompts(PlayDesk desk, PadInput pad, HudLayout lay)
+        {
+            float s = sc;
+            var list = PadPrompts.For(pad, desk, lay);
+            float x = 0, h = 26 * s;
+            var widths = new float[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                var (g, l) = list[i];
+                widths[i] = (Mathf.Max(2, g.Length) * 9 + 14 + l.Length * 7.5f + 22) * s;
+                x += widths[i];
+            }
+            var strip = new Rect((Screen.width - x) / 2 - 8 * s, 18 * s, x + 16 * s, h + 8 * s);
+            if (strip.x < (float)lay.Dash.X + 290 * s) strip.x = (float)lay.Dash.X + 290 * s;   // keep clear of the pylon
+            Fill(strip, PanelC);
+            float cx = strip.x + 8 * s;
+            for (int i = 0; i < list.Count; i++)
+            {
+                var (g, l) = list[i];
+                float gw = (Mathf.Max(2, g.Length) * 9 + 8) * s;
+                var gr = new Rect(cx, strip.y + 4 * s, gw, h);
+                Fill(gr, Gold);
+                GUI.Label(gr, g, plate);
+                Text(new Rect(gr.xMax + 6 * s, gr.y, widths[i] - gw - 6 * s, h), l, small, Color.white);
+                cx += widths[i];
+            }
+        }
 
         void SlowTint()
         {
@@ -575,7 +648,17 @@ namespace GreenFlag.Presentation
             Outline(r, desk.BeatPaused ? Gold : Line, 2 * s);
             Text(new Rect(r.x, r.y + 8 * s, r.width, 40 * s), desk.BeatPaused ? "DRAW" : "PAUSED", bigC, desk.BeatPaused ? Gold : Color.white);
             Text(new Rect(r.x + 10 * s, r.y + 50 * s, r.width - 20 * s, 40 * s),
-                desk.BeatPaused ? "Plan your next move. Play a card, hold Space, or press P (or click here) to go green." : "Pick cards and watch their odds. P resumes.", smallC, Dim);
+                PauseText(desk), smallC, Dim);
+        }
+
+        string PauseText(PlayDesk desk)
+        {
+            var pad = view.Pad;
+            if (pad == null || !pad.Active)
+                return desk.BeatPaused ? "Plan your next move. Play a card, hold Space, or press P (or click here) to go green." : "Pick cards and watch their odds. P resumes.";
+            string G(PadButton b) => PadGlyphs.Of(pad.Style, b);
+            return desk.BeatPaused ? $"Plan your next move. Play a card ({G(PadButton.Confirm)} twice), hold {G(PadButton.Aim)}, or press {G(PadButton.Pause)} to go green."
+                                   : $"Pick cards and watch their odds. {G(PadButton.Pause)} resumes.";
         }
 
         void ToastBox(PlayDesk desk, HudLayout lay)
