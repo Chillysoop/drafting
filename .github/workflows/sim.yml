@@ -53,7 +53,7 @@ jobs:
       - name: Race view frames and wreck close-ups (top-down snapshots from the view model)
         run: |
           mkdir -p "$RUNNER_TEMP/frames"
-          for t in carver ridge cross; do
+          for t in carver ridge cross bramble lake; do
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- frames $t 61 "$RUNNER_TEMP/frames/$t.html" 6
           done
           # step 30: close-ups of the first wrecks of a card-spamming race, as the view plays them out
@@ -103,6 +103,15 @@ jobs:
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- career 11 drafter 3 skip
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Kart series (step 40, a kart season must pass the harness targets)
+        run: |
+          set -o pipefail
+          {
+            echo '### Kart series: races on all four kart circuits, then whole kart seasons through the menus'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- kartseason 10 3 61
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Saves (step 35, closing and reopening the game after every press must change nothing; old saves load in the tests above)
         run: |
           set -o pipefail
@@ -111,6 +120,7 @@ jobs:
             echo '```'
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- saves 6 drafter 1 standard
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- saves 7 brawler 1 ironman
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- saves 9 linepainter 2 standard
             echo '```'
             echo "Sample saves loaded by OldSavesLoadAndPlayOn: $(ls sim/GreenFlag.Sim.Tests/Saves | tr '\n' ' ')"
           } | tee -a "$GITHUB_STEP_SUMMARY"

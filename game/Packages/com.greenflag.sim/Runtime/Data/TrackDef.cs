@@ -50,7 +50,8 @@ namespace GreenFlag.Sim
         }
     }
 
-    /// <summary>Every track in slice v47: three stock ovals, two stock non-ovals, two kart circuits and three late model tracks.</summary>
+    /// <summary>Every track in slice v47 (three stock ovals, two stock non-ovals, two kart circuits and three late model tracks), plus
+    /// the two kart circuits from step 40. New tracks go on the end so the browser harness's track indexes still match.</summary>
     public static class Tracks
     {
         static PathPiece St(double s) => PathPiece.Straight(s);
@@ -80,6 +81,20 @@ namespace GreenFlag.Sim
             Path = new[] { St(1.8), Tn(90, 0.5), St(0.7588), Tn(-90, 0.45), St(0.5), Tn(90, 0.45), St(0.6), Tn(90, 0.5), St(6.3698), Tn(180, 0.38, "Creek Hairpin"), St(0.6), Tn(-50, 0.4), Tn(50, 0.4), St(0.5), Tn(-100, 0.55), St(0.4), Tn(100, 1, "Hollow Sweeper") },
         };
 
+        /// <summary>Step 40: a tight, twisty kart club. Two hairpins, a chicane and esses, short straights and almost no tow.</summary>
+        public static readonly TrackDef BrambleHill = new TrackDef
+        {
+            Id = "bramble", DraftBias = -0.8, BeatPoints = 2, BeatAt = new[] { 6, 13 }, Name = "Bramble Hill Kart Club", Type = "Kart circuit", Kart = true, Laps = 15, LapTime = 23, R = 0.5, Draft = 0.004, DraftRange = 0.35, Wear = 0.6, Contact = 1.45, PassDiff = 1.15, HandlingW = 1.9, AiWreckK = 0.7, FuelRange = 99,
+            Path = new[] { St(1.636396), Tn(90, 0.45), St(0.6), Tn(60, 0.4), Tn(-60, 0.4), St(0.5), Tn(180, 0.4, "Bramble Hairpin"), St(0.856424), Tn(-90, 0.45), St(0.9), Tn(-45, 0.45), Tn(45, 0.45), St(0.5), Tn(180, 0.6, "Thicket Hairpin"), St(1.6) },
+        };
+
+        /// <summary>Step 40: a fast lakeside kartway. Long straights, big sweepers and one hairpin at the end of the back straight: tow trains.</summary>
+        public static readonly TrackDef Lakeshore = new TrackDef
+        {
+            Id = "lake", DraftBias = 0.6, BeatPoints = 2, BeatAt = new[] { 1, 6 }, Name = "Lakeshore Kartway", Type = "Kart circuit", Kart = true, Laps = 12, LapTime = 29, R = 0.5, Draft = 0.02, DraftRange = 0.7, Wear = 0.6, Contact = 1.2, PassDiff = 1.0, HandlingW = 1.3, AiWreckK = 0.7, FuelRange = 99,
+            Path = new[] { St(3), Tn(60, 1.2, "Lakeshore Sweeper"), Tn(30, 1), St(0.1), Tn(90, 0.9), St(6.405256), Tn(180, 0.55, "Boathouse Hairpin"), St(0.8), Tn(-60, 1, "Dune Kink"), Tn(60, 1, "Dune Kink"), St(0.6) },
+        };
+
         public static readonly TrackDef CedarBowl = new TrackDef { Id = "cedar", DraftBias = -0.9, Name = "Cedar Bowl", Type = "Bullring", Late = true, Laps = 24, LapTime = 16, S = 0.6, R = 0.72, Draft = 0.003, DraftRange = 0.3, Wear = 1.25, Contact = 1.5, PassDiff = 1.15, HandlingW = 1.7, FuelRange = 14 };
         public static readonly TrackDef MillbrookLate = Millbrook.With("milll", t => { t.Late = true; t.Laps = 22; t.FuelRange = 13; });
 
@@ -89,7 +104,7 @@ namespace GreenFlag.Sim
             Path = new[] { St(1.2), Tn(135, 0.5), St(2.697056), Tn(-135, 0.5), St(1.2), Tn(-135, 0.5), St(2.697056), Tn(135, 0.5) },
         };
 
-        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads };
+        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads, BrambleHill, Lakeshore };
 
         public static TrackDef ById(string id)
         {

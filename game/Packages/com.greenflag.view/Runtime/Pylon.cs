@@ -58,7 +58,7 @@ namespace GreenFlag.View
             return parts[parts.Length - 1].ToUpperInvariant();
         }
 
-        static readonly string[] Suffixes = { " Motor Speedway", " Superspeedway", " Speedway", " Kart Park", " Kartway", " Road Course", " Figure-8" };
+        static readonly string[] Suffixes = { " Motor Speedway", " Superspeedway", " Speedway", " Kart Park", " Kart Club", " Kartway", " Road Course", " Figure-8" };
 
         /// <summary>The track's short name (the slice's TRACKS[].short): "Carver Motor Speedway" is "Carver".</summary>
         public static string ShortName(TrackDef t)

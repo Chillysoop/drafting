@@ -15,7 +15,7 @@ namespace GreenFlag.Sim
         public static readonly IReadOnlyDictionary<Type, string[]> SaveCoverage = new Dictionary<Type, string[]>
         {
             [typeof(Career)] = new[] { "Name", "Persona", "Series", "Diff", "Info", "Stakes", "Survive", "Money", "Season", "RaceIdx", "Over", "Base", "Collection", "Deck", "PartsOwned", "Equipped", "Tune", "Hist", "TrackDecks", "Results", "ShopPart", "ShopRerolls", "shopRolled", "Reward", "DeckNote", "deckFor", "Seed", "Rng",
-                "Field", "Pts", "Contract", "Sponsor", "SponsorOffers", "Objectives", "RivalId", "Past", "Review", "Offers", "Ladder", "Qual", "QualRunning", "-ContractNote",
+                "Field", "Pts", "Contract", "Sponsor", "SponsorOffers", "Objectives", "RivalId", "Past", "Review", "Offers", "Ladder", "Qual", "QualRunning", "-ContractNote", "Cal",
                 "Driver", "Event", "EventsHeld", "Staff", "Hire", "hireFor", "Poach", "Poached" },
             // Deck, Parts and Tune on the career's base loadout are always empty or unused: Loadout() fills them from the career
             [typeof(PlayerLoadout)] = new[] { "Car", "CrewChief", "Spotter", "Engineer", "PitCrew", "PitDeck", "Grit", "Wits", "Radio", "Crew", "-Deck", "-Parts", "-Tune", "-DriverMom" },

@@ -15,6 +15,8 @@ namespace GreenFlag.Sim
         RadioCall, RadioAnswered, RadioPassed, RadioTimedOut,
         // presentation only (step 30): an AI move that came to nothing, so the view can show it (Other = the car it tried)
         AutoLift, AutoAlongside,
+        // kart field (step 40): an AI bumper hits your rear bumper (your fairing takes it); an AI kart covers the inside from you
+        KartBump, KartCover,
     }
 
     /// <summary>

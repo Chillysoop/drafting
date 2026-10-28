@@ -209,7 +209,9 @@ namespace GreenFlag.Sim
             if (fx.Mom != 0) d.NextMom = Math.Min(DriverRules.MomMax, d.NextMom + fx.Mom);
             if (fx.Clause != null)
             {
-                if (fx.Clause == "crewChief") Base.CrewChief = Math.Min(10, Base.CrewChief + 1);
+                // since step 39 the crew chief is a person and Base.CrewChief follows them, so the clause levels them up (step 40 fix:
+                // bumping Base alone was lost on the next SyncCrew or reload)
+                if (fx.Clause == "crewChief") { var cm = Staff[CrewRole.CrewChief]; cm.Lvl = Math.Min(CrewRules.Max, cm.Lvl + 1); SyncCrew(); }
                 else if (CareerRules.Stat(Base.Car, fx.Clause) < CareerRules.StatMax) Base.AddStat(fx.Clause, 1);
                 Contract.Clauses.Add(fx.Clause);
             }
