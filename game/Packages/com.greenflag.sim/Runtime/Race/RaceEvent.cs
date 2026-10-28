@@ -11,6 +11,8 @@ namespace GreenFlag.Sim
         CardPlayed, CardResolved, CardReturned, CardRerolled, CardTossed, CardsExpired, DrawBeat, Combo, BoardFull, Overdrive, ReelOffered,
         FairingPushed, FairingPenalty, Repassed, PartnerPush,
         PitGameOpen, PitGameGo, LooseWheel, PitGameRelease, PerfectStop, SetupInstalled, PackageComplete, SetupsStale,
+        // crew radio (step 33): Card holds the call's name; RadioAnswered's Tier is Success, Neutral (safety net) or Fail
+        RadioCall, RadioAnswered, RadioPassed, RadioTimedOut,
         // presentation only (step 30): an AI move that came to nothing, so the view can show it (Other = the car it tried)
         AutoLift, AutoAlongside,
     }

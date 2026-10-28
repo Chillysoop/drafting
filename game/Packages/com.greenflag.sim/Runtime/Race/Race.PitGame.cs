@@ -282,6 +282,7 @@ namespace GreenFlag.Sim
             pg.StopSeconds = el;
             car.Pit.Until = T;
             CardStats.StopTimes.Add(Math.Round(el, 2));
+            CrewXp(CrewRole.PitCrew, CrewHq.XpStop + (pg.Perfect ? CrewHq.XpPerfect : 0));
             if (pg.Perfect)
             {
                 CardStats.Perfect++; AddMomentum(1); FocusMeter = 1;

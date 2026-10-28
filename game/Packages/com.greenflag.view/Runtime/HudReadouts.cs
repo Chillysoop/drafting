@@ -294,6 +294,86 @@ namespace GreenFlag.View
         public static string Svc(PitService s) => s == PitService.Four ? "Four tires" : s == PitService.Two ? "Two tires" : s == PitService.Fuel ? "Fuel only" : "Stay out";
     }
 
+    /// <summary>
+    /// The radio lane (step 33, the slice's amber #radio box just above the hand): the crew call on the radio with its
+    /// countdown, its odds, what it pays and what a miss costs, and the crew level behind it; free advice; and, when the radio
+    /// is quiet, the crew chief's pit call (under caution until your call locks, and on green around your planned stop lap).
+    /// A call you took flashes its result for a moment.
+    /// </summary>
+    public sealed class RadioReadout
+    {
+        public bool Show, Risky, Advice, PitCall;
+        public string Who, Tag, Line, Win, Risk, Crew, Wits, Left, TakeLabel, PassLabel;
+        public int Chance;
+        /// <summary>Countdown, 1 = just came up, 0 = gone (0 for the pit call, which has no timer).</summary>
+        public double Frac;
+        /// <summary>The last call you took: its result, shown for FlashSec of race time.</summary>
+        public bool Flash, FlashOk;
+        public string FlashTitle, FlashText;
+        public const double FlashSec = 2.4;
+
+        public void Update(PlayDesk d)
+        {
+            var r = d.Race; var me = r.Me;
+            Show = Risky = Advice = PitCall = false;
+            Wits = Win = Risk = Crew = Left = null;
+            var a = r.LastAnswer;
+            Flash = a != null && r.T - a.At < FlashSec;
+            if (Flash)
+            {
+                FlashOk = a.Ok;
+                FlashTitle = a.Ok ? "Radio gamble works" : "Radio gamble fails";
+                FlashText = a.Text;
+            }
+            if (!r.RadioOn || me.Dnf || r.Phase == RacePhase.Finished) return;
+            var c = r.Radio;
+            if (c != null)
+            {
+                Show = true;
+                Advice = c.Kind == RadioKind.Advice; Risky = !Advice;
+                Who = c.Who; Line = c.Line;
+                Tag = Advice ? "Advice" : "Risky call";
+                Frac = c.Dur > 0 ? Math.Max(0, Math.Min(1, c.Left(r.T) / c.Dur)) : 0;
+                Left = Math.Ceiling(c.Left(r.T)) + " s";
+                PassLabel = Advice ? "Got it" : "No thanks";
+                if (Risky)
+                {
+                    var def = c.Def;
+                    Chance = c.Chance;
+                    TakeLabel = $"Try it: {Chance}% to work";
+                    Win = def.S; Risk = def.F;
+                    int lvl = r.Loadout.Level(def.Role);
+                    Crew = $"{RadioCalls.Who(def.Role)} level {lvl}{(def.Lvl > 0 ? $" · level {def.Lvl} call" : "")}: a better crew makes calls land more often and pay more (Crew HQ).";
+                    if (c.Wits != 0) Wits = $"Wits {(c.Wits > 0 ? "+" : "−")}{Math.Abs(c.Wits):0} s";
+                }
+                return;
+            }
+            // the pit call: the crew chief's caution call until it locks, and the green-flag stop around the plan lap
+            if (r.Track.Kart) return;
+            if (r.Phase == RacePhase.Caution && r.Caution != null && !r.Caution.Done)
+            {
+                var k = r.Caution;
+                Show = PitCall = true; Who = "Crew chief"; Tag = "Pit call";
+                Line = k.Mine == k.Chief ? ChiefLine(k.Chief) : $"\"You've got {PitReadout.Svc(k.Mine).ToLowerInvariant()}. I'd have gone {PitReadout.Svc(k.Chief).ToLowerInvariant()}. Your call.\"";
+                return;
+            }
+            if (r.Phase == RacePhase.Green && me.Pit == null && r.MyPlan is PitPlan pp)
+            {
+                int lap = r.LapOf(me);
+                if (r.PitRequest != null) { Show = PitCall = true; Line = "\"Pit this time by. We're ready for you.\""; }
+                else if (lap >= pp.Lap) { Show = PitCall = true; Line = lap > pp.Lap ? "\"You're past the window! Box, box, box.\"" : $"\"Box this lap. {PitReadout.Svc(pp.Service)}.\""; }
+                else if (lap == pp.Lap - 1) { Show = PitCall = true; Line = "\"Pit next lap. Get ready.\""; }
+                if (PitCall) { Who = "Crew chief"; Tag = "Pit call"; }
+            }
+        }
+
+        static string ChiefLine(PitService s) =>
+            s == PitService.Stay ? "\"Stay out. Track position is worth more than tires here.\""
+            : s == PitService.Fuel ? "\"Fuel only. Quick stop, we need it to make the end.\""
+            : s == PitService.Two ? "\"Two tires. Get in and get out.\""
+            : "\"Bring it in. Four tires and fix what we can.\"";
+    }
+
     /// <summary>All the readouts the HUD draws, updated once a frame after PlayDesk.Frame.</summary>
     public sealed class HudReadouts
     {
@@ -303,11 +383,12 @@ namespace GreenFlag.View
         public readonly DashReadout Dash = new DashReadout();
         public readonly ComboReadout Combo = new ComboReadout();
         public readonly PitReadout Pit = new PitReadout();
+        public readonly RadioReadout Radio = new RadioReadout();
 
         public void Update(PlayDesk d)
         {
             if (!d.Race.CardsOn) return;
-            Focus.Update(d); Clock.Update(d); Gauge.Update(d); Dash.Update(d); Combo.Update(d); Pit.Update(d);
+            Focus.Update(d); Clock.Update(d); Gauge.Update(d); Dash.Update(d); Combo.Update(d); Pit.Update(d); Radio.Update(d);
         }
     }
 }

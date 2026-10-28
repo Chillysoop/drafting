@@ -52,6 +52,10 @@ namespace GreenFlag.Sim
     {
         public int Plays, Succ, Crits, Combos, BestChain, Follow, BoardFires, Expired, Tossed, TossFx, TossLive, RiskRefills, Reels, Returned;
         public int PitStops, Perfect, Setups, Packages, Loose, Repassed, PushBack;
+        /// <summary>Crew calls taken and calls that worked (step 33).</summary>
+        public int Calls, CallsWon;
+        /// <summary>Crew XP earned this race per seat (calls; pit stops for the pit crew), before Mentor and Rapport.</summary>
+        public readonly Dictionary<CrewRole, int> CrewXp = new Dictionary<CrewRole, int>();
         public double FocusGain;
         public readonly List<double> StopTimes = new List<double>();
         /// <summary>Plays and outcomes per card id.</summary>
@@ -128,6 +132,7 @@ namespace GreenFlag.Sim
             lastPos = Me.Start;
             DrawCards(5);
             beatU = BeatPoints();
+            RadioInit();
         }
 
         // ---------------------------------------------------------------- reading the race
@@ -523,7 +528,7 @@ namespace GreenFlag.Sim
             if (cd.Heats)
             {
                 Heat = Math.Min(5, Heat + (tier == Tier.CritFail ? 2 : 1)); HeatAt = T;
-                if (Bal.Overdrive && Heat >= 3 && T - overAt > 30) { overAt = T; Emit(RaceEventKind.Overdrive, car, null, "You're overdriving it. Heat's up: they'll block you and come after you."); }
+                if (Bal.Overdrive && Heat >= 3 && T - overAt > 30) { overAt = T; Emit(RaceEventKind.Overdrive, car, null, "You're overdriving it. Heat's up: they'll block you and come after you."); RadioOverdrive("You're overdriving it. Heat's up: they'll block you and come after you."); }
             }
             bool ok = CardRules.Landed(tier);
             double tc = cd.TireCost > 0 ? cd.TireCost * Bal.TireCost * (ok && Bal.Refund != 0 ? 1 - Bal.Refund : 1) : 0;

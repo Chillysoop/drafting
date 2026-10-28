@@ -9,7 +9,7 @@ namespace GreenFlag.Sim
     /// One race, advanced in fixed ticks of SimInfo.TickSeconds. A port of the slice's race loop (update, autoMove, pit road,
     /// cautions): same rules and numbers, its own seeded roll order. Everything random comes from Rng; nothing here touches
     /// the engine, the UI or the wall clock, so the same setup and seed always give the same race.
-    /// The card layer (Race.Cards, Race.Kart, Race.PitGame) runs on top when the setup has a Loadout; radio calls come in step 33.
+    /// The card layer (Race.Cards, Race.Kart, Race.PitGame) and the crew radio (Race.Radio) run on top when the setup has a Loadout.
     /// </summary>
     public sealed partial class Race
     {
@@ -67,7 +67,7 @@ namespace GreenFlag.Sim
             Mods = s.Loadout != null ? new PlayerMods() : s.Mods;
             Loadout = s.Loadout;
             PitPolicy = s.PitPolicy;
-            if (Loadout != null) CardRng = new SimRng(s.Seed ^ 0xC4A2D5EBu);
+            if (Loadout != null) { CardRng = new SimRng(s.Seed ^ 0xC4A2D5EBu); RadioRng = new SimRng(s.Seed ^ 0x7AD10CA1u); }
             minGap = Shape.MinGap;
             baseV = 1 / Track.LapTime;
 
@@ -367,7 +367,7 @@ namespace GreenFlag.Sim
                     if (!c.Dnf && c.Pit == null && T >= c.NextMove && c.Spinning <= 0) AutoMove(c);
                 if (T - LastGreenAt > 70 && Rng.NextDouble() < 0.0035 * dt) StartCaution(Rng.Pick(DebrisReasons));
             }
-            if (CardsOn) CardsDrawTick();
+            if (CardsOn) { CardsDrawTick(); RadioTick(); }
 
             if (Phase != RacePhase.Finished && lead.Dist >= Track.Laps)
             {

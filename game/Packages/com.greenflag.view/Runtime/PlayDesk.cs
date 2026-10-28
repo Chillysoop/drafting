@@ -77,6 +77,8 @@ namespace GreenFlag.View
 
         /// <summary>Cards played and tossed through the desk, and draw beats it paused at (the mouse player's report).</summary>
         public int Plays, Tosses, BeatStops;
+        /// <summary>Crew calls taken and turned down through the desk.</summary>
+        public int CallsTaken, CallsPassed;
 
         public PlayDesk(RaceDriver driver)
         {
@@ -170,7 +172,11 @@ namespace GreenFlag.View
                 case RaceEventKind.ReelOffered: Say("Reel Them In", "A free card to close the gap", Rgb.Hex("#1d3b5c")); break;
                 case RaceEventKind.PerfectStop: Say("Perfect stop!", e.Text, Rgb.Hex("#1f6b40")); break;
                 case RaceEventKind.LooseWheel: Say("Loose wheel", e.Text, Rgb.Hex("#8a1c20")); break;
-                case RaceEventKind.Overdrive: Say("Crew chief", e.Text, Rgb.Hex("#6b3a10")); break;
+                case RaceEventKind.Overdrive: if (!r.RadioOn) Say("Crew chief", e.Text, Rgb.Hex("#6b3a10")); break;
+                case RaceEventKind.RadioAnswered:
+                    bool ok = e.Tier == (int)Tier.Success;
+                    Say(ok ? "Radio gamble works" : "Radio gamble fails", e.Text, ok ? Rgb.Hex("#1f6b40") : Rgb.Hex("#8a1c20"));
+                    break;
             }
         }
 
@@ -384,6 +390,30 @@ namespace GreenFlag.View
 
         /// <summary>1-9: pick (or play, if already picked) the nth shown card.</summary>
         public string Key(int n) => n >= 1 && n <= Shown.Count ? Click(Shown[n - 1]) : null;
+
+        // ------------------------------------------------------------------ the radio
+
+        /// <summary>A risky crew call is on the radio (Try it / No thanks answer it).</summary>
+        public bool RiskyCall => Race.Radio != null && Race.Radio.Kind == RadioKind.Mech;
+
+        /// <summary>Try the call on the radio. The result shows as a toast and in the radio lane.</summary>
+        public string TakeCall()
+        {
+            int n = Race.Events.Count;
+            var why = Race.TakeCall();
+            if (why == null) { CallsTaken++; Driver.Deliver(n); }
+            return why;
+        }
+
+        /// <summary>Turn the call down (or wave off advice).</summary>
+        public void PassCall()
+        {
+            if (Race.Radio == null) return;
+            int n = Race.Events.Count;
+            Race.PassCall();
+            CallsPassed++;
+            Driver.Deliver(n);
+        }
 
         // ------------------------------------------------------------------ pit road
 

@@ -7,7 +7,7 @@ namespace GreenFlag.View
     /// <summary>
     /// Plays a race with nothing but a pointer and the P key, through the same layout and input path a person uses: it drags
     /// cards up to play them, clicks a picked card to play it, holds the Play button, drags weak cards onto the toss bin at
-    /// draw beats, presses PIT on the plan lap and plans and releases its own stops. Its card rules are the harness's
+    /// draw beats, presses PIT on the plan lap, clicks Try it on crew calls at 55%+ and plans and releases its own stops. Its card rules are the harness's
     /// human style (looks every 2.5 s of race time and at every draw beat; plays Evade and Reel Them In at once, else the best
     /// card at 65%+ with under 5% wreck chance). Tests and the harness use it to prove a race is playable with a mouse; the
     /// Unity race view runs it as Autoplay (A).
@@ -25,7 +25,11 @@ namespace GreenFlag.View
         /// <summary>Gestures made: drag-to-play, click-to-play (pick, then click again), hold the Play button, drag to the toss
         /// bin, pit clicks, and P presses to leave a draw beat.</summary>
         public int Drags, Clicks, Holds, TossDrags, PitClicks, Resumes;
+        /// <summary>Clicks on Try it in the radio lane.</summary>
+        public int CallClicks;
         public double MinOdds = 0.65, MaxWreck = 0.05;
+        /// <summary>The lowest crew call chance it takes (the harness's callMin).</summary>
+        public int CallMin = 55;
 
         public MousePlayer(PlayDesk desk, HudLayout layout, HudReadouts readouts, HudInput input)
         {
@@ -49,6 +53,7 @@ namespace GreenFlag.View
 
         Box? StopBox(HitKind k) { foreach (var (h, b, _) in lay.StopBoxes) if (h.Kind == k) return b; return null; }
         Box? PitBox(HitKind k) { foreach (var (h, b, _) in lay.PitBoxes) if (h.Kind == k) return b; return null; }
+        Box? RadioBox(HitKind k) { foreach (var (h, b, _) in lay.RadioBoxes) if (h.Kind == k) return b; return null; }
 
         /// <summary>Press on a card, slide to (tx, ty) over a few frames, let go.</summary>
         void DragCard(int uid, Func<(double x, double y)> to)
@@ -98,6 +103,13 @@ namespace GreenFlag.View
             if (r.Phase == RacePhase.Green && r.Me.Pit == null && !p.Requested && p.Show && r.MyPlan is PitPlan plan && r.LapOf(r.Me) >= plan.Lap)
             {
                 ClickBox(() => PitBox(HitKind.PitButton)); PitClicks++;
+                return;
+            }
+
+            // the radio: click Try it on a crew call at CallMin% or better, let the rest time out
+            if (ro.Radio.Risky && ro.Radio.Chance >= CallMin && RadioBox(HitKind.RadioTake) != null)
+            {
+                ClickBox(() => RadioBox(HitKind.RadioTake)); CallClicks++;
                 return;
             }
 
