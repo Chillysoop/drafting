@@ -10,8 +10,9 @@ namespace GreenFlag.Presentation
     /// layout, a car per entrant, drives the race in real time through RaceDriver and points the camera with CameraRig.
     /// Everything that decides where things are lives in the engine-free GreenFlag.View package (tested in CI); this class only
     /// turns it into GameObjects (step 30 adds body lean, damage, glow and streaks on the cars, and sparks, smoke and skid marks
-    /// in FxView). Your car runs hands-off until the hand UI arrives in step 31.
-    /// Keys: C camera, 1-4 speed, Space pause, R new race, T / Shift+T track, L look, F fast-forward to the flag.
+    /// in FxView). Step 31 hands you the car: PlayDesk runs the hand and beats rules and HandHud draws the hand, the console,
+    /// the dash, the gauge, the beat clock and the pit stop hand (see HandHud for the keys).
+    /// Keys: C camera, [ and ] speed, R new race, T / Shift+T track, L look, F fast-forward to the flag, A autoplay.
     /// </summary>
     public sealed class RaceView : MonoBehaviour
     {
@@ -20,6 +21,19 @@ namespace GreenFlag.Presentation
         public int seed = 61;
         [Tooltip("clean, pixel, poly or tv. Empty = Looks.Default (Clean until board Q37 is answered).")]
         public string lookKey = "";
+        [Tooltip("Your persona's deck (drafter, bully, whisperer, restart, gambler; the kart cousin on kart tracks).")]
+        public string persona = "drafter";
+        [Tooltip("Step 29's hands-off race: no cards, the crew chief runs your car.")]
+        public bool handsOff;
+
+        /// <summary>The hand and beats rules for this race (null when hands-off).</summary>
+        public PlayDesk Desk { get; private set; }
+        public HudReadouts Readouts { get; } = new HudReadouts();
+        public HudLayout Layout { get; } = new HudLayout();
+        public HudInput HudInput { get; private set; }
+        /// <summary>The mouse player drives the HUD (A): a demo, and a quick way to watch a whole race played with cards.</summary>
+        public bool Autoplay;
+        MousePlayer bot;
 
         public RaceDriver Driver { get; private set; }
         public CameraRig Rig { get; } = new CameraRig();
@@ -30,6 +44,7 @@ namespace GreenFlag.Presentation
         GameObject track, carsRoot;
         readonly Dictionary<int, CarRig> rigs = new Dictionary<int, CarRig>();
         RaceHud hud;
+        HandHud hand;
         FxView fx;
 
         void Start()
@@ -46,13 +61,22 @@ namespace GreenFlag.Presentation
             sun.intensity = 1.15f;
             sun.shadows = LightShadows.Soft;
             hud = new RaceHud(this);
+            hand = new HandHud(this);
             NewRace();
         }
 
         public void NewRace()
         {
             var t = Tracks.ById(trackId);
-            Driver = new RaceDriver(new Race(RaceSetup.Quick(t, (uint)seed)));
+            if (handsOff) { Driver = new RaceDriver(new Race(RaceSetup.Quick(t, (uint)seed))); Desk = null; HudInput = null; bot = null; }
+            else
+            {
+                int speed = Driver?.SpeedIndex ?? 0;
+                Driver = new RaceDriver(PlayDesk.NewRace(t, (uint)seed, persona)) { SpeedIndex = speed };
+                Desk = new PlayDesk(Driver);
+                HudInput = new HudInput(Desk, Layout);
+                bot = new MousePlayer(Desk, Layout, Readouts, HudInput);
+            }
             Rebuild();
             Rig.Cut();
         }
@@ -111,7 +135,13 @@ namespace GreenFlag.Presentation
             if (Driver == null) return;
             if (LowRes != null && (LowRes.width != Mathf.Max(64, Screen.width / Look.PixelSize) || LowRes.height != Mathf.Max(36, Screen.height / Look.PixelSize))) ApplyPixelSize();
             float dt = Time.unscaledDeltaTime;
-            Driver.Advance(dt);
+            if (Desk != null)
+            {
+                Desk.Frame(dt);
+                Readouts.Update(Desk);
+                if (Autoplay) { Layout.Update(Screen.width, Screen.height, Desk, Readouts); bot.Frame(); }
+            }
+            else Driver.Advance(dt);
             double now = Driver.ViewT;
             CarPose me = default;
             foreach (var p in Driver.Poses)
@@ -129,7 +159,13 @@ namespace GreenFlag.Presentation
             fx.Draw(Driver.Motion.Fx, Driver.Motion.T, Cam);
         }
 
-        void OnGUI() => hud?.Draw();
+        void OnGUI()
+        {
+            hud?.Draw();    // the look's low-res frame, pylon, banners, booth, controls
+            hand?.Draw();   // the hand and beats HUD on top
+        }
+
+        void OnApplicationFocus(bool focused) { if (!focused) hand?.LostFocus(); }
 
         void OnDestroy()
         {

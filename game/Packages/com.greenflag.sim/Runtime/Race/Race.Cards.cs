@@ -161,6 +161,9 @@ namespace GreenFlag.Sim
             return w;
         }
 
+        /// <summary>How long the live combo's window is in all (the combo meter's full width).</summary>
+        public double ComboWindow => ComboWin();
+
         /// <summary>Seconds left to land a card that chains off the last one (0 = no live combo).</summary>
         public double ComboLeft => ChainFam != null ? Math.Max(0, ComboWin() - (T - ChainAt)) : 0;
 
@@ -400,6 +403,9 @@ namespace GreenFlag.Sim
             double back = (Track.S + Tn + 0.45 * Track.S) / P, front = 0.45 * Track.S / P;
             return Track.BeatPoints >= 2 ? new[] { front, back } : new[] { back };
         }
+
+        /// <summary>Draw beats per lap on this track (the beat clock's full turn is a lap divided by this).</summary>
+        public int BeatsPerLap => beatU?.Length ?? 0;
 
         /// <summary>Seconds of racing until your next draw beat (green flag only).</summary>
         public double NextBeatIn

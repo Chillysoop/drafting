@@ -115,7 +115,7 @@ namespace GreenFlag.Harness
 
         static string F(double v) => v.ToString("F4", CultureInfo.InvariantCulture);
 
-        static string Frame(RaceDriver d, LookDef look, Vec2? focus = null, double span = 0, string caption = null)
+        internal static string Frame(RaceDriver d, LookDef look, Vec2? focus = null, double span = 0, string caption = null)
         {
             var l = d.Layout; var r = d.Race;
             double pad = 0.6, x0 = l.MinX - pad, x1 = l.MaxX + pad, z0 = l.MinZ - pad, z1 = l.MaxZ + pad;

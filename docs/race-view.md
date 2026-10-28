@@ -1,21 +1,22 @@
 # The race view (roadmap step 29)
 
 The first thing in the Unity build you can watch: a full race of the C# sim on screen, on any of the ten tracks, with wide and
-follow cameras and the scoring pylon. Your car runs hands-off (the crew chief takes the caution calls) until the hand and beats
-UI arrive in step 31. Open `Assets/GreenFlag/Scenes/Race.unity` (the project bootstrap creates it) and press Play. It is also
+follow cameras and the scoring pylon. Since step 31 you drive it with your hand of cards: see [hand-ui.md](hand-ui.md) for the
+HUD and its keys (tick `handsOff` on the RaceView to get step 29's hands-off race back). Open `Assets/GreenFlag/Scenes/Race.unity` (the project bootstrap creates it) and press Play. It is also
 the first scene in the player build.
 
 | Key | Does |
 |---|---|
 | C | Camera: Auto (wide at the start and under caution, follow otherwise, as in the slice), Wide, Follow |
-| 1 to 4 | Speed 1x, 2x, 4x, 8x |
-| Space | Pause |
+| [ and ] | Speed 1x, 2x, 4x, 8x (1 to 4 when hands-off; with cards the number keys pick cards) |
+| P | Pause (Space when hands-off; with cards Space is hold to play) |
+| A | Autoplay: the mouse player plays your hand |
 | T / Shift+T | Next / previous track (all ten: Millbrook, Carver, Talon Ridge, Pinewood, Ridgeback, the two kart circuits, Cedar Bowl, Millbrook late model, Crossroads Figure-8) |
 | L | Next look (Clean, then the three step 11 candidates as previews) |
 | R | New race on a new seed |
 | F | Skip to the checkered flag |
 
-The same buttons sit bottom right. The result card shows the race fingerprint, which matches
+The same buttons sit bottom right (top right once you have a hand, since the odds gauge takes that corner). The result card shows the race fingerprint, which matches
 `dotnet run --project sim/GreenFlag.Harness -- race <track> <seed>`.
 
 ## Two halves

@@ -39,8 +39,10 @@ namespace GreenFlag.Harness
                     case "parity": return Parity.Run(Arg(args, 1, "sim/parity/browser-baseline.json"), int.Parse(Arg(args, 2, "60")), Arg(args, 3, "all"));
                     case "frames": return ViewFrames.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "frames.html"), int.Parse(Arg(args, 4, "6")), Arg(args, 5, "none"));
                     case "wrecks": return ViewFrames.Wrecks(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "wrecks.html"), Arg(args, 4, "spam"), int.Parse(Arg(args, 5, "3")));
+                    case "mouse": return HudShots.Mouse(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")));
+                    case "hud": return HudShots.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "hud.html"), int.Parse(Arg(args, 4, "6")));
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | hud [track] [seed] [out.html] [n]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }
