@@ -4935,7 +4935,6 @@ function qualiScore(pl){
 }
 // pace fraction (higher = faster) for my car from an average-points score
 const qualiDelta=avg=>QL.skipQ+QL.K*(avg-QL.skipPts);
-// upgrades: every car or driver point bought above the starting car adds qualifying pace on top of carRating (raceday pace is unchanged)
 // step 23: the driver term every car adds, yours and the AI's (racecraft and consistency against 5). It used to count your
 // own car stats a second time on top of carRating, for your car only, and a coached driver took pole ~90% of races.
 const qualiUp=s=>QL.statK*((s.racecraft-5)+(s.consistency-5));
@@ -6424,7 +6423,9 @@ if(screen==='title'&&typeof document!=='undefined')renderTitle();
      per Wits modifier. Both use the d20 modifier, so a score of 10 or 11 does nothing and 8 or 9 costs a little.
    - Qualifying no longer counts your stats twice (qualiUp in quali-js): a coached driver was on pole ~90% of the time.
    - Promotion offers come from the next series' smaller teams (OFFER_TIERS), so each rung starts near the back again.
-   - Board Q66: driver coaching is worth more (COACH) and it is the upgrade that follows you when you change teams. */
+   - The field races back (TOUGH: the other driver's Defense or Racecraft) and late model and stock car fields are sharper (FIELD).
+   - Board Q66: driver coaching is the upgrade that follows you when you change teams (car and crew stay with the team), and it
+     is already the cheaper one; with promotions that reset car and crew, that makes it worth more than crew over a career. */
 const ECON={kart:0.15,late:0.3,stock:0.4};
 // promotions start you near the back of the next series again: the next series' smaller teams make the step-up offers
 // (before step 23 a kart title brought a rating-7 late model ride and the careful career won ~80% of races from there)
