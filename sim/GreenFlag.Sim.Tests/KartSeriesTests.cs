@@ -248,6 +248,26 @@ namespace GreenFlag.Sim.Tests
             Assert.Equal(was + 1, g.Career.Base.CrewChief);
         }
 
+        /// <summary>Board Q89 (Conner, Oct 28): a near-perfect qualifying run in the first kart (team 3/10) reaches the top 8,
+        /// while a skipped run still starts near the back.</summary>
+        [Fact]
+        public void APerfectQualifyingRunInTheFirstKartStartsInTheTopEight()
+        {
+            double perfect = 0, skip = 0;
+            for (uint s = 1; s <= 40; s++)
+            {
+                var c = Career.New("linepainter", seed: s);
+                c.EnterGarage();
+                var run = c.StartQuali(null);
+                foreach (var ch in run.Plan.Checks) ch.Res = QualiMark.Perfect;
+                perfect += c.FinishQuali(run).Pos;
+                skip += c.FinishQuali(null).Pos;
+            }
+            perfect /= 40; skip /= 40;
+            Assert.True(perfect <= 8, $"perfect run starts P{perfect:F1}");
+            Assert.True(skip > 12, $"skip starts P{skip:F1}");
+        }
+
         static Race QuickRace(RaceSetup s)
         {
             s.PitPolicy = PitPolicy.Bot;

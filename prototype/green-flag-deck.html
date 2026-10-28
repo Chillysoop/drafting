@@ -4883,7 +4883,7 @@ if(typeof race!=='undefined'&&race)layoutBugs();
    pure and also runs headless (qualiAuto) so the harness can play it. */
 const QL={laps:2,roll:3.4,rollU:0.22,gapMax:2.2,statK:0.0009,runSec:44,sweep:{mill:1.45,carver:1.4,talon:1.2,pine:1.5,ridge:1.5},
  slow:0.35,focusSec:3,perfFocus:0.05,pts:{P:1.6,G:1,O:0.25,E:-0.5,L:-1},chainStep:0.1,chainMax:4,
- K:0.03,skipPts:1.15,skipQ:-0.002,noise:0.003,playNoise:0.0015};
+ K:0.045,skipPts:1.15,skipQ:-0.002,noise:0.003,playNoise:0.0015};
 const QT={P:'Perfect',G:'Good',O:'OK',E:'Early',L:'Late'};
 const QCARD={
  draft:{n:'Slipstream',txt:t=>t.draftBias>0.5?'+0.25 on every corner here: the tow is worth a lot on this track.':t.draftBias>0?'+0.15 on every corner: a little tow down the straights.':'+0.05 on every corner: there is barely any tow here.'},
@@ -4936,7 +4936,8 @@ function qualiScore(pl){
   ch.pts=p;ch.chain=chain;lapPts[ch.lap]=(lapPts[ch.lap]||0)+p;lapN[ch.lap]=(lapN[ch.lap]||0)+1;tot+=p;n++;}
  return {tot,n,avg:n?tot/n:0,lapPts,lapN,chain,best};
 }
-// pace fraction (higher = faster) for my car from an average-points score
+// pace fraction (higher = faster) for my car from an average-points score. K was 0.03 to v47; board Q89 (Conner, Oct 28) said a
+// near-perfect run in the first kart (team 3/10) should reach the top 8, not P11-P14, so the run now counts half as much again.
 const qualiDelta=avg=>QL.skipQ+QL.K*(avg-QL.skipPts);
 // step 23: the driver term every car adds, yours and the AI's (racecraft and consistency against 5). It used to count your
 // own car stats a second time on top of carRating, for your car only, and a coached driver took pole ~90% of races.

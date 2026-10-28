@@ -72,7 +72,9 @@ namespace GreenFlag.Sim
     {
         public const int Laps = 2;
         public const double Roll = 3.4, RollU = 0.22, GapMax = 2.2, StatK = 0.0009, RunSec = 44, Slow = 0.35, FocusSec = 3, PerfFocus = 0.05;
-        public const double ChainStep = 0.1, K = 0.03, SkipPts = 1.15, SkipQ = -0.002, Noise = 0.003, PlayNoise = 0.0015;
+        /// <summary>K is how much the run's points move your lap. It was 0.03 to step 41; board Q89 (Conner, Oct 28): a near-perfect
+        /// run in the first kart (team 3/10) should reach the top 8, not P11-P14.</summary>
+        public const double ChainStep = 0.1, K = 0.045, SkipPts = 1.15, SkipQ = -0.002, Noise = 0.003, PlayNoise = 0.0015;
         public const int ChainMax = 4;
 
         public static double MarkPts(QualiMark m) => m == QualiMark.Perfect ? 1.6 : m == QualiMark.Good ? 1 : m == QualiMark.Ok ? 0.25 : m == QualiMark.Early ? -0.5 : -1;
