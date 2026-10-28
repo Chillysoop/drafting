@@ -1,0 +1,10 @@
+{
+  "name": "com.greenflag.view",
+  "version": "0.1.0",
+  "displayName": "Green Flag View",
+  "description": "The race view's engine-free half: track layout, car motion, cameras, the scoring pylon and the looks. Reads the sim, never writes to it. Plain C#, no UnityEngine reference, so CI tests it with dotnet.",
+  "unity": "6000.3",
+  "author": {
+    "name": "Chillysoop"
+  }
+}

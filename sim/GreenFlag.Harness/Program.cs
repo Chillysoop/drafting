@@ -14,6 +14,7 @@ namespace GreenFlag.Harness
     ///   check  [n]                                   every track, n seeds, each policy run twice: fails if any run differs (CI)
     ///   parity [baseline] [n] [styles]               the browser slice's averages vs C# per persona, track and play style (CI)
     ///   json   [n] [personas] [tracks] [styles] [out] [seed]   the browser harness's JSON, for comparing anything else
+    ///   frames [track] [seed] [out.html] [n]         n top-down snapshots of the race view (step 29) and its pylon
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
     /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
     /// Policies with cards (a persona's starting deck, part, tune and driver; default drafter, its kart cousin on kart tracks):
@@ -35,8 +36,9 @@ namespace GreenFlag.Harness
                     case "batch": return Batch(int.Parse(Arg(args, 1, "100")), Arg(args, 2, "all"), Arg(args, 3, "none"), Arg(args, 4, "drafter"));
                     case "check": return Check(int.Parse(Arg(args, 1, "5")));
                     case "parity": return Parity.Run(Arg(args, 1, "sim/parity/browser-baseline.json"), int.Parse(Arg(args, 2, "60")), Arg(args, 3, "all"));
+                    case "frames": return ViewFrames.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "frames.html"), int.Parse(Arg(args, 4, "6")));
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }

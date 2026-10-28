@@ -1,0 +1,14 @@
+{
+    "name": "GreenFlag.View",
+    "rootNamespace": "GreenFlag.View",
+    "references": ["GreenFlag.Sim"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

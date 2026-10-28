@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../GreenFlag.Sim/GreenFlag.Sim.csproj" />
+    <ProjectReference Include="../GreenFlag.View/GreenFlag.View.csproj" />
   </ItemGroup>
 </Project>
