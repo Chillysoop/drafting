@@ -97,16 +97,23 @@ namespace GreenFlag.Sim
         {
             Hazard = new Hazard { Until = T + Bal.HazardWin, Crossover = crossover };
             Emit(RaceEventKind.HazardOffered, Me, null, crossover ? "Traffic at the crossover" : "Wreck ahead");
+            if (CardsOn) CardsHazard(true);
         }
 
         /// <summary>
-        /// You got slowed in time. Step 27 replaces this with the Evade card and its odds; for now playing it always works.
+        /// React to the hazard. With cards this plays the Evade card (it resolves on its odds); without, you always get slowed in time.
         /// </summary>
-        public void EvadeHazard() { if (Hazard != null) EndHazard(true); }
+        public void EvadeHazard()
+        {
+            if (Hazard == null) return;
+            if (CardsOn && HazardCard != null) PlayCard(HazardCard.Uid);
+            else EndHazard(true);
+        }
 
         void EndHazard(bool played)
         {
             Hazard = null;
+            if (CardsOn) CardsHazard(false);
             var m = Me;
             if (played) { Emit(RaceEventKind.HazardDodged, m); return; }
             if (!m.Dnf && Rng.NextDouble() < Bal.HazardCatch)

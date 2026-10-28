@@ -3,8 +3,9 @@ using System.Collections.Generic;
 namespace GreenFlag.Sim
 {
     /// <summary>
-    /// What the player's build does to the race core. Step 26 leaves these at 1 (a car with no persona, tune, setup or parts);
-    /// step 27 fills them from the persona, tune, setup and equipped parts (the slice's relicMul / tunePace / setupWear).
+    /// What the player's build does to the race core. All 1 for a car with no parts or tune; with a Loadout the race fills
+    /// them from the equipped parts and the tune (the slice's relicMul / tunePace / tuneWear) and keeps them current when a
+    /// pit Setup nudges the tune. Setup tire wear is applied on top, live.
     /// </summary>
     public sealed class PlayerMods
     {
@@ -27,12 +28,24 @@ namespace GreenFlag.Sim
         public PlayerMods Mods = new PlayerMods();
         /// <summary>Entrant ids in grid order (from qualifying). Null = the slice's roll-off by car rating.</summary>
         public List<int> Grid;
+        /// <summary>Your deck, parts, tune and crew. Null = no cards: the step 26 hands-off race core.</summary>
+        public PlayerLoadout Loadout;
+        /// <summary>Who plays your pit stops when the race has cards.</summary>
+        public PitPolicy PitPolicy = PitPolicy.Bot;
 
         /// <summary>A race on a fresh field for the track's series, everything rolled from one seed.</summary>
         public static RaceSetup Quick(TrackDef track, uint seed, CarStats myStats = null)
         {
             var fieldRng = new SimRng(seed ^ 0x9E3779B9u);
             return new RaceSetup { Track = track, Seed = seed, Field = FieldBuilder.Build(fieldRng, track.Series, myStats ?? CarStats.Rookie()) };
+        }
+
+        /// <summary>A race with cards: the same field as Quick, your car from the loadout.</summary>
+        public static RaceSetup Quick(TrackDef track, uint seed, PlayerLoadout loadout)
+        {
+            var s = Quick(track, seed, loadout.Car);
+            s.Loadout = loadout;
+            return s;
         }
     }
 

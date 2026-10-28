@@ -7,6 +7,10 @@ namespace GreenFlag.Sim
         PitIn, PitService, PitOut,
         LuckyDog, WaveAround, PitPenalty,
         HazardOffered, HazardDodged, HazardCollected,
+        // cards (step 27): Card holds the card id
+        CardPlayed, CardResolved, CardReturned, CardRerolled, CardTossed, CardsExpired, DrawBeat, Combo, BoardFull, Overdrive, ReelOffered,
+        FairingPushed, FairingPenalty, Repassed, PartnerPush,
+        PitGameOpen, PitGameGo, LooseWheel, PitGameRelease, PerfectStop, SetupInstalled, PackageComplete, SetupsStale,
     }
 
     /// <summary>
@@ -19,9 +23,11 @@ namespace GreenFlag.Sim
         public readonly double Time;
         public readonly int Car, Other;
         public readonly string Text;
+        /// <summary>The card involved, for card events.</summary>
+        public readonly string Card;
 
-        public RaceEvent(RaceEventKind kind, double time, int car = -1, int other = -1, string text = null)
-        { Kind = kind; Time = time; Car = car; Other = other; Text = text; }
+        public RaceEvent(RaceEventKind kind, double time, int car = -1, int other = -1, string text = null, string card = null)
+        { Kind = kind; Time = time; Car = car; Other = other; Text = text; Card = card; }
 
         public override string ToString() => $"{Time,8:F2} {Kind}{(Car >= 0 ? " car " + Car : "")}{(Other >= 0 ? " / " + Other : "")}{(Text != null ? ": " + Text : "")}";
     }

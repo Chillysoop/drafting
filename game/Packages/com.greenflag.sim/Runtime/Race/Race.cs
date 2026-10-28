@@ -9,7 +9,7 @@ namespace GreenFlag.Sim
     /// One race, advanced in fixed ticks of SimInfo.TickSeconds. A port of the slice's race loop (update, autoMove, pit road,
     /// cautions): same rules and numbers, its own seeded roll order. Everything random comes from Rng; nothing here touches
     /// the engine, the UI or the wall clock, so the same setup and seed always give the same race.
-    /// Cards, odds, combos, beats, Focus and radio calls plug in at step 27 through the public effect methods below.
+    /// The card layer (Race.Cards, Race.Kart, Race.PitGame) runs on top when the setup has a Loadout; radio calls come in step 33.
     /// </summary>
     public sealed partial class Race
     {
@@ -36,7 +36,7 @@ namespace GreenFlag.Sim
         public List<RaceCar> FinalOrder;
         public double FinishedAt;
 
-        // player state the AI reads; step 27's card layer writes these
+        // player state the AI reads; the card layer writes these
         /// <summary>Heat from aggressive cards: AI drivers race you harder.</summary>
         public int Heat;
         public double HeatAt;
@@ -64,7 +64,10 @@ namespace GreenFlag.Sim
             Rng = new SimRng(s.Seed);
             Diff = s.Difficulty;
             Bal = s.Balance;
-            Mods = s.Mods;
+            Mods = s.Loadout != null ? new PlayerMods() : s.Mods;
+            Loadout = s.Loadout;
+            PitPolicy = s.PitPolicy;
+            if (Loadout != null) CardRng = new SimRng(s.Seed ^ 0xC4A2D5EBu);
             minGap = Shape.MinGap;
             baseV = 1 / Track.LapTime;
 
@@ -100,6 +103,7 @@ namespace GreenFlag.Sim
             double mine = Me.Stats.Rating;
             Expected = 1;
             foreach (var c in Cars) if (!c.IsMe && c.Stats.Rating > mine) Expected++;
+            if (Loadout != null) CardsInit();
         }
 
         // ---------------------------------------------------------------- helpers
@@ -113,14 +117,14 @@ namespace GreenFlag.Sim
         public int Position(RaceCar c) => Order.IndexOf(c) + 1;
         public TrackSpot SpotOf(RaceCar c) => Shape.SpotOf(c.Dist);
 
-        void Emit(RaceEventKind k, RaceCar car = null, RaceCar other = null, string text = null)
+        void Emit(RaceEventKind k, RaceCar car = null, RaceCar other = null, string text = null, string card = null)
         {
-            var e = new RaceEvent(k, T, car != null && !car.IsPace ? car.Id : -1, other != null && !other.IsPace ? other.Id : -1, text);
+            var e = new RaceEvent(k, T, car != null && !car.IsPace ? car.Id : -1, other != null && !other.IsPace ? other.Id : -1, text, card);
             Events.Add(e);
             Log?.Add(e);
         }
 
-        // ---------------------------------------------------------------- effects (cards call these from step 27)
+        // ---------------------------------------------------------------- effects (cards call these)
 
         public void AddPace(RaceCar car, double mult, double sec) { car?.Effects.Add(new CarEffect { Kind = EffectKind.Pace, Mult = mult, Until = T + sec }); }
 
@@ -168,7 +172,7 @@ namespace GreenFlag.Sim
         internal void DamageSpin(RaceCar c, double amt) => AddDamage(c, amt, 0.2, 0.5, 0.3);
 
         /// <summary>When damage was repaired, take it off the worst zone first.</summary>
-        void ReconcileZones(RaceCar car)
+        internal void ReconcileZones(RaceCar car)
         {
             var z = car.Zones;
             double s = z.Sum, d = car.Damage;
@@ -261,10 +265,12 @@ namespace GreenFlag.Sim
         /// <summary>Advance one fixed tick (SimInfo.TickSeconds).</summary>
         public void Tick()
         {
-            if (Done) return;
+            if (Done || Holding) return;
             Events.Clear();
             const double dt = SimInfo.TickSeconds;
+            if (CardsOn) CardsPreTick();
             T += dt; PhaseT += dt;
+            if (CardsOn) CardsClockTick();
 
             if (Phase == RacePhase.Start && PhaseT >= 5) GoGreen();
             if (Phase == RacePhase.Caution) CautionTick();
@@ -278,7 +284,8 @@ namespace GreenFlag.Sim
             PaceTick(dt);
             if (Phase != RacePhase.Green && Phase != RacePhase.Finished) PhysAhead();
 
-            if (Heat > 0 && T - HeatAt > 25) { Heat--; HeatAt = T; }
+            if (Heat > 0 && T - HeatAt > 25 / HeatCoolK) { Heat--; HeatAt = T; }
+            if (CardsOn) CardsFreezeTick(dt);
             foreach (var c in Cars) c.Effects.RemoveAll(e => e.Until <= T);
 
             var lead = Order[0];
@@ -304,7 +311,7 @@ namespace GreenFlag.Sim
                             v += baseV * dm;
                         }
                     }
-                    double wearRate = 0.24 * Track.Wear * Diff.Wear * (1 - (c.Stats.TireMgmt - 5) * 0.04) * (c.Trait == Trait.Smooth ? 0.85 : 1) * (c.IsMe ? Mods.Wear : 1);
+                    double wearRate = 0.24 * Track.Wear * Diff.Wear * (1 - (c.Stats.TireMgmt - 5) * 0.04) * (c.Trait == Trait.Smooth ? 0.85 : 1) * (c.IsMe ? Mods.Wear * MySetupWear : 1);
                     foreach (var e in c.Effects) if (e.Kind == EffectKind.Wear) wearRate *= e.Mult;
                     c.Tires = Math.Max(5, c.Tires - wearRate * DzWear(c) * dt);
                 }
@@ -352,6 +359,7 @@ namespace GreenFlag.Sim
                 if (c.Dist > mx) c.Dist = mx;
             }
             SortOrder();
+            if (CardsOn) CardsAfterMove();
 
             if (Phase == RacePhase.Green)
             {
@@ -359,16 +367,22 @@ namespace GreenFlag.Sim
                     if (!c.Dnf && c.Pit == null && T >= c.NextMove && c.Spinning <= 0) AutoMove(c);
                 if (T - LastGreenAt > 70 && Rng.NextDouble() < 0.0035 * dt) StartCaution(Rng.Pick(DebrisReasons));
             }
+            if (CardsOn) CardsDrawTick();
 
             if (Phase != RacePhase.Finished && lead.Dist >= Track.Laps)
             {
                 Phase = RacePhase.Finished; FinishedAt = T; FinalOrder = new List<RaceCar>(Order);
                 Emit(RaceEventKind.Checkered, lead);
             }
-            if (Phase == RacePhase.Finished && T - FinishedAt > 3.5) { Done = true; Emit(RaceEventKind.Finished); return; }
+            if (Phase == RacePhase.Finished && T - FinishedAt > 3.5)
+            {
+                if (CardsOn) KartFairingPenalty();
+                Done = true; Emit(RaceEventKind.Finished); return;
+            }
 
             if (Track.Kart && Phase != RacePhase.Finished) KartSettle();
             if (Track.Fig8) Fig8Tick();
+            if (CardsOn) CardsEndTick(dt);
         }
 
         void SortOrder() => SimMath.StableSort(Order, (a, b) => a.Dnf != b.Dnf ? (a.Dnf ? 1 : -1) : b.Dist.CompareTo(a.Dist));
@@ -377,6 +391,7 @@ namespace GreenFlag.Sim
         {
             Phase = RacePhase.Green; PhaseT = 0; LastGreenAt = T;
             MyPlans();
+            if (CardsOn) CardsGoGreen();
             foreach (var c in Cars) if (c.NextMove < T + 3) c.NextMove = T + Rng.Rand(3, 12);
             Emit(RaceEventKind.GreenFlag);
         }

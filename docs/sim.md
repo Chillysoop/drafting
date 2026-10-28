@@ -1,6 +1,6 @@
 # The race sim (roadmap step 26)
 
-`game/Packages/com.greenflag.sim/Runtime/` is the race, as plain C# with no engine reference. The same files compile into the Unity game and into `sim/GreenFlag.Sim` for CI. It is a port of the slice's race loop (`update`, `autoMove`, pit road and cautions in `prototype/green-flag-deck.html`, slice v47) with the same rules and numbers. Cards, odds, combos, beats, Focus and radio calls come in step 27 and plug into the effect methods listed below.
+`game/Packages/com.greenflag.sim/Runtime/` is the race, as plain C# with no engine reference. The same files compile into the Unity game and into `sim/GreenFlag.Sim` for CI. It is a port of the slice's race loop (`update`, `autoMove`, pit road and cautions in `prototype/green-flag-deck.html`, slice v47) with the same rules and numbers. Step 27 added the card layer and the pit stop mini-game on top: see [cards.md](cards.md). Radio and crew calls come in step 33.
 
 ## How a race runs
 
@@ -33,7 +33,7 @@ Slow-mo and beat pauses (step 27 and 31) change how many ticks run per real seco
 | `Race/Race.Caution.cs` | The caution sequence, crew chief calls, lucky dog, wave-around, pit-road-closed penalty, pace car | `startCaution`, `cautionTick`, `oneToGo`, `aiCautionCall`, `physAhead` |
 | `Race/RaceSetup.cs` | `RaceSetup`, `PlayerMods`, `RaceResult` | |
 
-## What your car can do in step 26
+## What your car can do without cards
 
 Your car races with no cards: AI moves still run for it (it works the draft and saves tires but never passes on autopilot outside Easy, as in the slice). The player-side API so far:
 
@@ -47,8 +47,7 @@ The effect methods cards will call: `AddPace`, `Slow`, `WearFx`, `BlockFor`, `Ho
 
 ## Not in the sim yet
 
-- Cards, odds, outcomes, combos, Heat gain, beats, Focus, toss effects, the reel-in card, kart tow pips and the partner push: step 27.
-- The pit stop mini-game: your stops use the crew chief's stop time for now (step 27 or 33).
+- Cards, odds, combos, beats, Focus, kart tow and the pit stop mini-game are in since step 27 ([cards.md](cards.md)). Without a loadout, your stops still use the crew chief's stop time.
 - Radio and crew calls: step 33.
 - Rivals' Grudge, payback and blocking: step 37 (career).
 - Practice mode: after step 36.
@@ -57,7 +56,7 @@ The effect methods cards will call: `AddPace`, `Slow`, `WearFx`, `BlockFor`, `Ho
 ## Checking it
 
 ```
-dotnet test sim/GreenFlag.Sim.sln                                    # 51 tests
+dotnet test sim/GreenFlag.Sim.sln                                    # 219 tests (51 race core, the rest cards and pit game)
 dotnet run --project sim/GreenFlag.Harness -c Release -- race carver 61   # one race: event log, result, fingerprint
 dotnet run --project sim/GreenFlag.Harness -c Release -- batch 100        # hands-off averages per track
 dotnet run --project sim/GreenFlag.Harness -c Release -- check 5          # every track, 5 seeds, run twice (CI)
