@@ -9,15 +9,16 @@ namespace GreenFlag.Harness
 {
     /// <summary>
     /// Headless races on the C# sim.
-    ///   race  [track] [seed] [policy] [persona]     one race: grid, event log, finish order, fingerprint
-    ///   batch [n] [tracks] [policy] [persona]       n races per track: average finish, cautions, wrecks, DNFs, length (+ card stats)
-    ///   check [n]                                   every track, n seeds, each policy run twice: fails if any run differs (CI)
+    ///   race   [track] [seed] [policy] [persona]     one race: grid, event log, finish order, fingerprint
+    ///   batch  [n] [tracks] [policy] [persona]       n races per track: average finish, cautions, wrecks, DNFs, length (+ card stats)
+    ///   check  [n]                                   every track, n seeds, each policy run twice: fails if any run differs (CI)
+    ///   parity [baseline] [n] [styles]               the browser slice's averages vs C# per persona, track and play style (CI)
+    ///   json   [n] [personas] [tracks] [styles] [out] [seed]   the browser harness's JSON, for comparing anything else
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
     /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
-    /// Policies with cards (a persona's starting deck, part and tune; default drafter, its kart cousin on kart tracks):
-    /// hands (holds a hand but never plays; the crew chief runs the stops), smart (the browser harness's instant bot: plays
-    /// the best card at 65%+ with under 5% wreck, Evade at once), spam (always plays the best card). smart and spam also pit
-    /// like "pit" and play the pit mini-game as a bot. Step 28 adds the timed human styles and parity with the browser.
+    /// Policies with cards (a persona's starting deck, part, tune and driver; default drafter, its kart cousin on kart tracks):
+    /// hands (holds a hand but never plays; the crew chief runs the stops) and the browser harness's play styles smart, spam,
+    /// human, human2, bold and hspam (see Bots).
     /// </summary>
     public static class Program
     {
@@ -33,7 +34,9 @@ namespace GreenFlag.Harness
                     case "race": return RaceCmd(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "none"), Arg(args, 4, "drafter"));
                     case "batch": return Batch(int.Parse(Arg(args, 1, "100")), Arg(args, 2, "all"), Arg(args, 3, "none"), Arg(args, 4, "drafter"));
                     case "check": return Check(int.Parse(Arg(args, 1, "5")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n]"); return 2;
+                    case "parity": return Parity.Run(Arg(args, 1, "sim/parity/browser-baseline.json"), int.Parse(Arg(args, 2, "60")), Arg(args, 3, "all"));
+                    case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }
@@ -43,8 +46,8 @@ namespace GreenFlag.Harness
 
         static IEnumerable<TrackDef> TracksFor(string spec) => spec == "all" ? Tracks.All : spec.Split(',').Select(Tracks.ById);
 
-        public static readonly string[] CardPolicies = { "hands", "smart", "spam" };
-        public static bool UsesCards(string policy) => Array.IndexOf(CardPolicies, policy) >= 0;
+        /// <summary>Card play styles: hands (holds a hand, never plays; the browser harness's "none") and the browser harness's bots (Bots.Styles).</summary>
+        public static bool UsesCards(string policy) => policy == "hands" || (policy != "none" && Bots.IsStyle(policy));
 
         /// <summary>The persona for a track: stock personas move to their kart cousin on kart tracks (and back).</summary>
         public static string PersonaFor(TrackDef t, string persona)
@@ -59,17 +62,18 @@ namespace GreenFlag.Harness
         /// <summary>Run one race with a policy driving your car's pit calls (and cards).</summary>
         public static (Race race, RaceResult res) Run(TrackDef t, uint seed, string policy, bool log = false, string persona = "drafter")
         {
-            bool cards = UsesCards(policy);
-            var setup = cards ? RaceSetup.Quick(t, seed, PlayerLoadout.ForPersona(PersonaFor(t, persona))) : RaceSetup.Quick(t, seed);
-            if (cards) setup.PitPolicy = policy == "hands" ? PitPolicy.Chief : PitPolicy.Bot;
-            var race = new Race(setup);
+            if (UsesCards(policy))
+            {
+                var (cr, _) = Bots.Run(t, seed, policy == "hands" ? "none" : policy, persona, x => { if (log) x.Log = new List<RaceEvent>(); });
+                return (cr, cr.Result());
+            }
+            var race = new Race(RaceSetup.Quick(t, seed));
             if (log) race.Log = new List<RaceEvent>();
-            bool pit = policy == "pit" || policy == "smart" || policy == "spam";
+            bool pit = policy == "pit";
             int cautionSet = -1;
             while (!race.Done)
             {
                 race.Tick();
-                if (policy == "smart" || policy == "spam") PlayBot(race, policy);
                 if (!pit) continue;
                 var me = race.Me;
                 if (me.Dnf) continue;
@@ -86,24 +90,6 @@ namespace GreenFlag.Harness
                 }
             }
             return (race, race.Result());
-        }
-
-        /// <summary>The browser harness's instant bots: play the hazard card at once, otherwise the best playable card.</summary>
-        static void PlayBot(Race r, string policy)
-        {
-            if (r.Done || r.Attempt != null || r.Me.Dnf || r.Phase == RacePhase.Finished) return;
-            var hz = r.Hand.Find(h => h.Special && h.Id == "evade");
-            if (hz != null && policy == "smart") { r.PlayCard(hz.Uid); return; }
-            var c = r.Ctx();
-            HandCard best = null; Odds bo = null;
-            foreach (var h in r.Hand)
-            {
-                if (r.CardBlock(h.Def, c) != null) continue;
-                var o = r.ComputeOdds(h.Def, c);
-                if (bo == null || o.Succ > bo.Succ) { best = h; bo = o; }
-            }
-            if (best == null) return;
-            if (policy == "spam" || (bo.Succ >= 0.65 && bo.Wreck < 0.05)) r.PlayCard(best.Uid);
         }
 
         static int RaceCmd(string track, uint seed, string policy, string persona)
@@ -147,6 +133,23 @@ namespace GreenFlag.Harness
                 Console.WriteLine($"{t.Id,-8} {fin / n,7:F1} {(exp - fin) / n,7:F1} {st / n,6:F1} {cau / n,9:F2} {wr / n,7:F2} {dnf / n,10:F2} {my / n * 100,6:F0}% {dur / n,9:F0}"
                     + (cards ? $"  {pl / n,5:F1}  {(pl > 0 ? su / pl * 100 : 0),5:F0}%  {cr / n,5:F2}  {co / n,6:F1}  {be / n,4:F1}  {(stops > 0 ? pf / stops * 100 : 0),6:F0}%" : ""));
             }
+            return 0;
+        }
+
+        /// <summary>The browser harness's JSON: {"persona|trackIndex|style": [RaceRow, ...]}, n races each, seeds seedBase + i.</summary>
+        static int Json(int n, string personas, string tracks, string styles, string outPath, uint seedBase)
+        {
+            var all = new Dictionary<string, List<RaceRow>>();
+            foreach (var a in personas.Split(','))
+                foreach (var ti in tracks.Split(','))
+                    foreach (var st in styles.Split(','))
+                    {
+                        var rows = new List<RaceRow>();
+                        for (int i = 0; i < n; i++) rows.Add(Bots.Run(Tracks.All[int.Parse(ti)], seedBase + (uint)i, st, a).row);
+                        all[$"{a}|{ti}|{st}"] = rows;
+                    }
+            System.IO.File.WriteAllText(outPath, System.Text.Json.JsonSerializer.Serialize(all, new System.Text.Json.JsonSerializerOptions { IncludeFields = true }));
+            Console.WriteLine($"wrote {outPath}: {all.Count} cells x {n} races");
             return 0;
         }
 

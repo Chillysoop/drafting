@@ -4096,7 +4096,8 @@ function setupReads(cd){
 }
 function setupWear(){const r=race;if(!r||!r.setups)return 1;let m=1;for(const s of r.setups){const d=SETUPS[s.id];if(d.wear)m*=d.wear[s.lvl-1];}for(const p of pgPkgs())if(p.wear)m*=p.wear;return m;}
 function pcOdds(id){const d=PIT_CARDS[id];if(!d.base)return null;const s=clamp((d.base+((G.stats.pitCrew||G.stats.crewChief)-5)*4+(typeof crewLaneOdds==='function'?crewLaneOdds(d.lane):0))/100,0.15,0.95);
- return d.safe?{cs:s*0.2,s:s*0.8,n:1-s,f:0}:{cs:s*0.2,s:s*0.8,n:(1-s)*0.45,f:(1-s)*0.55};}
+ // step 28: cf:0 is needed; without it sampleTier's running total went NaN and every pit card rolled a critical success
+ return d.safe?{cs:s*0.2,s:s*0.8,n:1-s,f:0,cf:0}:{cs:s*0.2,s:s*0.8,n:(1-s)*0.45,f:(1-s)*0.55,cf:0};}
 function pcExp(id){const o=pcOdds(id),d=PIT_CARDS[id].d;let e=0;for(const k in o)e+=o[k]*(d[k]||0);return e;}
 function pgBase(c,svc){const R=fuelRange(),m=1-(G.stats.crewChief-5)*0.03,b=(race.pitBonus||0)+relicSum('pit'),tt=PIT.tireT[svc]||0;
  return {tire:tt?Math.max(2.5,tt*m-b):0,fuel:Math.max(1,(PIT.fuelBase+PIT.fuelT*clamp(1-c.fuel/R,0,1))*m-b)};}

@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -25,6 +25,19 @@ jobs:
         run: dotnet test sim/GreenFlag.Sim.sln --logger "trx;LogFileName=sim.trx" --results-directory "$RUNNER_TEMP/sim-tests"
       - name: Headless races, each run twice (same seed must give the same race)
         run: dotnet run --project sim/GreenFlag.Harness -c Release -- check 5
+      - name: Parity with the browser slice (every play style within half a place)
+        run: |
+          set -o pipefail
+          dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- parity sim/parity/browser-baseline.json 60 | tee "$RUNNER_TEMP/parity.txt"
+      - name: Parity summary
+        if: always()
+        run: |
+          {
+            echo '### Parity with the browser slice (C# vs sim-harness-v10.js, 60 races per cell)'
+            echo '```'
+            sed -n '/^style/,$p' "$RUNNER_TEMP/parity.txt" 2>/dev/null || echo 'parity did not run'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Hands-off summary
         run: |
           {

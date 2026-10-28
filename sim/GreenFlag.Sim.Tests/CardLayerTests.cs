@@ -467,6 +467,14 @@ namespace GreenFlag.Sim.Tests
         }
 
         [Fact]
+        public void PersonasStartWithTheirBackgroundsGrit()
+        {
+            // a new career's driver comes from the persona's background (the slice's ARCH bg): sim 12, hero 15, dirt 15, crew 12, rich 9
+            var want = new Dictionary<string, int> { ["drafter"] = 12, ["bully"] = 15, ["whisperer"] = 15, ["restart"] = 12, ["gambler"] = 9, ["brawler"] = 15, ["linepainter"] = 15, ["packrat"] = 12, ["latebraker"] = 12 };
+            foreach (var p in Personas.All) Assert.Equal(want[p.Id], PlayerLoadout.ForPersona(p.Id).Grit);
+        }
+
+        [Fact]
         public void KartCardsTranslateToLateModelCards()
         {
             foreach (var c in CardBook.All.Where(c => c.Kart))
