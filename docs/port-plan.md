@@ -28,6 +28,8 @@ sim/
 .github/workflows/
   sim.yml                            dotnet test + harness smoke on every PR
   nightly.yml                        GameCI Windows player build every night (step 25)
+tools/
+  setup-git.ps1, setup-git.sh         One-time Git LFS + Unity Smart Merge setup
 ```
 
 The sim source lives once, inside the Unity package. The `sim/` csproj points at the same files, so CI can build and test it fast without a Unity licence, and Unity compiles the same code into the game.
@@ -72,7 +74,7 @@ One HTML file, about 4,200 lines and 300 functions. The parts that matter for th
 
 ## Order of work in phase C
 
-25. Unity 6 LTS project in `game/` with URP, Git LFS, UnityYAMLMerge, and GameCI building a Windows player nightly. Needs a Unity licence secret in GitHub and Conner opening the project once.
+25. Unity 6.3 LTS (6000.3.27f1) project in `game/` with URP, Git LFS, UnityYAMLMerge, and GameCI building a Windows player nightly. Built Oct 28 (see `docs/unity-setup.md`): the project rebuilds its URP asset and boot scene from scripts, `SimRng` is ported and tested against the slice, and `sim.yml` runs `dotnet test`. Waits on Conner for the Unity licence secrets and opening the project once.
 26. `com.greenflag.sim` package and the `sim/` solution. Port tracks, field, pace, tires, fuel, pit road and cautions. A headless race runs in CI and gives the same order from the same seed every time.
 27. Cards, odds, outcomes, combos, Heat, beats, Focus, personas and tunes as data plus card classes.
 28. C# balance harness matching the slice within half a place.
