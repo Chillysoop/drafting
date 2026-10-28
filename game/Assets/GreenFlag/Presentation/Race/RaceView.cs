@@ -9,7 +9,8 @@ namespace GreenFlag.Presentation
     /// The race scene's one script (roadmap step 29): plays a race of the C# sim on screen. It builds the track from the sim's
     /// layout, a car per entrant, drives the race in real time through RaceDriver and points the camera with CameraRig.
     /// Everything that decides where things are lives in the engine-free GreenFlag.View package (tested in CI); this class only
-    /// turns it into GameObjects. Your car runs hands-off until the hand UI arrives in step 31.
+    /// turns it into GameObjects (step 30 adds body lean, damage, glow and streaks on the cars, and sparks, smoke and skid marks
+    /// in FxView). Your car runs hands-off until the hand UI arrives in step 31.
     /// Keys: C camera, 1-4 speed, Space pause, R new race, T / Shift+T track, L look, F fast-forward to the flag.
     /// </summary>
     public sealed class RaceView : MonoBehaviour
@@ -29,6 +30,7 @@ namespace GreenFlag.Presentation
         GameObject track, carsRoot;
         readonly Dictionary<int, CarRig> rigs = new Dictionary<int, CarRig>();
         RaceHud hud;
+        FxView fx;
 
         void Start()
         {
@@ -64,6 +66,7 @@ namespace GreenFlag.Presentation
             Kit.ClearMaterials();
             track = TrackBuilder.Build(Driver.Layout, Look);
             carsRoot = new GameObject("Cars");
+            fx = new FxView(carsRoot.transform);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.52f, 0.54f, 0.58f);
             Cam.clearFlags = CameraClearFlags.SolidColor;
@@ -123,6 +126,7 @@ namespace GreenFlag.Presentation
             Rig.Update(Driver.Layout, me, Driver.Race.Phase, Cam.aspect, dt);
             Cam.transform.position = Kit.V(Rig.Eye);
             Cam.transform.LookAt(Kit.V(Rig.LookAt));
+            fx.Draw(Driver.Motion.Fx, Driver.Motion.T, Cam);
         }
 
         void OnGUI() => hud?.Draw();

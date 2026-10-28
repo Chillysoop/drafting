@@ -117,9 +117,9 @@ namespace GreenFlag.Sim
         public int Position(RaceCar c) => Order.IndexOf(c) + 1;
         public TrackSpot SpotOf(RaceCar c) => Shape.SpotOf(c.Dist);
 
-        void Emit(RaceEventKind k, RaceCar car = null, RaceCar other = null, string text = null, string card = null)
+        void Emit(RaceEventKind k, RaceCar car = null, RaceCar other = null, string text = null, string card = null, int tier = -1)
         {
-            var e = new RaceEvent(k, T, car != null && !car.IsPace ? car.Id : -1, other != null && !other.IsPace ? other.Id : -1, text, card);
+            var e = new RaceEvent(k, T, car != null && !car.IsPace ? car.Id : -1, other != null && !other.IsPace ? other.Id : -1, text, card, tier);
             Events.Add(e);
             Log?.Add(e);
         }
