@@ -14,6 +14,7 @@ docs/
   port-plan.md          How the slice maps onto the Unity project, module by module
   unity-setup.md        Installing Unity, opening the project, CI licence secrets, nightly builds
   race-view.md          The race view (step 29): what is on screen, the packages behind it, the looks
+  hand-ui.md            The hand and beats HUD (step 31): playing cards with the mouse, the beat pause, slow-mo and Focus
 game/                 Unity 6.3 LTS project (URP); the sim is the local package com.greenflag.sim, the view model com.greenflag.view
 sim/                  .NET 8 solution that builds and tests the same sim files outside Unity
 tools/                One-time git setup (LFS + Unity Smart Merge)
@@ -43,7 +44,7 @@ The same seed and settings give identical results, so compare two builds on the 
 
 ## Unity project and sim tests
 
-See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set. How the race and the cards work: `docs/sim.md` and `docs/cards.md`. How the C# sim is kept in line with the browser slice: `docs/parity.md`. What you see in the engine and how it is built: `docs/race-view.md`.
+See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set. How the race and the cards work: `docs/sim.md` and `docs/cards.md`. How the C# sim is kept in line with the browser slice: `docs/parity.md`. What you see in the engine and how it is built: `docs/race-view.md`; how you play the race with the mouse: `docs/hand-ui.md`.
 
 ## Working rules
 

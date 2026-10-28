@@ -34,6 +34,11 @@ namespace GreenFlag.View
         public Banner? Banner { get; private set; }
         public int SpeedIndex;
         public bool Paused;
+        /// <summary>Extra time factor on top of Speed: slow-mo while you aim a card (step 31), 0 while you plan a pit stop.</summary>
+        public double TimeScale = 1;
+        /// <summary>Called for every sim event after the driver has seen it (the hand UI pauses at draw beats). Setting Paused
+        /// from here stops the frame on that tick.</summary>
+        public Action<RaceEvent> EventHook;
         /// <summary>Ticks run so far.</summary>
         public int Ticks { get; private set; }
         /// <summary>Sim time drawn this frame: the last tick's time plus the interpolated part of the next.</summary>
@@ -70,13 +75,13 @@ namespace GreenFlag.View
         public int Advance(double realSeconds)
         {
             if (Paused || realSeconds <= 0) { Motion.Poses(distFn, Poses); return 0; }
-            double simDt = Math.Min(realSeconds, 0.25) * Speed;
+            double simDt = Math.Min(realSeconds, 0.25) * Speed * Math.Max(0, TimeScale);
             int n = 0;
             if (Race.Done) acc = 0;
             else
             {
                 acc += simDt;
-                while (acc >= dt && n < MaxTicksPerFrame && !Race.Done) { acc -= dt; TickOnce(); n++; }
+                while (acc >= dt && n < MaxTicksPerFrame && !Race.Done && !Paused) { acc -= dt; TickOnce(); n++; }
                 if (acc >= dt) acc = dt * 0.999;   // dropped time: the race runs slower than the wall clock this frame
                 if (Race.Done) acc = 0;
             }
@@ -89,7 +94,12 @@ namespace GreenFlag.View
         /// <summary>Runs the race straight to the end with no drawing (tests and the skip button).</summary>
         public void Finish(int maxTicks = 20 * 60 * 60)
         {
-            for (int i = 0; i < maxTicks && !Race.Done; i++) TickOnce();
+            for (int i = 0; i < maxTicks && !Race.Done; i++)
+            {
+                // a stop you are planning is planned by the crew chief (the race holds until GO)
+                if (Race.Holding) { Race.PitAutoPlan(Race.PitGame, true); Race.PitGo(); }
+                TickOnce();
+            }
             acc = 0;
             Motion.Poses(distFn, Poses);
         }
@@ -108,7 +118,7 @@ namespace GreenFlag.View
                 if (step < -1e-9 || step > typical + 0.004) Motion.Jumped(c, step - typical, c.Pit != null);
                 prev[c] = c.Dist - (step < -1e-9 || step > typical + 0.004 ? typical : step);
             }
-            foreach (var e in Race.Events) { OnEvent(e); Motion.OnEvent(e); }
+            foreach (var e in Race.Events) { OnEvent(e); Motion.OnEvent(e); EventHook?.Invoke(e); }
         }
 
         static readonly Rgb Green = Rgb.Hex("#2fb36a"), Yellow = Rgb.Hex("#e9b52f"), White = Rgb.Hex("#ffffff"), Black = Rgb.Hex("#000000"), Ink = Rgb.Hex("#0b0f18");

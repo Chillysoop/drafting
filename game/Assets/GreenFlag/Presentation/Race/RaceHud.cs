@@ -7,8 +7,9 @@ namespace GreenFlag.Presentation
 {
     /// <summary>
     /// The race view's on-screen layer, in immediate-mode GUI so it needs no prefabs or fonts: the scoring pylon, flag banners,
-    /// the booth ticker, car numbers, the result card and the controls. Step 31 replaces it with the real HUD and hand.
-    /// Keys are read here too (GUI events work whichever input backend the project uses).
+    /// the booth ticker, car numbers, the result card and the controls. The hand and beats HUD (step 31) is HandHud, drawn on
+    /// top. Keys are read here too (GUI events work whichever input backend the project uses); with a hand in play the
+    /// number keys and Space belong to the cards, so speed moves to [ and ].
     /// </summary>
     public sealed class RaceHud
     {
@@ -56,14 +57,18 @@ namespace GreenFlag.Presentation
         void Keys(Event e)
         {
             var d = view.Driver;
+            bool cards = view.Desk != null;
             switch (e.keyCode)
             {
                 case KeyCode.C: view.Rig.Mode = CameraRig.Next(view.Rig.Mode); break;
-                case KeyCode.Alpha1: d.SpeedIndex = 0; break;
-                case KeyCode.Alpha2: d.SpeedIndex = 1; break;
-                case KeyCode.Alpha3: d.SpeedIndex = 2; break;
-                case KeyCode.Alpha4: d.SpeedIndex = 3; break;
-                case KeyCode.Space: d.Paused = !d.Paused; break;
+                case KeyCode.Alpha1 when !cards: d.SpeedIndex = 0; break;
+                case KeyCode.Alpha2 when !cards: d.SpeedIndex = 1; break;
+                case KeyCode.Alpha3 when !cards: d.SpeedIndex = 2; break;
+                case KeyCode.Alpha4 when !cards: d.SpeedIndex = 3; break;
+                case KeyCode.Space when !cards: d.Paused = !d.Paused; break;
+                case KeyCode.LeftBracket: d.SpeedIndex = Mathf.Max(0, d.SpeedIndex - 1); break;
+                case KeyCode.RightBracket: d.SpeedIndex = Mathf.Min(RaceDriver.Speeds.Length - 1, d.SpeedIndex + 1); break;
+                case KeyCode.A when cards: view.Autoplay = !view.Autoplay; break;
                 case KeyCode.R: view.Restart(true); break;
                 case KeyCode.T: view.NextTrack(e.shift ? -1 : 1); break;
                 case KeyCode.L: view.NextLook(); break;
@@ -124,6 +129,7 @@ namespace GreenFlag.Presentation
             if (d.Booth.Count == 0) return;
             float s = scale, w = 520 * s, lh = 22 * s, h = d.Booth.Count * lh + 12 * s;
             var r = new Rect(16 * s, Screen.height - h - 16 * s, w, h);
+            if (view.Desk != null) { var b = view.Layout.Booth; w = Mathf.Min(w, (float)b.W); r = new Rect((float)b.X, (float)b.Bottom - h, w, h); }
             Fill(r, Panel);
             for (int i = 0; i < d.Booth.Count; i++)
             {
@@ -161,20 +167,27 @@ namespace GreenFlag.Presentation
         void Controls(RaceDriver d)
         {
             float s = scale, w = 230 * s, bh = 30 * s;
-            var area = new Rect(Screen.width - w - 16 * s, Screen.height - (bh + 4 * s) * 7 - 24 * s, w, (bh + 4 * s) * 7 + 12 * s);
+            bool cards = view.Desk != null;
+            int n = cards ? 8 : 7;
+            // with a hand in play the bottom-right corner is the odds gauge, so the controls go to the top right
+            var area = cards ? new Rect(Screen.width - w - 16 * s, 16 * s, w, (bh + 4 * s) * n + 12 * s)
+                             : new Rect(Screen.width - w - 16 * s, Screen.height - (bh + 4 * s) * n - 24 * s, w, (bh + 4 * s) * n + 12 * s);
             Fill(area, Panel);
             GUILayout.BeginArea(new Rect(area.x + 6 * s, area.y + 6 * s, area.width - 12 * s, area.height - 12 * s));
             var bs = new GUIStyle(GUI.skin.button) { fontSize = Mathf.RoundToInt(14 * s), fixedHeight = bh };
             if (GUILayout.Button("Camera: " + view.Rig.Mode + "  (C)", bs)) view.Rig.Mode = CameraRig.Next(view.Rig.Mode);
-            if (GUILayout.Button("Speed: " + d.Speed + "x  (1-4)", bs)) d.SpeedIndex = (d.SpeedIndex + 1) % RaceDriver.Speeds.Length;
-            if (GUILayout.Button((d.Paused ? "Resume" : "Pause") + "  (Space)", bs)) d.Paused = !d.Paused;
+            if (GUILayout.Button("Speed: " + d.Speed + "x  (" + (cards ? "[ ]" : "1-4") + ")", bs)) d.SpeedIndex = (d.SpeedIndex + 1) % RaceDriver.Speeds.Length;
+            if (GUILayout.Button((d.Paused ? "Resume" : "Pause") + (cards ? "  (P)" : "  (Space)"), bs)) { if (cards) view.Desk.TogglePause(); else d.Paused = !d.Paused; }
+            if (cards && GUILayout.Button("Autoplay: " + (view.Autoplay ? "on" : "off") + "  (A)", bs)) view.Autoplay = !view.Autoplay;
             if (GUILayout.Button("Track: " + Pylon.ShortName(d.Race.Track) + "  (T)", bs)) view.NextTrack(1);
             if (GUILayout.Button("Look: " + view.Look.Name + (view.Look.Finished ? "" : "*") + "  (L)", bs)) view.NextLook();
             if (GUILayout.Button("New race  (R)", bs)) view.Restart(true);
             if (GUILayout.Button("Skip to flag  (F)", bs)) d.Finish();
             GUILayout.EndArea();
             var st = new GUIStyle(small) { alignment = TextAnchor.LowerRight, wordWrap = false }; st.normal.textColor = Dim;
-            GUI.Label(new Rect(0, 0, Screen.width - 16 * s, area.y - 4 * s), $"{d.Race.Track.Name} · seed {d.Race.Seed} · {d.Race.T:F0} s" + (view.Look.Finished ? "" : " · *look is a preview until step 45"), st);
+            var info = cards ? new Rect(0, area.yMax + 4 * s, Screen.width - 16 * s, 20 * s) : new Rect(0, 0, Screen.width - 16 * s, area.y - 4 * s);
+            if (cards) st.alignment = TextAnchor.UpperRight;
+            GUI.Label(info, $"{d.Race.Track.Name} · seed {d.Race.Seed} · {d.Race.T:F0} s" + (view.Look.Finished ? "" : " · *look is a preview until step 45"), st);
         }
 
         Race resultFor;

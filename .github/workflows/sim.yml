@@ -60,6 +60,17 @@ jobs:
           for t in mill carver; do
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- wrecks $t 61 "$RUNNER_TEMP/frames/wrecks-$t.html" spam 3
           done
+      - name: Hand and beats HUD (races played with the mouse only, through the HUD's layout and input)
+        run: |
+          {
+            echo '### Mouse-only races (step 31 HUD: drag, click, hold to play, toss bin, pit stop clicks)'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- mouse all 2
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          for t in carver ridge; do
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- hud $t 61 "$RUNNER_TEMP/frames/hud-$t.html" 9
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: race-view-frames
