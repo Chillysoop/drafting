@@ -32,6 +32,10 @@ jobs:
             echo '```'
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- batch 50
             echo '```'
+            echo '### Card races (smart bot, Drafter, 20 per track, Normal)'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- batch 20 all smart drafter
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()

@@ -42,12 +42,12 @@ The same seed and settings give identical results, so compare two builds on the 
 
 ## Unity project and sim tests
 
-See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set.
+See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set. How the race and the cards work: `docs/sim.md` and `docs/cards.md`.
 
 ## Working rules
 
 - The race sim decides every outcome. Physics, motion and camera work only play out what the sim already decided, so results stay fair and testable.
-- The sim is deterministic: one seeded RNG for the sim, a separate one for visuals, a fixed tick, and no engine types inside it.
+- The sim is deterministic: seeded RNGs for the race and the cards, a separate one for visuals, a fixed tick, and no engine types inside it.
 - Art, audio and fonts go through Git LFS (see `.gitattributes`). Run `tools/setup-git.ps1` (or `tools/setup-git.sh`) once after cloning.
 - Work happens on branches and lands through pull requests.
 

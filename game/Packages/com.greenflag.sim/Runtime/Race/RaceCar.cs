@@ -57,6 +57,8 @@ namespace GreenFlag.Sim
         public bool Dnf;
         public double Spinning;
         public int Passes;
+        /// <summary>Kart: covering the inside after a Show the Inside feint, until this time.</summary>
+        public double CoverUntil = double.NegativeInfinity;
 
         // fuel and pit road
         public double Fuel, Burn = 1, Stall, DryAt, PitSlip;

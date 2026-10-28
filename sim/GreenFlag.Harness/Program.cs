@@ -9,11 +9,15 @@ namespace GreenFlag.Harness
 {
     /// <summary>
     /// Headless races on the C# sim.
-    ///   race  [track] [seed] [policy]     one race: grid, event log, finish order, fingerprint
-    ///   batch [n] [tracks] [policy]       n races per track: average finish, cautions, wrecks, DNFs, length
-    ///   check [n]                         every track, n seeds, each run twice: fails if any run differs (CI)
-    /// Policies: none (hands-off: never presses PIT, takes the crew chief's caution call) and pit (presses PIT on the
-    /// plan lap and calls cautions by tires and damage, like the browser harness's bots). Cards arrive in step 27.
+    ///   race  [track] [seed] [policy] [persona]     one race: grid, event log, finish order, fingerprint
+    ///   batch [n] [tracks] [policy] [persona]       n races per track: average finish, cautions, wrecks, DNFs, length (+ card stats)
+    ///   check [n]                                   every track, n seeds, each policy run twice: fails if any run differs (CI)
+    /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
+    /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
+    /// Policies with cards (a persona's starting deck, part and tune; default drafter, its kart cousin on kart tracks):
+    /// hands (holds a hand but never plays; the crew chief runs the stops), smart (the browser harness's instant bot: plays
+    /// the best card at 65%+ with under 5% wreck, Evade at once), spam (always plays the best card). smart and spam also pit
+    /// like "pit" and play the pit mini-game as a bot. Step 28 adds the timed human styles and parity with the browser.
     /// </summary>
     public static class Program
     {
@@ -26,10 +30,10 @@ namespace GreenFlag.Harness
             {
                 switch (cmd)
                 {
-                    case "race": return RaceCmd(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "none"));
-                    case "batch": return Batch(int.Parse(Arg(args, 1, "100")), Arg(args, 2, "all"), Arg(args, 3, "none"));
+                    case "race": return RaceCmd(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "none"), Arg(args, 4, "drafter"));
+                    case "batch": return Batch(int.Parse(Arg(args, 1, "100")), Arg(args, 2, "all"), Arg(args, 3, "none"), Arg(args, 4, "drafter"));
                     case "check": return Check(int.Parse(Arg(args, 1, "5")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] | batch [n] [tracks] [policy] | check [n]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }
@@ -39,16 +43,33 @@ namespace GreenFlag.Harness
 
         static IEnumerable<TrackDef> TracksFor(string spec) => spec == "all" ? Tracks.All : spec.Split(',').Select(Tracks.ById);
 
-        /// <summary>Run one race with a policy driving your car's pit calls.</summary>
-        public static (Race race, RaceResult res) Run(TrackDef t, uint seed, string policy, bool log = false)
+        public static readonly string[] CardPolicies = { "hands", "smart", "spam" };
+        public static bool UsesCards(string policy) => Array.IndexOf(CardPolicies, policy) >= 0;
+
+        /// <summary>The persona for a track: stock personas move to their kart cousin on kart tracks (and back).</summary>
+        public static string PersonaFor(TrackDef t, string persona)
         {
-            var race = new Race(RaceSetup.Quick(t, seed));
+            var kart = new Dictionary<string, string> { ["drafter"] = "packrat", ["bully"] = "brawler", ["whisperer"] = "linepainter", ["restart"] = "latebraker", ["gambler"] = "latebraker" };
+            var p = Personas.Get(persona);
+            if (t.Kart && !p.Kart) return kart[persona];
+            if (!t.Kart && p.Kart) return kart.First(kv => kv.Value == persona).Key;
+            return persona;
+        }
+
+        /// <summary>Run one race with a policy driving your car's pit calls (and cards).</summary>
+        public static (Race race, RaceResult res) Run(TrackDef t, uint seed, string policy, bool log = false, string persona = "drafter")
+        {
+            bool cards = UsesCards(policy);
+            var setup = cards ? RaceSetup.Quick(t, seed, PlayerLoadout.ForPersona(PersonaFor(t, persona))) : RaceSetup.Quick(t, seed);
+            if (cards) setup.PitPolicy = policy == "hands" ? PitPolicy.Chief : PitPolicy.Bot;
+            var race = new Race(setup);
             if (log) race.Log = new List<RaceEvent>();
-            bool pit = policy == "pit";
+            bool pit = policy == "pit" || policy == "smart" || policy == "spam";
             int cautionSet = -1;
             while (!race.Done)
             {
                 race.Tick();
+                if (policy == "smart" || policy == "spam") PlayBot(race, policy);
                 if (!pit) continue;
                 var me = race.Me;
                 if (me.Dnf) continue;
@@ -67,13 +88,37 @@ namespace GreenFlag.Harness
             return (race, race.Result());
         }
 
-        static int RaceCmd(string track, uint seed, string policy)
+        /// <summary>The browser harness's instant bots: play the hazard card at once, otherwise the best playable card.</summary>
+        static void PlayBot(Race r, string policy)
+        {
+            if (r.Done || r.Attempt != null || r.Me.Dnf || r.Phase == RacePhase.Finished) return;
+            var hz = r.Hand.Find(h => h.Special && h.Id == "evade");
+            if (hz != null && policy == "smart") { r.PlayCard(hz.Uid); return; }
+            var c = r.Ctx();
+            HandCard best = null; Odds bo = null;
+            foreach (var h in r.Hand)
+            {
+                if (r.CardBlock(h.Def, c) != null) continue;
+                var o = r.ComputeOdds(h.Def, c);
+                if (bo == null || o.Succ > bo.Succ) { best = h; bo = o; }
+            }
+            if (best == null) return;
+            if (policy == "spam" || (bo.Succ >= 0.65 && bo.Wreck < 0.05)) r.PlayCard(best.Uid);
+        }
+
+        static int RaceCmd(string track, uint seed, string policy, string persona)
         {
             var t = Tracks.ById(track);
-            var (race, res) = Run(t, seed, policy, true);
-            Console.WriteLine($"{t.Name} ({t.Id}), {t.Laps} laps, seed {seed}, policy {policy}");
+            var (race, res) = Run(t, seed, policy, true, persona);
+            Console.WriteLine($"{t.Name} ({t.Id}), {t.Laps} laps, seed {seed}, policy {policy}{(race.CardsOn ? ", persona " + PersonaFor(t, persona) : "")}");
             Console.WriteLine("Grid: " + string.Join(" ", race.Cars.Select(c => (c.IsMe ? "*" : "") + c.Ref.Number)));
             foreach (var e in race.Log) if (e.Kind != RaceEventKind.Pass || e.Car == race.Me.Id || e.Other == race.Me.Id) Console.WriteLine(e);
+            if (race.CardsOn)
+            {
+                var s = race.CardStats;
+                Console.WriteLine($"\nCards: {s.Plays} played, {s.Succ} landed, {s.Crits} wrecks, best combo ×{s.BestChain}, {s.Combos} combo links, {s.Tossed} tossed, {s.Expired} expired, board {s.BoardFires}, beats {race.Beats}, reels {s.Reels}");
+                if (s.PitStops > 0) Console.WriteLine($"Pit stall: {s.PitStops} stops ({string.Join(", ", s.StopTimes.Select(x => x.ToString("F1")))} s), {s.Perfect} perfect, {s.Setups} setups, {s.Packages} packages");
+            }
             Console.WriteLine();
             foreach (var r in res.Order)
             {
@@ -85,19 +130,22 @@ namespace GreenFlag.Harness
             return 0;
         }
 
-        static int Batch(int n, string tracks, string policy)
+        static int Batch(int n, string tracks, string policy, string persona)
         {
-            Console.WriteLine($"{n} races per track, policy {policy}, Normal");
-            Console.WriteLine("track    avg fin  vs exp  start  cautions  wrecks  field DNF  my DNF  length s");
+            bool cards = UsesCards(policy);
+            Console.WriteLine($"{n} races per track, policy {policy}{(cards ? ", persona " + persona : "")}, Normal");
+            Console.WriteLine("track    avg fin  vs exp  start  cautions  wrecks  field DNF  my DNF  length s" + (cards ? "  plays  landed  crits  combos  best  perfect" : ""));
             foreach (var t in TracksFor(tracks))
             {
-                double fin = 0, exp = 0, st = 0, cau = 0, wr = 0, dnf = 0, my = 0, dur = 0;
+                double fin = 0, exp = 0, st = 0, cau = 0, wr = 0, dnf = 0, my = 0, dur = 0, pl = 0, su = 0, cr = 0, co = 0, be = 0, pf = 0, stops = 0;
                 for (int i = 0; i < n; i++)
                 {
-                    var (_, r) = Run(t, (uint)(1000 + i), policy);
+                    var (race, r) = Run(t, (uint)(1000 + i), policy, false, persona);
                     fin += r.MyFinish; exp += r.MyExpected; st += r.MyStart; cau += r.Cautions; wr += r.Wrecks; dnf += r.Dnfs; my += r.MyDnf ? 1 : 0; dur += r.Duration;
+                    if (cards) { var s = race.CardStats; pl += s.Plays; su += s.Succ; cr += s.Crits; co += s.Combos; be += s.BestChain; pf += s.Perfect; stops += s.PitStops; }
                 }
-                Console.WriteLine($"{t.Id,-8} {fin / n,7:F1} {(exp - fin) / n,7:F1} {st / n,6:F1} {cau / n,9:F2} {wr / n,7:F2} {dnf / n,10:F2} {my / n * 100,6:F0}% {dur / n,9:F0}");
+                Console.WriteLine($"{t.Id,-8} {fin / n,7:F1} {(exp - fin) / n,7:F1} {st / n,6:F1} {cau / n,9:F2} {wr / n,7:F2} {dnf / n,10:F2} {my / n * 100,6:F0}% {dur / n,9:F0}"
+                    + (cards ? $"  {pl / n,5:F1}  {(pl > 0 ? su / pl * 100 : 0),5:F0}%  {cr / n,5:F2}  {co / n,6:F1}  {be / n,4:F1}  {(stops > 0 ? pf / stops * 100 : 0),6:F0}%" : ""));
             }
             return 0;
         }
@@ -107,7 +155,7 @@ namespace GreenFlag.Harness
             int bad = 0;
             var sb = new StringBuilder();
             foreach (var t in Tracks.All)
-                foreach (var policy in new[] { "none", "pit" })
+                foreach (var policy in new[] { "none", "pit", "hands", "smart" })
                     for (int i = 0; i < n; i++)
                     {
                         uint seed = (uint)(61 + i * 7919);
@@ -116,10 +164,10 @@ namespace GreenFlag.Harness
                         string fa = a.Fingerprint(), fb = b.Fingerprint();
                         bool same = fa == fb && ra.Order.Select(x => x.Id).SequenceEqual(rb.Order.Select(x => x.Id));
                         if (!same) { bad++; Console.WriteLine($"MISMATCH {t.Id} seed {seed} {policy}: {fa} vs {fb}"); }
-                        sb.Append($"{t.Id,-7} seed {seed,-6} {policy,-4} P{ra.MyFinish,-3} cautions {ra.Cautions} wrecks {ra.Wrecks} {fa}\n");
+                        sb.Append($"{t.Id,-7} seed {seed,-6} {policy,-5} P{ra.MyFinish,-3} cautions {ra.Cautions} wrecks {ra.Wrecks} {fa}\n");
                     }
             Console.Write(sb);
-            Console.WriteLine(bad == 0 ? $"OK: {Tracks.All.Count * 2 * n} races, each run twice, identical." : $"FAILED: {bad} races differed between runs.");
+            Console.WriteLine(bad == 0 ? $"OK: {Tracks.All.Count * 4 * n} races, each run twice, identical." : $"FAILED: {bad} races differed between runs.");
             return bad == 0 ? 0 : 1;
         }
     }

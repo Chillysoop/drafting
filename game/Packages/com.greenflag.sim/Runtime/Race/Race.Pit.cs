@@ -207,7 +207,9 @@ namespace GreenFlag.Sim
                 if (rem <= 0)
                 {
                     c.Dist = SimMath.RoundJs(c.Dist) + c.Stall;
-                    p.Stage = PitStage.Box; p.T1 = T; p.Until = T + StopTime(c, p.Service, false);
+                    p.Stage = PitStage.Box; p.T1 = T;
+                    if (c.IsMe && PitGameOn) { p.Until = double.MaxValue; OpenPitGame(c); }
+                    else p.Until = T + StopTime(c, p.Service, false);
                     return 0;
                 }
                 return lim * SimMath.Clamp(rem / 0.012 + 0.12, 0.12, 1);
