@@ -104,8 +104,73 @@ namespace GreenFlag.View
         public string DeckSort = "fam";
         public CardFamily? DeckTab;
 
+        // saves (step 35): null = no saving (tests and the harness that don't care)
+        /// <summary>The three save slots, or null to play without saving.</summary>
+        public SaveSlots Saves;
+        /// <summary>The slot this career saves to (0 = none).</summary>
+        public int Slot;
+        /// <summary>The slot a new career goes into.</summary>
+        public int PickSlot = 1;
+        /// <summary>A change since the last save that no checkpoint has written yet (garage buys, tune, equipment).</summary>
+        public bool Dirty;
+        /// <summary>A press that has to be pressed twice (delete a slot, replace a slot): the id that is waiting.</summary>
+        string armed;
+        List<SlotInfo> slots;
+
         public CareerMenu() { }
         public CareerMenu(Career c) { Career = c; Career.EnterGarage(); Screen = CareerScreen.Garage; }
+        public CareerMenu(SaveSlots saves) { Saves = saves; RefreshSlots(); }
+
+        /// <summary>Re-reads the slots (the title screen shows them; reading files every frame would be wasteful).</summary>
+        public IReadOnlyList<SlotInfo> RefreshSlots()
+        {
+            if (Saves == null) return slots = new List<SlotInfo>();
+            slots = Saves.All();
+            var empty = slots.Find(i => !i.Used);
+            if (Slot == 0) PickSlot = empty != null ? empty.Slot : PickSlot;
+            return slots;
+        }
+
+        public IReadOnlyList<SlotInfo> Slots => slots ?? RefreshSlots();
+
+        /// <summary>What a save of the career right now holds: the screen it is on and, on a Standard reward screen, the
+        /// pre-race career for Retry this race.</summary>
+        public SaveGame Snapshot() => new SaveGame
+        {
+            Career = Career,
+            Screen = Screen == CareerScreen.Reward ? SaveGame.Reward : Screen == CareerScreen.Over || (Career != null && Career.Over && Career.Reward == null) ? SaveGame.Over : SaveGame.Garage,
+            Retry = Screen == CareerScreen.Reward && Career.CanRetry ? snap : null,
+            RetrySeed = snapSeed,
+        };
+
+        /// <summary>Writes the career to its slot now (a checkpoint). Returns false when there is nothing to save or the write
+        /// failed (the toast says so; the game goes on).</summary>
+        public bool SaveNow()
+        {
+            if (Saves == null || Slot == 0 || Career == null || Screen == CareerScreen.Title) return false;
+            if (!Saves.Save(Slot, Snapshot())) { Toast = "Couldn't save: " + Saves.LastError; return false; }
+            Dirty = false;
+            slots = null;
+            return true;
+        }
+
+        /// <summary>Saves only if something changed since the last checkpoint (the engine calls this when the game is paused,
+        /// put in the background or closed).</summary>
+        public bool Flush() => Dirty && SaveNow();
+
+        /// <summary>Picks up a saved career from a slot.</summary>
+        public bool Load(int slot)
+        {
+            if (Saves == null) return false;
+            var info = Saves.Info(slot);
+            if (info.State != SlotState.Ok) { Toast = info.State == SlotState.Empty ? $"Slot {slot} is empty." : info.Error; return false; }
+            var g = info.Game;
+            Career = g.Career; Slot = slot; snap = g.Retry; snapSeed = g.RetrySeed; RaceWanted = null; Dirty = false;
+            Screen = g.Screen == SaveGame.Reward ? CareerScreen.Reward : g.Screen == SaveGame.Over ? CareerScreen.Over : CareerScreen.Garage;
+            if (Screen == CareerScreen.Garage) Career.EnterGarage();
+            Toast = info.FromBackup ? $"Slot {slot}'s newest save was damaged, so this is the one before it." : g.LoadedFrom < CareerSave.Version ? $"Save from an older version, updated." : null;
+            return true;
+        }
 
         static readonly CultureInfo inv = CultureInfo.InvariantCulture;
         public static string Money(int v) => (v < 0 ? "−$" : "$") + Math.Abs(v).ToString("N0", inv);
@@ -122,6 +187,27 @@ namespace GreenFlag.View
             var page = Page();
             if (!page.CanPress(id)) { Toast = null; return false; }
             Toast = null;
+            bool again = armed == id;
+            armed = null;
+            var before = Screen;
+            bool ok = Do(id, again);
+            if (ok) Checkpoint(id, before);
+            return ok;
+        }
+
+        /// <summary>Which presses write the save at once: anything that starts, ends or reruns a race, every press on the reward
+        /// screen (so rerolls can't be undone by quitting) and leaving the deck builder. Other garage changes mark it dirty and
+        /// ride along with the next checkpoint (or Flush when the game closes).</summary>
+        void Checkpoint(string id, CareerScreen before)
+        {
+            if (Career == null || Screen == CareerScreen.Title || id.StartsWith("title.", StringComparison.Ordinal)) return;
+            bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward;
+            if (now) SaveNow();
+            else Dirty = true;
+        }
+
+        bool Do(string id, bool again)
+        {
             string arg = null;
             int colon = id.IndexOf(':');
             string key = id;
@@ -134,9 +220,34 @@ namespace GreenFlag.View
                 case "title.diff": PickDiff = (DifficultyLevel)Enum.Parse(typeof(DifficultyLevel), arg); return true;
                 case "title.stakes": PickStakes = (Stakes)Enum.Parse(typeof(Stakes), arg); return true;
                 case "title.start":
+                {
+                    var into = Saves != null ? Slots.FirstOrDefault(i => i.Slot == PickSlot) : null;
+                    if (into != null && into.Used && !again) { armed = id; Toast = $"Slot {PickSlot} already has a career. Press Start career again to replace it."; return true; }
                     Career = Career.New(PickPersona, PickDiff, PickStakes, NewSeed);
                     Career.EnterGarage();
                     Screen = CareerScreen.Garage;
+                    snap = null;
+                    if (Saves != null) { Slot = PickSlot; SaveNow(); }
+                    return true;
+                }
+                case "title.slot": PickSlot = int.Parse(arg, inv); return true;
+                case "title.continue": return Load(Saves.MostRecent());
+                case "title.load": return Load(int.Parse(arg, inv));
+                case "title.delete":
+                {
+                    int n = int.Parse(arg, inv);
+                    if (!again) { armed = id; Toast = $"Press Delete again to erase slot {n}. This can't be undone."; return true; }
+                    Saves.Delete(n);
+                    if (Slot == n) Slot = 0;
+                    RefreshSlots();
+                    Toast = $"Slot {n} erased.";
+                    return true;
+                }
+                case "quit":
+                    SaveNow();
+                    Career = null; Slot = 0; snap = null;
+                    Screen = CareerScreen.Title;
+                    RefreshSlots();
                     return true;
                 // garage
                 case "go":
@@ -180,7 +291,7 @@ namespace GreenFlag.View
                     c.Continue();
                     Screen = CareerScreen.Garage;
                     return true;
-                case "over.new": Career = null; Screen = CareerScreen.Title; return true;
+                case "over.new": Career = null; Slot = 0; snap = null; Screen = CareerScreen.Title; RefreshSlots(); return true;
             }
             return false;
         }
@@ -193,6 +304,7 @@ namespace GreenFlag.View
         {
             var res = Career.FinishRace(race);
             Screen = CareerScreen.Reward;
+            SaveNow();
             return res;
         }
 
@@ -216,9 +328,40 @@ namespace GreenFlag.View
             return $"{d(u.Hand, "Tight", "Loose")} · {d(u.Aero, "Downforce", "Low drag")} · {u.FocusName(kart)}";
         }
 
+        /// <summary>A slot's one-line description on the title screen.</summary>
+        public static string SlotLine(SlotInfo i)
+        {
+            switch (i.State)
+            {
+                case SlotState.Empty: return "Empty";
+                case SlotState.TooNew: return "Saved by a newer version of the game";
+                case SlotState.Broken: return "Damaged: " + i.Error;
+            }
+            var g = i.Game; var c = g.Career;
+            string where = c.Over ? "Run over" : g.Screen == SaveGame.Reward ? $"Results of race {c.Reward.Res.RaceNo}" : $"Before race {c.RaceIdx + 1} of {c.SeasonLength}, {c.NextTrack.Name}";
+            return $"{c.Name} · {Personas.Get(c.Persona).Name} · {c.Series} season {c.Season} · {where} · {Money(c.Money)} · saved {g.SavedAt.ToString("MMM d HH:mm", inv)} UTC{(i.FromBackup ? " (backup)" : "")}";
+        }
+
+        void SlotsSection(MenuPage p)
+        {
+            var s = p.Section("Saved careers", 0, "Three slots. Your career saves itself when you go racing, at the results and when you leave the deck builder.");
+            foreach (var i in Slots)
+            {
+                string n = i.Slot.ToString(inv);
+                s.Add(new MenuItem { Kind = MenuKind.Part, Id = "title.load:" + n, Label = $"Slot {i.Slot}", Value = i.State == SlotState.Ok ? "Load" : "", Note = SlotLine(i), Enabled = i.State == SlotState.Ok, Color = i.State == SlotState.Broken || i.State == SlotState.TooNew ? Red : i.Used ? Green : Dim });
+                if (i.Used) s.Button("title.delete:" + n, armed == "title.delete:" + n ? $"Press again to erase slot {i.Slot}" : $"Delete slot {i.Slot}");
+            }
+        }
+
         MenuPage TitlePage()
         {
-            var p = new MenuPage { Screen = CareerScreen.Title, Eyebrow = "New career", Title = "Green Flag Deck", Sub = "A racing career you drive with a hand of cards. Pick a persona: it sets your starting cards, one part and a default car tune. Card rewards and the garage can take you anywhere." };
+            var p = new MenuPage { Screen = CareerScreen.Title, Eyebrow = "New career", Title = "Green Flag Deck", Sub = "A racing career you drive with a hand of cards. Pick a persona: it sets your starting cards, one part and a default car tune. Card rewards and the garage can take you anywhere.", Notice = Toast };
+            bool cont = Saves != null && Slots.Any(i => i.State == SlotState.Ok);
+            if (Saves != null)
+            {
+                if (cont) { p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "title.continue", Label = "Continue", Primary = true, Note = "The career you saved last" }); p.Default = "title.continue"; }
+                SlotsSection(p);
+            }
             var kart = p.Section("Karts (the ladder starts here)", 0, "A kart persona starts in the kart series.");
             var stock = p.Section("Stock cars", 1, "Skip the ladder and start in stock cars.");
             foreach (var pr in Personas.All)
@@ -233,7 +376,13 @@ namespace GreenFlag.View
             s.Chip("title.stakes:Standard", "Standard", PickStakes == Stakes.Standard, note: "Retry any race from the results screen.");
             s.Chip("title.stakes:Ironman", "Ironman +10%", PickStakes == Stakes.Ironman, note: "No retries. A DNF costs $3,000 and a random spare part.");
             s.Chip("title.stakes:Permadeath", "Permadeath +20%", PickStakes == Stakes.Permadeath, note: "No retries. A DNF ends the run, but one Survive token turns the first DNF into an Ironman penalty.");
-            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "title.start", Label = "Start career", Primary = true });
+            if (Saves != null)
+            {
+                var into = p.Section("Start the new career in", 1);
+                foreach (var i in Slots) into.Chip("title.slot:" + i.Slot.ToString(inv), $"Slot {i.Slot}{(i.Used ? " (replaces it)" : "")}", PickSlot == i.Slot, i.State != SlotState.TooNew);
+            }
+            var pick = Slots.FirstOrDefault(i => i.Slot == PickSlot);
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "title.start", Label = armed == "title.start" ? $"Replace slot {PickSlot}" : "Start career", Primary = !cont, Note = Saves != null && pick != null && pick.Used ? $"Replaces the career in slot {PickSlot}" : null });
             return p;
         }
 
@@ -299,6 +448,7 @@ namespace GreenFlag.View
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "go", Label = "Go racing", Enabled = why == null, Primary = true, Note = why });
             p.Default = why == null ? "go" : "deck";
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "deck", Label = "Build race deck" });
+            if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit", Note = $"Saves to slot {Slot} and goes back to the title screen" });
 
             TuneSection(p, t, 0);
 

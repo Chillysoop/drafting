@@ -60,7 +60,7 @@ namespace GreenFlag.Sim
     /// generator, so a career replays the same from its seed.
     /// Not here yet: race objectives, sponsors, salary, points and standings (step 37), the driver sheet (38) and Crew HQ (39).
     /// </summary>
-    public sealed class Career
+    public sealed partial class Career
     {
         public string Name = "Rookie", Persona = "drafter";
         public Series Series = Series.Stock;
