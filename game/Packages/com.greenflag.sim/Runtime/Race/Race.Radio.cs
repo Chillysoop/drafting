@@ -68,22 +68,13 @@ namespace GreenFlag.Sim
         bool CrewLate => LapOf(Me) >= Track.Laps * 0.7;
 
         /// <summary>A call's chance to work right now: base + level x per, the Clutch Radio, perks and traits. 5 to 95.</summary>
-        public int CallChance(RadioCallDef d)
-        {
-            var fx = Loadout.Crew.For(d.Role);
-            double v = d.Base + Level(d.Role) * d.Per + Loadout.PartSum(p => p.RadioBonus) + fx.Chance + Loadout.Crew.ChanceAll + (CrewLate ? fx.Late : 0);
-            return (int)SimMath.Clamp(v, 5, 95);
-        }
+        public int CallChance(RadioCallDef d) => Loadout.CallChance(d, CrewLate);
 
         /// <summary>Payoff scale: +10% per level above 3, times the seat's pay perks.</summary>
         public double CallQ(RadioCallDef d) => (1 + Math.Max(0, Level(d.Role) - 3) * 0.1) * (1 + Loadout.Crew.For(d.Role).Pay);
 
         /// <summary>A better crew talks more: the gap between calls is 2% shorter per average level above 3, times perks.</summary>
-        public double CrewRate()
-        {
-            double a = (Math.Max(0, Loadout.CrewChief - 3) + Math.Max(0, Loadout.Spotter - 3) + Math.Max(0, Loadout.Engineer - 3)) / 3.0;
-            return Math.Max(0.5, (1 - 0.02 * a) * Loadout.Crew.Rate);
-        }
+        public double CrewRate() => Loadout.CrewRate();
 
         double RadioGap() => RadioRng.Rand(22, 34) * Loadout.PartMul(p => p.RadioRate) * CrewRate();
 

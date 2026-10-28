@@ -54,6 +54,12 @@ namespace GreenFlag.Sim
         /// XP for racing and the levels it reached.</summary>
         public int Dmg, DrvMom, Hype, Xp, LvlUp;
         public List<string> HypeWhy = new List<string>();
+
+        // the crew (step 39)
+        /// <summary>Crew wages taken from the payout, XP each seat earned, and the seats that went up a level.</summary>
+        public int Wages;
+        public Dictionary<CrewRole, int> CrewXp = new Dictionary<CrewRole, int>();
+        public List<CrewRole> CrewUp = new List<CrewRole>();
     }
 
     /// <summary>The reward screen's choices: a card for the collection (or $1,000), and a part after a strong run. Both reroll for money.</summary>
@@ -79,7 +85,7 @@ namespace GreenFlag.Sim
     /// pay out and roll rewards, so race, rewards, shop and the next race loop. Every roll comes from the career's own
     /// generator, so a career replays the same from its seed.
     /// The season around it (field, points, sponsors, objectives, qualifying, the season wrap) is in Career.Season.cs (step 37).
-    /// The driver sheet and off-track events are in Career.Driver.cs (step 38). Not here yet: Crew HQ (39).
+    /// The driver sheet and off-track events are in Career.Driver.cs (step 38), Crew HQ in Crew.cs (step 39).
     /// </summary>
     public sealed partial class Career
     {
@@ -142,6 +148,7 @@ namespace GreenFlag.Sim
             l.Deck = new List<string>(); l.Parts = new List<string>();
             c.Driver = Driver.New(background ?? DriverRules.BgFor(persona));
             c.SyncDriverStats();
+            c.NewStaff();
             c.Contract.Series = c.Series;
             c.Ladder.Add(c.Series);
             c.BuildField();
@@ -174,6 +181,7 @@ namespace GreenFlag.Sim
         /// <summary>Why "Go racing" is off, or null.</summary>
         public string CantRace => Over ? "The run is over" : Reward != null ? "Finish the reward screen first" : Offers != null ? "Sign a contract for next season first"
             : Event != null && !Event.Done ? $"Finish tonight's {Event.Def.Name.ToLowerInvariant()} first, or skip it"
+            : Poach != null && !Poach.Done ? $"Answer {Poach.TeamName}'s offer for your {CrewRules.Name(Poach.Role).ToLowerInvariant()} first (Crew HQ)"
             : Sponsor == null ? "Sign a sponsor for the season first" : !DeckOk() ? $"Your race deck breaks a rule for {DeckRules.ShortName(NextTrack)}" : null;
 
         /// <summary>The loadout the next race uses: your car and crew with the race deck, the fitted parts and the tune.</summary>
@@ -324,6 +332,7 @@ namespace GreenFlag.Sim
             }
             ScoreSeason(race, res);
             DriverAfterRace(race, res);
+            CrewAfterRace(race, res);
             Money += res.Total;
             Results.Add(res);
             ApplyStakes(res);
@@ -406,8 +415,9 @@ namespace GreenFlag.Sim
             Reward = null;
             Qual = null;
             RaceIdx++;
+            if (Poach != null && Poach.Done) Poach = null;
             if (RaceIdx >= SeasonLength) WrapSeason();
-            else RollEvent();
+            else { RollEvent(); RollPoach(); }
             shopRolled = false; ShopPart = null; ShopRerolls = 0;
             EnterGarage();
         }
@@ -476,6 +486,9 @@ namespace GreenFlag.Sim
             c.Driver = Driver.Clone();
             c.Event = Event == null ? null : EventFrom(EventJson(Event));
             c.EventsHeld = new List<string>(EventsHeld);
+            c.Staff = Staff.ToDictionary(kv => kv.Key, kv => kv.Value.Clone());
+            c.Hire = Hire.Select(h => h.Clone()).ToList();
+            c.Poach = Poach?.Clone();
             return c;
         }
 

@@ -19,7 +19,7 @@ A full season now plays start to finish through the career menus: sign a sponsor
 ## Not in this step
 
 - **No playoffs.** The slice has a straight points title per series and so does this; a playoff format waits for the Grand Slam endgame (step 42). Board Q118.
-- Crew HQ wages (step 39). Negotiation, XP, Hype and off-track events are in since step 38 ([driver.md](driver.md)).
+- Crew HQ wages came in step 39 ([crew.md](crew.md)). Negotiation, XP, Hype and off-track events are in since step 38 ([driver.md](driver.md)).
 
 ## Checks
 

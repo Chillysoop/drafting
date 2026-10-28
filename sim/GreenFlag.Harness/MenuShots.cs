@@ -139,6 +139,19 @@ namespace GreenFlag.Harness
             Shot("Driver sheet with a level-up point to spend");
             m.Press("drv.back");
             Shot("Garage before race 2");
+            // step 39: a rival comes for a level 6 crew chief (forced here so the screens show it)
+            m.Career.Staff[CrewRole.CrewChief].Lvl = 6; m.Career.SyncCrew();
+            m.Career.RollPoach(force: true, role: CrewRole.CrewChief);
+            Shot("Garage: a rival team wants your crew chief (step 39)");
+            m.Press("crew");
+            Shot("Crew HQ: the offer with its whole Lead the Crew check, the four seats, perks, hiring and the pit deck");
+            m.Press("crew.talk");
+            Shot("Crew HQ after talking them round: the roll and what it did");
+            if (!m.Career.Poach.Done) m.Press("crew.match");
+            m.Press("crew.perk:CrewChief:0:1");
+            Shot("Crew HQ: a perk pick waits for a second press");
+            m.Press("crew.perk:CrewChief:0:1");
+            m.Press("crew.back");
             m.Press("quit");
             Shot("Title after Save and quit (two careers saved, Continue picks the newest)");
             m.Press("title.delete:2");

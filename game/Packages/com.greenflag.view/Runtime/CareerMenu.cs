@@ -7,8 +7,9 @@ using GreenFlag.Sim;
 namespace GreenFlag.View
 {
     /// <summary>The career's screens. Qualifying (step 37) is three: pick a card, the timed run, the grid. Season is the
-    /// season-end review with its contract offers. Event is tonight's off-track event and Driver the driver sheet (step 38).</summary>
-    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season, Event, Driver }
+    /// season-end review with its contract offers. Event is tonight's off-track event and Driver the driver sheet (step 38).
+    /// Crew is Crew HQ (step 39).</summary>
+    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season, Event, Driver, Crew }
 
     /// <summary>What a menu line is: plain text, a label and value row, a button, a small toggle chip, a card or part tile.</summary>
     public enum MenuKind { Text, Row, Button, Chip, Card, Part }
@@ -213,7 +214,8 @@ namespace GreenFlag.View
             if (Career == null || Screen == CareerScreen.Title || id.StartsWith("title.", StringComparison.Ordinal)) return;
             bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward || id.StartsWith("quali.", StringComparison.Ordinal)
                 || id.StartsWith("offer:", StringComparison.Ordinal) || id.StartsWith("sponsor:", StringComparison.Ordinal)
-                || id.StartsWith("ev.", StringComparison.Ordinal) || id.StartsWith("neg:", StringComparison.Ordinal) || id.StartsWith("drv.up:", StringComparison.Ordinal);
+                || id.StartsWith("ev.", StringComparison.Ordinal) || id.StartsWith("neg:", StringComparison.Ordinal) || id.StartsWith("drv.up:", StringComparison.Ordinal)
+                || (id.StartsWith("crew.", StringComparison.Ordinal) && id != "crew.back" && !id.StartsWith("crew.pitbuy:", StringComparison.Ordinal) && id != "crew.pitcancel");
             if (now) SaveNow();
             else Dirty = true;
         }
@@ -329,6 +331,7 @@ namespace GreenFlag.View
                     return true;
                 case "over.new": Career = null; Slot = 0; snap = null; Screen = CareerScreen.Title; RefreshSlots(); return true;
             }
+            if (key == "crew" || key.StartsWith("crew.", StringComparison.Ordinal)) return DoCrew(key, arg, again, id);
             return DoDriver(key, arg);
         }
 
@@ -373,6 +376,7 @@ namespace GreenFlag.View
                 case CareerScreen.Season: return SeasonPage();
                 case CareerScreen.Event: return EventPage();
                 case CareerScreen.Driver: return DriverPage();
+                case CareerScreen.Crew: return CrewPage();
                 default: return TitlePage();
             }
         }
@@ -505,12 +509,14 @@ namespace GreenFlag.View
             nx.Row("Team", $"{c.TeamName} · rating {c.SeriesTeams[c.Team].Rating}{(c.Contract.Per > 0 ? " · " + Money(c.Contract.Per) + " a race" : " · no salary yet")}");
             if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
             EventPanel(p);
+            PoachPanel(p);
             SponsorSection(p);
             ObjectivesSection(p);
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "go", Label = "Go racing", Enabled = why == null, Primary = true, Note = why });
-            p.Default = why == null ? "go" : c.Event != null && !c.Event.Done ? "ev.open" : c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0 ? "sponsor:" + c.SponsorOffers[0].Id : "deck";
+            p.Default = why == null ? "go" : c.Event != null && !c.Event.Done ? "ev.open" : c.Poach != null && !c.Poach.Done ? "crew" : c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0 ? "sponsor:" + c.SponsorOffers[0].Id : "deck";
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "deck", Label = "Build race deck" });
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "drv", Label = "Driver sheet" + (c.Driver.Pts > 0 ? $" · {c.Driver.Pts} point{(c.Driver.Pts > 1 ? "s" : "")} to spend" : ""), Note = "Attributes, skills, image, Hype and recent checks" });
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "crew", Label = CrewButtonLabel(), Note = "Hire and train staff, pick perks, upgrade pit cards" });
             if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit", Note = $"Saves to slot {Slot} and goes back to the title screen" });
 
             TuneSection(p, t, 0);
@@ -637,7 +643,8 @@ namespace GreenFlag.View
             foreach (var o in res.Objectives.Where(o => o.Ok)) pay.Row((o.Ask ? "Sponsor ask: " : "Objective: ") + o.Name, Money(o.Pay));
             if (res.Sponsor != null) pay.Row(SeasonRules.Sponsor(res.Sponsor).Name + " (per race)", Money(res.Retainer));
             if (res.Salary > 0) pay.Row("Team salary", Money(res.Salary));
-            pay.Row("Total", "+" + Money(res.Total), Green);
+            if (res.Wages > 0) pay.Row("Crew wages", "−" + Money(res.Wages), Red);
+            pay.Row("Total", (res.Total >= 0 ? "+" : "") + Money(res.Total), res.Total >= 0 ? Green : Red);
             pay.Row($"Points +{res.Pts}", $"P{res.Rank} in points · {res.PtsTotal} pts{(res.RankBefore != res.Rank && res.RaceNo > 1 ? $" (was P{res.RankBefore})" : "")}", res.Rank < res.RankBefore ? Green : (Rgb?)null);
             pay.Row("Bank", Money(c.Money));
             if (res.Penalty == "survive") pay.Text($"Survive token used: the DNF would have ended your run. It still cost {Money(CareerRules.DnfFine)}{(res.LostPart != null ? " and your spare " + Parts.Get(res.LostPart).Name : "")}. No tokens left.", Amber);
@@ -645,6 +652,7 @@ namespace GreenFlag.View
             else if (res.Penalty == "dead") pay.Text("Permadeath: the DNF ends the run.", Red);
 
             DriverRewardRows(pay, res);
+            CrewRewardRows(pay, res);
 
             if (res.Objectives.Count > 0)
             {
@@ -849,7 +857,7 @@ namespace GreenFlag.View
             {
                 var o = c.Offers[i];
                 string what = o.Kind == OfferKind.Stay ? "Same car, same crew, same series."
-                    : $"New car: power, handling and aero {o.Rating} (yours now {c.Base.Car.Power}/{c.Base.Car.Handling}/{c.Base.Car.Aero}). New crew at level {SeasonRules.CrewBase(o.Rating)}: perks and pit cards start over. You keep your driver coaching, money, cards and parts.";
+                    : $"New car: power, handling and aero {o.Rating} (yours now {c.Base.Car.Power}/{c.Base.Car.Handling}/{c.Base.Car.Aero}). {FollowText(o.Rating)} You keep your driver coaching, money, cards and parts.";
                 if (o.Kind == OfferKind.Promote) what += c.Series == Series.Kart ? " Kart cards turn into late model cards and your persona grows into its stock car self." : "";
                 if (o.Kind == OfferKind.Promote) what += o.Series == Series.Late ? " Late models: pit stops and cautions, an 11 to 15 card deck." : " Stock cars: the full schedule, 12 to 16 cards.";
                 string kind = o.Kind == OfferKind.Stay ? "Stay" : o.Kind == OfferKind.Move ? "Better team" : "Step up · " + SeasonRules.SeriesName(o.Series);

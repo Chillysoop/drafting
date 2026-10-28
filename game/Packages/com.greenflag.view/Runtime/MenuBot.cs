@@ -11,12 +11,14 @@ namespace GreenFlag.View
     /// first part. Tests and the harness use it to prove race, rewards, shop and the next race loop (roadmap step 34).
     /// Step 37: it signs the sponsor paying most per race (a renewal first), qualifies with QualiBot at QualiSkill (null =
     /// skip qualifying), and at the season end signs the best step-up offer, else a better team, else stays.
+    /// Step 39: in Crew HQ it picks every perk that opens (the first option), and answers a rival's offer: it talks when
+    /// that's at least even money, then matches when it can keep three races of the new wage in the bank, else lets them go.
     /// </summary>
     public sealed class MenuBot
     {
         /// <summary>Money it keeps in the bank after a purchase.</summary>
         public int Reserve = 3000;
-        public int Presses, Bought, PartsBought, Rerolls, Skips, QualiRuns, Contracts, Checks, Negotiations, Points;
+        public int Presses, Bought, PartsBought, Rerolls, Skips, QualiRuns, Contracts, Checks, Negotiations, Points, Perks, Matched, Talked, LetGo;
         /// <summary>Skip every off-track event instead of answering (tests that only care about racing).</summary>
         public bool SkipEvents;
         /// <summary>How well it qualifies: poor, avg, good, great; null skips qualifying.</summary>
@@ -48,6 +50,10 @@ namespace GreenFlag.View
             if (id.StartsWith("ev.opt:", StringComparison.Ordinal)) Checks++;
             if (id.StartsWith("neg:", StringComparison.Ordinal)) Negotiations++;
             if (id.StartsWith("drv.up:", StringComparison.Ordinal)) Points++;
+            if (id.StartsWith("crew.perk:", StringComparison.Ordinal) && m.Toast != null && !m.Toast.StartsWith("Press", StringComparison.Ordinal)) Perks++;
+            if (id == "crew.match") Matched++;
+            if (id == "crew.talk") Talked++;
+            if (id == "crew.let" && m.Career.Poach != null && m.Career.Poach.Done) LetGo++;
             return true;
         }
 
@@ -89,6 +95,17 @@ namespace GreenFlag.View
                         if (d.Score(a) < (a == DAttr.Savvy || a == DAttr.Grit ? 16 : DriverRules.AttrMax)) return "drv.up:" + a;
                     return "drv.back";
                 }
+                case CareerScreen.Crew:
+                {
+                    var o = c.Poach;
+                    if (o != null && !o.Done)
+                    {
+                        if (o.Talk == null && c.TalkBuild().Pass >= 0.5) return "crew.talk";
+                        return c.Money >= Reserve + 3 * o.MatchAt ? "crew.match" : "crew.let";
+                    }
+                    var perk = p.Pressables().FirstOrDefault(i => i.Id.StartsWith("crew.perk:", StringComparison.Ordinal) && i.Id.EndsWith(":1", StringComparison.Ordinal));
+                    return perk?.Id ?? "crew.back";
+                }
                 case CareerScreen.DeckBuilder:
                     if (builtFor != Key(c)) { builtFor = Key(c); return "deck.auto"; }
                     return "deck.done";
@@ -96,6 +113,7 @@ namespace GreenFlag.View
                 {
                     if (c.Event != null && !c.Event.Done) return "ev.open";
                     if (c.Driver.Pts > 0) return "drv";
+                    if ((c.Poach != null && !c.Poach.Done) || c.PerksWaiting > 0) return "crew";
                     if (c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0)
                         return "sponsor:" + c.SponsorOffers.OrderByDescending(d => d.Renew).ThenByDescending(d => d.Per).ThenBy(d => d.Id, StringComparer.Ordinal).First().Id;
                     var buy = p.Pressables().Where(i => i.Id.StartsWith("buy:", StringComparison.Ordinal))
@@ -161,7 +179,7 @@ namespace GreenFlag.View
             int done = 0;
             CareerMenu Reload(CareerMenu x)
             {
-                if (x.Career == null || x.Screen == CareerScreen.DeckBuilder || x.Screen == CareerScreen.Driver || x.Screen == CareerScreen.Quali || x.Screen == CareerScreen.QualiRun || x.Screen == CareerScreen.QualiDone) return x;
+                if (x.Career == null || x.Screen == CareerScreen.DeckBuilder || x.Screen == CareerScreen.Driver || x.Screen == CareerScreen.Crew || x.Screen == CareerScreen.Quali || x.Screen == CareerScreen.QualiRun || x.Screen == CareerScreen.QualiDone) return x;
                 x.Flush();
                 var n = new CareerMenu(x.Saves) { NewSeed = x.NewSeed, PickPersona = x.PickPersona, PickDiff = x.PickDiff, PickStakes = x.PickStakes, PickSlot = x.PickSlot };
                 if (!n.Load(x.Slot)) throw new InvalidOperationException("Reload failed: " + n.Toast);

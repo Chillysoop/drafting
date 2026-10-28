@@ -135,6 +135,7 @@ namespace GreenFlag.Harness
             Console.WriteLine($"average finish P{k.Results.Average(r => r.Finish):F1} vs expected P{k.Results.Average(r => r.Expected):F1}; tiers {string.Join(", ", k.Results.GroupBy(r => r.Tier).OrderBy(g => g.Key).Select(g => CareerRules.TierName(g.Key) + " " + g.Count()))}");
             var dv = k.Driver;
             Console.WriteLine($"driver: {dv.Background.Name} level {dv.Lvl} ({dv.Xp} XP), {string.Join(" ", Enum.GetValues(typeof(DAttr)).Cast<DAttr>().Select(x => DriverRules.AttrAbbr[(int)x] + " " + dv.Score(x)))}, image {(dv.Image != null ? DriverRules.Image(dv.Image).Name : "fresh face")} ({dv.ImgX},{dv.ImgY}), Hype {dv.Hype}, fans {dv.Fans}, respect {dv.Respect}; off-track checks {bot.Checks} (made {dv.Log.Count(l => l.Tier <= CheckTier.Success)} of the last {dv.Log.Count}), negotiations {bot.Negotiations}, points spent {bot.Points}");
+            Console.WriteLine($"crew: {string.Join(", ", CrewRules.Roles.Select(r => { var cm = k.Staff[r]; return $"{CrewRules.Name(r).ToLowerInvariant()} {cm.Name} L{cm.Lvl}{(cm.Trait != null ? " " + cm.Trait : "")}{(cm.Wage > 0 ? $" ${cm.Wage}" : "")} perks {string.Concat(cm.Perks)}"; }))}; wages paid {k.Results.Sum(r => r.Wages):N0}; crew XP {k.Results.Sum(r => r.CrewXp.Values.Sum())}; perks picked {bot.Perks}; rival offers: talked {bot.Talked}, matched {bot.Matched}, let go {bot.LetGo}; pit deck {k.Base.PitDeck.Count(x => x.EndsWith("+"))} upgraded");
             return bad == 0 ? 0 : 1;
         }
 
