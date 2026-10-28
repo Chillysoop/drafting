@@ -130,6 +130,15 @@ jobs:
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- stockseason 10 3 61
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Rival arcs and silly season (step 43, a kart rival must show up as your stock car teammate or rival)
+        run: |
+          set -o pipefail
+          {
+            echo '### Rival arcs: careers from karts through the menus until a kart rival is your stock car teammate or rival, then Grudge in premier seasons'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- classarc 2 61 6 2
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Saves (step 35, closing and reopening the game after every press must change nothing; old saves load in the tests above)
         run: |
           set -o pipefail

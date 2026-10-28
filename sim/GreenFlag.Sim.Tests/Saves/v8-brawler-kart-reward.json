@@ -1,0 +1,2972 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 8,
+  "build": "sample save (format 8)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "reward",
+  "summary": {
+    "name": "Rookie",
+    "persona": "brawler",
+    "series": "Kart",
+    "season": 1,
+    "race": 3,
+    "of": 6,
+    "track": "Hollow Creek Kartway",
+    "money": 4598,
+    "races": 3,
+    "diff": "Normal",
+    "stakes": "Standard",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "brawler",
+    "series": "Kart",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Standard",
+    "survive": 0,
+    "money": 4598,
+    "season": 1,
+    "raceIdx": 2,
+    "over": false,
+    "seed": 12,
+    "rng": 3494863550,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 3,
+        "durability": 5,
+        "racecraft": 5,
+        "defense": 5,
+        "consistency": 5,
+        "tireMgmt": 5
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 3,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 15,
+      "wits": 12,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["k_tow", "k_show", "k_switch", "k_outside", "k_cover", "k_board", "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake", "k_owninside", "k_latebrake"],
+    "deck": ["k_push", "k_tow", "k_latebrake", "k_latebrake", "k_owninside", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_cover", "k_smooth", "k_board"],
+    "partsOwned": ["nerf_bar", "pit_monitor", "sticker_tires"],
+    "equipped": {
+      "Chassis": "nerf_bar",
+      "Tires": "sticker_tires",
+      "Crew": "pit_monitor"
+    },
+    "tune": {
+      "hand": 1,
+      "aero": -1,
+      "focus": "Bumper"
+    },
+    "hist": {
+      "k_board": [28, 18],
+      "k_cover": [31, 27],
+      "k_door": [26, 17],
+      "k_latebrake": [5, 2],
+      "k_owninside": [2, 2],
+      "k_push": [13, 8],
+      "k_show": [25, 23],
+      "k_smooth": [16, 13],
+      "k_switch": [23, 18],
+      "k_tow": [17, 15],
+      "reel_in": [1, 1]
+    },
+    "trackDecks": {
+      "bramble": ["k_owninside", "k_door", "k_door", "k_show", "k_switch", "k_switch", "k_outside", "k_latebrake", "k_cover", "k_board", "k_smooth", "k_tow", "k_push"],
+      "hollow": ["k_push", "k_tow", "k_latebrake", "k_latebrake", "k_owninside", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_cover", "k_smooth", "k_board"],
+      "pinek": ["k_door", "k_door", "k_switch", "k_switch", "k_outside", "k_show", "k_latebrake", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "pinek",
+        "trackName": "Pinewood Kart Park",
+        "start": 19,
+        "finish": 13,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Victory",
+        "mul": 0.15,
+        "purse": 645,
+        "bonus": 300,
+        "total": 2345,
+        "plays": 49,
+        "succ": 40,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 8,
+        "callsWon": 3,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 18,
+        "bestPos": 13,
+        "beatMate": true,
+        "beatRival": true,
+        "rival": "Tommy Kessler",
+        "objMet": 3,
+        "tierFrom": "Strong",
+        "sponsor": "bolt",
+        "retainer": 300,
+        "salary": 0,
+        "pts": 24,
+        "ptsTotal": 24,
+        "rank": 13,
+        "rankBefore": 19,
+        "dmg": 0,
+        "drvMom": 0,
+        "hype": 1,
+        "hypeWhy": ["5 spots over expected"],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "Spotter": 23,
+          "Engineer": 13
+        },
+        "crewUp": [],
+        "rvWreck": false,
+        "rvPaid": false,
+        "paybacks": 0,
+        "inboxNew": 0,
+        "rvWeek": "grinder",
+        "objectives": [
+          {
+            "id": "clean",
+            "name": "No critical failures",
+            "ask": false,
+            "ok": true,
+            "pay": 300
+          },
+          {
+            "id": "mate",
+            "name": "Finish ahead of your teammate",
+            "ask": false,
+            "ok": true,
+            "pay": 200
+          },
+          {
+            "id": "gain5",
+            "name": "Finish 5+ spots ahead of where you started",
+            "ask": true,
+            "ok": true,
+            "pay": 600
+          }
+        ]
+      },
+      {
+        "season": 1,
+        "raceNo": 2,
+        "track": "bramble",
+        "trackName": "Bramble Hill Kart Club",
+        "start": 15,
+        "finish": 15,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Strong",
+        "mul": 0.15,
+        "purse": 540,
+        "bonus": 180,
+        "total": 2320,
+        "plays": 62,
+        "succ": 46,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 5,
+        "callsWon": 3,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 18,
+        "bestPos": 6,
+        "beatMate": true,
+        "beatRival": true,
+        "rival": "Jet Alvarez",
+        "objMet": 3,
+        "tierFrom": "Solid",
+        "sponsor": "bolt",
+        "retainer": 300,
+        "salary": 0,
+        "pts": 22,
+        "ptsTotal": 46,
+        "rank": 14,
+        "rankBefore": 13,
+        "dmg": 5,
+        "drvMom": 0,
+        "hype": 0,
+        "hypeWhy": [],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 10,
+          "Spotter": 10,
+          "Engineer": 7
+        },
+        "crewUp": [],
+        "rvWreck": false,
+        "rvPaid": false,
+        "paybacks": 0,
+        "inboxNew": 1,
+        "rvWeek": "hothead",
+        "objectives": [
+          {
+            "id": "top10",
+            "name": "Run in the top 10 at any point",
+            "ask": false,
+            "ok": true,
+            "pay": 300
+          },
+          {
+            "id": "rival",
+            "name": "Finish ahead of your rival (Jet Alvarez)",
+            "ask": false,
+            "ok": true,
+            "pay": 400
+          },
+          {
+            "id": "combo3",
+            "name": "Land a ×3 combo",
+            "ask": true,
+            "ok": true,
+            "pay": 600
+          }
+        ]
+      },
+      {
+        "season": 1,
+        "raceNo": 3,
+        "track": "hollow",
+        "trackName": "Hollow Creek Kartway",
+        "start": 16,
+        "finish": 18,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 383,
+        "bonus": 0,
+        "total": 1433,
+        "plays": 76,
+        "succ": 58,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 3,
+        "callsWon": 3,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 18,
+        "bestPos": 2,
+        "beatMate": false,
+        "beatRival": false,
+        "rival": "Skye Rennick",
+        "objMet": 1,
+        "tierFrom": null,
+        "sponsor": "bolt",
+        "retainer": 450,
+        "salary": 0,
+        "pts": 19,
+        "ptsTotal": 65,
+        "rank": 16,
+        "rankBefore": 14,
+        "dmg": 4,
+        "drvMom": 0,
+        "hype": 0,
+        "hypeWhy": [],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 7,
+          "Spotter": 7,
+          "Engineer": 7
+        },
+        "crewUp": [],
+        "rvWreck": false,
+        "rvPaid": false,
+        "paybacks": 0,
+        "inboxNew": 0,
+        "rvWeek": "talker",
+        "objectives": [
+          {
+            "id": "gain5",
+            "name": "Finish 5+ spots ahead of where you started",
+            "ask": false,
+            "ok": false,
+            "pay": 400
+          },
+          {
+            "id": "top15",
+            "name": "Finish P15 or better",
+            "ask": false,
+            "ok": false,
+            "pay": 500
+          },
+          {
+            "id": "combo3",
+            "name": "Land a ×3 combo",
+            "ask": true,
+            "ok": true,
+            "pay": 600
+          }
+        ]
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "low_spoiler",
+      "rerolls": 0
+    },
+    "deckFor": 1002,
+    "deckNote": null,
+    "reward": {
+      "res": {
+        "season": 1,
+        "raceNo": 3,
+        "track": "hollow",
+        "trackName": "Hollow Creek Kartway",
+        "start": 16,
+        "finish": 18,
+        "expected": 18,
+        "dnf": false,
+        "tier": "Solid",
+        "mul": 0.15,
+        "purse": 383,
+        "bonus": 0,
+        "total": 1433,
+        "plays": 76,
+        "succ": 58,
+        "crits": 0,
+        "bestChain": 3,
+        "calls": 3,
+        "callsWon": 3,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 18,
+        "bestPos": 2,
+        "beatMate": false,
+        "beatRival": false,
+        "rival": "Skye Rennick",
+        "objMet": 1,
+        "tierFrom": null,
+        "sponsor": "bolt",
+        "retainer": 450,
+        "salary": 0,
+        "pts": 19,
+        "ptsTotal": 65,
+        "rank": 16,
+        "rankBefore": 14,
+        "dmg": 4,
+        "drvMom": 0,
+        "hype": 0,
+        "hypeWhy": [],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 7,
+          "Spotter": 7,
+          "Engineer": 7
+        },
+        "crewUp": [],
+        "rvWreck": false,
+        "rvPaid": false,
+        "paybacks": 0,
+        "inboxNew": 0,
+        "rvWeek": "talker",
+        "objectives": [
+          {
+            "id": "gain5",
+            "name": "Finish 5+ spots ahead of where you started",
+            "ask": false,
+            "ok": false,
+            "pay": 400
+          },
+          {
+            "id": "top15",
+            "name": "Finish P15 or better",
+            "ask": false,
+            "ok": false,
+            "pay": 500
+          },
+          {
+            "id": "combo3",
+            "name": "Land a ×3 combo",
+            "ask": true,
+            "ok": true,
+            "pay": 600
+          }
+        ],
+        "rivals": [
+          {
+            "rid": "heir",
+            "name": "Brock Hollister",
+            "g0": -0.5,
+            "g1": 1.25,
+            "week": false,
+            "fin": 20,
+            "why": [
+              ["hard pass", 1],
+              ["cooled off", -0.5],
+              ["beaten in a close finish", 1.2]
+            ]
+          },
+          {
+            "rid": "prodigy",
+            "name": "Nina Valdez",
+            "g0": 0,
+            "g1": 0,
+            "week": false,
+            "fin": 10,
+            "why": [
+              ["hard pass", 1],
+              ["cooled off", -1]
+            ]
+          },
+          {
+            "rid": "talker",
+            "name": "Skye Rennick",
+            "g0": 1,
+            "g1": 1,
+            "week": true,
+            "fin": 14,
+            "why": [
+              ["hard pass", 1],
+              ["cooled off", -1]
+            ]
+          },
+          {
+            "rid": "hothead",
+            "name": "Jet Alvarez",
+            "g0": 0,
+            "g1": -0.5,
+            "week": false,
+            "fin": 17,
+            "why": [
+              ["clean race side by side", -0.5]
+            ]
+          }
+        ],
+        "order": [
+          {
+            "pos": 1,
+            "id": 0,
+            "name": "Kenta Tanaka",
+            "team": "Velocity Kart Works",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 2,
+            "id": 1,
+            "name": "Luc Dubois",
+            "team": "Velocity Kart Works",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 3,
+            "id": 5,
+            "name": "Ana Ruiz",
+            "team": "Tri-County Karting",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 4,
+            "id": 4,
+            "name": "Ivan Petrov",
+            "team": "Tri-County Karting",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 5,
+            "id": 6,
+            "name": "Erik Lindqvist",
+            "team": "Hotshoe Karts",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 6,
+            "id": 8,
+            "name": "Jace Whitaker",
+            "team": "Kingpin Kart Club",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 7,
+            "id": 10,
+            "name": "Kasey Kowalski",
+            "team": "Rattlesnake Karts",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 8,
+            "id": 2,
+            "name": "Shane Sullivan",
+            "team": "Brickyard Juniors",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 9,
+            "id": 3,
+            "name": "Wade Haskins",
+            "team": "Brickyard Juniors",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 10,
+            "id": 9,
+            "name": "Nina Valdez",
+            "team": "Kingpin Kart Club",
+            "me": false,
+            "dnf": false
+          },
+          {
+            "pos": 18,
+            "id": 18,
+            "name": "Rookie",
+            "team": "Garage 77 Karting",
+            "me": true,
+            "dnf": false
+          }
+        ],
+        "log": [
+          {
+            "lap": 1,
+            "card": "k_push",
+            "succ": 0.3735064955684586,
+            "tier": "Success",
+            "tags": [
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_door",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [10, "Bent Nerf Bar", null],
+              [9, "Combo ×2", "combo"],
+              [8, "Sticker Tires", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Corner entry", null],
+              [4, "Close behind", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_door",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [10, "Wheel to wheel", null],
+              [10, "Bent Nerf Bar", null],
+              [8, "Sticker Tires", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Hairpin braking zone", "shape"],
+              [8, "Right on him", null]
+            ]
+          },
+          {
+            "lap": 1,
+            "card": "k_show",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [-9, "Heat ×3", "heat"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [10, "Corner exit", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_tow",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_show",
+            "succ": 0.8772380142972466,
+            "tier": "Success",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [9, "Combo ×2", "combo"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [18, "Combo ×3", "combo"],
+              [-12, "Heat ×4", "heat"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_latebrake",
+            "succ": 0.7192602264165802,
+            "tier": "Neutral",
+            "tags": [
+              [18, "Hairpin braking zone", null],
+              [15, "Tow ×3", null],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 2,
+            "card": "k_door",
+            "succ": 0.6018213835494852,
+            "tier": "Neutral",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "k_cover",
+            "succ": 0.8898641733084078,
+            "tier": "Neutral",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "k_door",
+            "succ": 0.7405887269097834,
+            "tier": "Neutral",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "k_tow",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"],
+              [6, "In the tow", null]
+            ]
+          },
+          {
+            "lap": 3,
+            "card": "k_push",
+            "succ": 0.6018213835494852,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null],
+              [9, "Combo ×2", "combo"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_tow",
+            "succ": 0.8636298996899782,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_show",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_door",
+            "succ": 0.6742260390218254,
+            "tier": "Neutral",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [-12, "Heat ×4", "heat"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_push",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 4,
+            "card": "k_latebrake",
+            "succ": 0.8772380142972466,
+            "tier": "Neutral",
+            "tags": [
+              [18, "Hairpin braking zone", null],
+              [15, "Tow ×3", null],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_smooth",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [10, "Carry speed through the sweeper", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_show",
+            "succ": 0.8636298996899782,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_switch",
+            "succ": 0.7405887269097834,
+            "tier": "Success",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_cover",
+            "succ": 0.5,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [4, "Close behind", null],
+              [-3, "Sullivan racecraft 7", "field"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_latebrake",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [18, "Hairpin braking zone", null],
+              [15, "Tow ×3", null],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 5,
+            "card": "k_door",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_tow",
+            "succ": 0.6742260390218254,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [6, "In the tow", null],
+              [5, "Train of 3", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_show",
+            "succ": 0.5513339734833473,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [9, "Combo ×2", "combo"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [18, "Combo ×3", "combo"],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_push",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 6,
+            "card": "k_door",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_door",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 7,
+            "card": "k_tow",
+            "succ": 0.9000000000000001,
+            "tier": "Fail",
+            "tags": [
+              [18, "Tucked up close", null],
+              [18, "Read the Board", "boost"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_cover",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_show",
+            "succ": 0.6742260390218254,
+            "tier": "Neutral",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 8,
+            "card": "k_switch",
+            "succ": 0.20081607323694384,
+            "tier": "Neutral",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [-12, "Heat ×4", "heat"],
+              [-10, "No corner to cut back", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_push",
+            "succ": 0.07789784636678565,
+            "tier": "Fail",
+            "tags": [
+              [-24, "Mid-corner", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_door",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_door",
+            "succ": 0.6971178639518723,
+            "tier": "Success",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [10, "Wheel to wheel", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_board",
+            "succ": 0.7610479703301001,
+            "tier": "Neutral",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_push",
+            "succ": 0.9000000000000001,
+            "tier": "Neutral",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 9,
+            "card": "k_cover",
+            "succ": 0.6971178639518723,
+            "tier": "Success",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Momentum ×5", "mom"],
+              [-3, "Sullivan racecraft 7", "field"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_show",
+            "succ": 0.6264935044315415,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "Success",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [18, "Combo ×3", "combo"],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_tow",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_door",
+            "succ": 0.7805918933901785,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 10,
+            "card": "k_cover",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [12, "He's on you", null],
+              [11, "Combo ×2", "combo"],
+              [10, "Corner entry", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_show",
+            "succ": 0.8898641733084078,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Combo ×3", "combo"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_push",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_tow",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Momentum ×5", "mom"],
+              [5, "Train of 3", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_door",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-12, "Heat ×4", "heat"],
+              [10, "Wheel to wheel", null]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_switch",
+            "succ": 0.8772380142972466,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 11,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_door",
+            "succ": 0.7805918933901785,
+            "tier": "Neutral",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_tow",
+            "succ": 0.9000000000000001,
+            "tier": "Success",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Train of 4", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_show",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_switch",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [20, "He is covering the inside", null],
+              [18, "Combo ×3", "combo"],
+              [-15, "Heat ×5", "heat"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_push",
+            "succ": 0.9,
+            "tier": "Fail",
+            "tags": [
+              [16, "On his bumper", null],
+              [10, "On the straight", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_door",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Momentum ×5", "mom"],
+              [10, "Bent Nerf Bar", null]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "Success",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 12,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_switch",
+            "succ": 0.8999999999999999,
+            "tier": "CritSuccess",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-15, "Heat ×5", "heat"],
+              [10, "Corner exit", null]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_tow",
+            "succ": 0.7991839267630562,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [6, "In the tow", null],
+              [5, "Train of 3", null]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_push",
+            "succ": 0.7805918933901785,
+            "tier": "Neutral",
+            "tags": [
+              [-22, "He is blocking", "block"],
+              [16, "On his bumper", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_show",
+            "succ": 0.9000000000000001,
+            "tier": "CritSuccess",
+            "tags": [
+              [-15, "Heat ×5", "heat"],
+              [10, "Braking zone", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 13,
+            "card": "k_tow",
+            "succ": 0.7610479703301001,
+            "tier": "Success",
+            "tags": [
+              [18, "Tucked up close", null],
+              [10, "Momentum ×5", "mom"],
+              [-10, "No draft in a hairpin", "shape"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_cover",
+            "succ": 0.9,
+            "tier": "CritSuccess",
+            "tags": [
+              [12, "He's on you", null],
+              [10, "Corner entry", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_show",
+            "succ": 0.8490243576786016,
+            "tier": "Success",
+            "tags": [
+              [-12, "Heat ×4", "heat"],
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_board",
+            "succ": 0.8334133682922437,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [-4, "Crew skill", null],
+              [4, "Grit 15 · late race", "drv"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_smooth",
+            "succ": 0.8636298996899782,
+            "tier": "Success",
+            "tags": [
+              [18, "Read the Board", "boost"],
+              [-10, "Pressure behind", null],
+              [10, "Momentum ×5", "mom"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_owninside",
+            "succ": 0.7192602264165802,
+            "tier": "Success",
+            "tags": [
+              [10, "Momentum ×5", "mom"],
+              [10, "Hairpin braking zone", "shape"],
+              [-9, "Heat ×3", "heat"]
+            ]
+          },
+          {
+            "lap": 14,
+            "card": "k_cover",
+            "succ": 0.8490243576786016,
+            "tier": "Neutral",
+            "tags": [
+              [11, "Combo ×2", "combo"],
+              [10, "Momentum ×5", "mom"],
+              [4, "Close behind", null]
+            ]
+          }
+        ]
+      },
+      "cards": ["k_show", "k_latebrake", "k_door"],
+      "cardRerolls": 1,
+      "picked": null,
+      "inDeck": false,
+      "parts": null,
+      "partRerolls": 0,
+      "partPicked": null
+    },
+    "field": [
+      {
+        "id": 0,
+        "team": 0,
+        "rating": 9,
+        "num": 87,
+        "me": false,
+        "name": "Kenta Tanaka",
+        "trait": "Closer",
+        "stats": [9, 9, 8, 5, 8, 10, 10, 10],
+        "rec": [3, 3, 3, 3, 1],
+        "rv": null
+      },
+      {
+        "id": 1,
+        "team": 0,
+        "rating": 9,
+        "num": 68,
+        "me": false,
+        "name": "Luc Dubois",
+        "trait": "Rookie",
+        "stats": [10, 9, 10, 5, 6, 6, 7, 7],
+        "rec": [3, 0, 0, 3, 2],
+        "rv": null
+      },
+      {
+        "id": 2,
+        "team": 1,
+        "rating": 8,
+        "num": 35,
+        "me": false,
+        "name": "Shane Sullivan",
+        "trait": "Wall",
+        "stats": [8, 7, 9, 5, 7, 7, 7, 7],
+        "rec": [3, 0, 0, 0, 6],
+        "rv": null
+      },
+      {
+        "id": 3,
+        "team": 1,
+        "rating": 8,
+        "num": 66,
+        "me": false,
+        "name": "Wade Haskins",
+        "trait": "Wall",
+        "stats": [9, 9, 9, 4, 7, 5, 7, 5],
+        "rec": [3, 0, 0, 2, 3],
+        "rv": null
+      },
+      {
+        "id": 4,
+        "team": 2,
+        "rating": 8,
+        "num": 22,
+        "me": false,
+        "name": "Ivan Petrov",
+        "trait": "Veteran",
+        "stats": [8, 8, 7, 6, 9, 10, 9, 7],
+        "rec": [3, 0, 0, 3, 2],
+        "rv": null
+      },
+      {
+        "id": 5,
+        "team": 2,
+        "rating": 8,
+        "num": 62,
+        "me": false,
+        "name": "Ana Ruiz",
+        "trait": "Rookie",
+        "stats": [8, 7, 8, 5, 9, 9, 10, 9],
+        "rec": [3, 0, 0, 3, 3],
+        "rv": null
+      },
+      {
+        "id": 6,
+        "team": 3,
+        "rating": 7,
+        "num": 14,
+        "me": false,
+        "name": "Erik Lindqvist",
+        "trait": "Aggressive",
+        "stats": [9, 8, 8, 6, 7, 4, 4, 4],
+        "rec": [3, 0, 0, 1, 5],
+        "rv": null
+      },
+      {
+        "id": 7,
+        "team": 3,
+        "rating": 7,
+        "num": 10,
+        "me": false,
+        "name": "Brock Hollister",
+        "trait": "Rookie",
+        "stats": [8, 8, 7, 5, 4, 3, 4, 4],
+        "rec": [3, 0, 0, 0, 9],
+        "rv": "heir"
+      },
+      {
+        "id": 8,
+        "team": 4,
+        "rating": 6,
+        "num": 8,
+        "me": false,
+        "name": "Jace Whitaker",
+        "trait": "Wall",
+        "stats": [8, 6, 5, 5, 6, 6, 6, 6],
+        "rec": [3, 0, 0, 0, 6],
+        "rv": null
+      },
+      {
+        "id": 9,
+        "team": 4,
+        "rating": 6,
+        "num": 7,
+        "me": false,
+        "name": "Nina Valdez",
+        "trait": "Smooth",
+        "stats": [5, 8, 6, 4, 7, 5, 5, 7],
+        "rec": [3, 0, 0, 0, 8],
+        "rv": "prodigy"
+      },
+      {
+        "id": 10,
+        "team": 5,
+        "rating": 6,
+        "num": 46,
+        "me": false,
+        "name": "Kasey Kowalski",
+        "trait": "Rookie",
+        "stats": [5, 7, 7, 4, 7, 8, 8, 7],
+        "rec": [3, 0, 0, 0, 7],
+        "rv": null
+      },
+      {
+        "id": 11,
+        "team": 5,
+        "rating": 6,
+        "num": 65,
+        "me": false,
+        "name": "Femi Adeyemi",
+        "trait": "Veteran",
+        "stats": [6, 8, 6, 5, 5, 5, 7, 6],
+        "rec": [3, 0, 0, 0, 10],
+        "rv": null
+      },
+      {
+        "id": 12,
+        "team": 6,
+        "rating": 5,
+        "num": 15,
+        "me": false,
+        "name": "Tobi Okafor",
+        "trait": "Smooth",
+        "stats": [6, 6, 6, 4, 5, 5, 4, 3],
+        "rec": [3, 0, 0, 0, 12],
+        "rv": null
+      },
+      {
+        "id": 13,
+        "team": 6,
+        "rating": 5,
+        "num": 31,
+        "me": false,
+        "name": "Cal Bram",
+        "trait": "Closer",
+        "stats": [7, 5, 5, 5, 6, 6, 4, 6],
+        "rec": [3, 0, 0, 0, 11],
+        "rv": null
+      },
+      {
+        "id": 14,
+        "team": 7,
+        "rating": 4,
+        "num": 56,
+        "me": false,
+        "name": "Remy Moreau",
+        "trait": "Aggressive",
+        "stats": [5, 4, 4, 4, 5, 3, 3, 4],
+        "rec": [3, 0, 0, 0, 14],
+        "rv": null
+      },
+      {
+        "id": 15,
+        "team": 7,
+        "rating": 4,
+        "num": 88,
+        "me": false,
+        "name": "Skye Rennick",
+        "trait": "Drafter",
+        "stats": [4, 4, 3, 4, 4, 6, 4, 6],
+        "rec": [3, 0, 0, 0, 14],
+        "rv": "talker"
+      },
+      {
+        "id": 16,
+        "team": 8,
+        "rating": 3,
+        "num": 13,
+        "me": false,
+        "name": "Diego Reyes",
+        "trait": "Wall",
+        "stats": [2, 2, 3, 6, 2, 2, 3, 3],
+        "rec": [3, 0, 0, 0, 18],
+        "rv": null
+      },
+      {
+        "id": 17,
+        "team": 8,
+        "rating": 3,
+        "num": 42,
+        "me": false,
+        "name": "Tommy Kessler",
+        "trait": "Veteran",
+        "stats": [3, 4, 2, 6, 5, 3, 5, 4],
+        "rec": [3, 0, 0, 0, 16],
+        "rv": "grinder"
+      },
+      {
+        "id": 18,
+        "team": 9,
+        "rating": 3,
+        "num": 77,
+        "me": true,
+        "name": null,
+        "trait": "None",
+        "stats": null,
+        "rec": [3, 0, 0, 0, 13],
+        "rv": null
+      },
+      {
+        "id": 19,
+        "team": 9,
+        "rating": 3,
+        "num": 51,
+        "me": false,
+        "name": "Jet Alvarez",
+        "trait": "Aggressive",
+        "stats": [2, 3, 3, 6, 6, 5, 4, 6],
+        "rec": [3, 0, 0, 0, 17],
+        "rv": "hothead"
+      }
+    ],
+    "pts": {
+      "0": 120,
+      "1": 103,
+      "2": 91,
+      "3": 96,
+      "4": 101,
+      "5": 98,
+      "6": 91,
+      "7": 69,
+      "8": 85,
+      "9": 74,
+      "10": 87,
+      "11": 78,
+      "12": 73,
+      "13": 67,
+      "14": 66,
+      "15": 65,
+      "16": 54,
+      "17": 61,
+      "18": 65,
+      "19": 58
+    },
+    "contract": {
+      "per": 0,
+      "team": 9,
+      "series": "Kart",
+      "since": 1,
+      "clauses": []
+    },
+    "sponsor": {
+      "id": "bolt",
+      "per": 450,
+      "bonus": 1500,
+      "renew": false,
+      "since": 1,
+      "trust": 1
+    },
+    "sponsorOffers": null,
+    "objectives": null,
+    "rival": 15,
+    "past": [],
+    "review": null,
+    "offers": null,
+    "ladder": ["Kart"],
+    "calendar": ["pinek", "bramble", "hollow", "lake", "bramble", "lake"],
+    "qual": {
+      "season": 1,
+      "race": 2,
+      "track": "hollow",
+      "grid": [1, 0, 3, 4, 5, 2, 6, 7, 10, 8, 13, 11, 9, 12, 15, 18, 14, 17, 19, 16],
+      "times": [24.092, 24.16, 24.183, 24.198, 24.28, 24.399, 24.446, 24.492, 24.639, 24.662, 24.748, 24.754, 24.799, 24.881, 25.12, 25.221, 25.227, 25.285, 25.383, 25.567],
+      "pos": 16,
+      "time": 25.220909763234424,
+      "skip": false,
+      "card": null,
+      "avg": 1.351,
+      "best": 4,
+      "counts": [6, 7, 3, 0, 0]
+    },
+    "qualRunning": false,
+    "driver": {
+      "bg": "hero",
+      "attr": {
+        "Presence": 14,
+        "Wits": 12,
+        "Composure": 9,
+        "Savvy": 11,
+        "Rapport": 13,
+        "Grit": 15
+      },
+      "prof": ["Media", "Endure"],
+      "lvl": 2,
+      "xp": 85,
+      "pts": 0,
+      "hype": 3,
+      "fans": 49,
+      "respect": 35,
+      "img": [-2, 0],
+      "trail": [
+        [1, 1],
+        [0, 0],
+        [-1, 1],
+        [-2, 0]
+      ],
+      "log": [
+        {
+          "ev": "Reply to Kessler",
+          "opt": "Return the respect",
+          "skill": "Read",
+          "tier": "Mixed",
+          "txt": "8 +1 = 9 vs DC 10",
+          "s": 1,
+          "r": 2
+        },
+        {
+          "ev": "Sponsor dinner",
+          "opt": "Offer fan appearances",
+          "skill": "Fans",
+          "tier": "Crit",
+          "txt": "20 +2 = 22 vs DC 12",
+          "s": 1,
+          "r": 2
+        },
+        {
+          "ev": "Sponsor dinner",
+          "opt": "Stay till the last toast",
+          "skill": "Endure",
+          "tier": "Success",
+          "txt": "19 +4 = 23 vs DC 11",
+          "s": 1,
+          "r": 2
+        },
+        {
+          "ev": "Press scrum",
+          "opt": "Call your shot",
+          "skill": "Media",
+          "tier": "Success",
+          "txt": "17 +4 = 21 vs DC 14",
+          "s": 1,
+          "r": 1
+        }
+      ],
+      "nextMom": 0
+    },
+    "event": {
+      "id": "dinner",
+      "ri": 2,
+      "season": 1,
+      "after": 2,
+      "ctx": {
+        "ev": "dinner",
+        "track": "Bramble Hill Kart Club",
+        "trackId": "bramble",
+        "rival": "Jet Alvarez",
+        "fin": 15,
+        "start": 15,
+        "exp": 18,
+        "dmg": 5,
+        "dnf": false,
+        "top3": false,
+        "big": true,
+        "beatRival": true
+      },
+      "ceil": 900,
+      "revealed": false,
+      "advFor": -1,
+      "hist": [
+        {
+          "ri": 0,
+          "opt": "late",
+          "n": "Stay till the last toast",
+          "auto": false,
+          "tier": "Success",
+          "fx": {
+            "trust": 1
+          }
+        },
+        {
+          "ri": 1,
+          "opt": "appear",
+          "n": "Offer fan appearances",
+          "auto": false,
+          "tier": "Crit",
+          "fx": {
+            "fans": 6,
+            "hype": 1,
+            "per": 150
+          }
+        }
+      ],
+      "done": true,
+      "walked": false,
+      "cur": null
+    },
+    "eventsHeld": ["press", "dinner"],
+    "staff": [
+      {
+        "role": "CrewChief",
+        "name": "Wes Calloway",
+        "lvl": 3,
+        "xp": 17,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Spotter",
+        "name": "Rita Okafor",
+        "lvl": 3,
+        "xp": 40,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Engineer",
+        "name": "Cal Brennan",
+        "lvl": 3,
+        "xp": 27,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "PitCrew",
+        "name": "Lena Park",
+        "lvl": 3,
+        "xp": 0,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      }
+    ],
+    "hire": [],
+    "hireFor": -1,
+    "poach": null,
+    "poached": 0,
+    "class": {
+      "rng": 3014196202,
+      "drivers": [
+        {
+          "id": "prodigy",
+          "series": "Kart",
+          "team": 4,
+          "skill": 6,
+          "g": 0,
+          "rec": [1, 2, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "hothead",
+          "series": "Kart",
+          "team": 9,
+          "skill": 5,
+          "g": -0.5,
+          "rec": [2, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "talker",
+          "series": "Kart",
+          "team": 7,
+          "skill": 5,
+          "g": 1,
+          "rec": [2, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "heir",
+          "series": "Kart",
+          "team": 3,
+          "skill": 3,
+          "g": 1.25,
+          "rec": [1, 2, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "grinder",
+          "series": "Kart",
+          "team": 8,
+          "skill": 4,
+          "g": -3,
+          "rec": [2, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "enforcer",
+          "series": "Late",
+          "team": 7,
+          "skill": 6,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "grudge",
+          "series": "Late",
+          "team": 6,
+          "skill": 6,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "local",
+          "series": "Late",
+          "team": 8,
+          "skill": 5,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "journey",
+          "series": "Late",
+          "team": 9,
+          "skill": 5,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "pro",
+          "series": "Stock",
+          "team": 1,
+          "skill": 8,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "wall",
+          "series": "Stock",
+          "team": 2,
+          "skill": 7,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "ice",
+          "series": "Stock",
+          "team": 4,
+          "skill": 8,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        }
+      ],
+      "inbox": [
+        {
+          "id": "m1",
+          "rid": "grinder",
+          "kind": "respect",
+          "track": "Bramble Hill Kart Club",
+          "subj": "Good racing",
+          "body": "\"Hard and clean all day at Bramble Hill Kart Club. I'll give you the same.\"",
+          "season": 1,
+          "race": 1,
+          "g": -2,
+          "reply": "thanks",
+          "replyText": "It lands, just about. Grudge −1, now -3 (Respect).",
+          "tier": "Mixed",
+          "roll": "Read the Room: d20 8 +1 = 9 vs DC 10, Mixed"
+        }
+      ],
+      "msgN": 1,
+      "news": []
+    }
+  },
+  "retry": {
+    "seed": 1792589367,
+    "career": {
+      "name": "Rookie",
+      "persona": "brawler",
+      "series": "Kart",
+      "diff": "Normal",
+      "info": "Full",
+      "stakes": "Standard",
+      "survive": 0,
+      "money": 4665,
+      "season": 1,
+      "raceIdx": 2,
+      "over": false,
+      "seed": 12,
+      "rng": 719332382,
+      "base": {
+        "car": {
+          "power": 3,
+          "handling": 3,
+          "aero": 3,
+          "durability": 5,
+          "racecraft": 5,
+          "defense": 5,
+          "consistency": 5,
+          "tireMgmt": 5
+        },
+        "crewChief": 3,
+        "spotter": 3,
+        "engineer": 3,
+        "pitCrew": 3,
+        "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+        "grit": 15,
+        "wits": 12,
+        "radio": true,
+        "crew": {
+          "laneCut": 0,
+          "chance": 0,
+          "tireOdds": 0,
+          "fuelOdds": 0,
+          "pitHand": 0,
+          "prep": 0,
+          "releaseWindow": 0,
+          "bodyMen": false,
+          "chief": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "spotter": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "engineer": {
+            "chance": 0,
+            "late": 0,
+            "pay": 0,
+            "soft": 1,
+            "weight": 1,
+            "again": 0,
+            "net": 0,
+            "fixOnS": 0
+          },
+          "chanceAll": 0,
+          "momAll": 0,
+          "softAll": 1,
+          "rate": 1,
+          "reroll": false,
+          "xp": 0
+        }
+      },
+      "collection": ["k_tow", "k_show", "k_switch", "k_outside", "k_cover", "k_board", "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake", "k_owninside", "k_latebrake"],
+      "deck": ["k_push", "k_tow", "k_latebrake", "k_latebrake", "k_owninside", "k_switch", "k_switch", "k_door", "k_door", "k_show", "k_cover", "k_smooth", "k_board"],
+      "partsOwned": ["nerf_bar", "pit_monitor", "sticker_tires"],
+      "equipped": {
+        "Chassis": "nerf_bar",
+        "Tires": "sticker_tires",
+        "Crew": "pit_monitor"
+      },
+      "tune": {
+        "hand": 1,
+        "aero": -1,
+        "focus": "Bumper"
+      },
+      "hist": {
+        "k_board": [21, 12],
+        "k_cover": [22, 21],
+        "k_door": [12, 8],
+        "k_latebrake": [2, 1],
+        "k_owninside": [1, 1],
+        "k_push": [4, 3],
+        "k_show": [14, 13],
+        "k_smooth": [14, 11],
+        "k_switch": [13, 9],
+        "k_tow": [7, 6],
+        "reel_in": [1, 1]
+      },
+      "trackDecks": {
+        "bramble": ["k_owninside", "k_door", "k_door", "k_show", "k_switch", "k_switch", "k_outside", "k_latebrake", "k_cover", "k_board", "k_smooth", "k_tow", "k_push"],
+        "pinek": ["k_door", "k_door", "k_switch", "k_switch", "k_outside", "k_show", "k_latebrake", "k_cover", "k_board", "k_smooth", "k_push", "k_tow"]
+      },
+      "results": [
+        {
+          "season": 1,
+          "raceNo": 1,
+          "track": "pinek",
+          "trackName": "Pinewood Kart Park",
+          "start": 19,
+          "finish": 13,
+          "expected": 18,
+          "dnf": false,
+          "tier": "Victory",
+          "mul": 0.15,
+          "purse": 645,
+          "bonus": 300,
+          "total": 2345,
+          "plays": 49,
+          "succ": 40,
+          "crits": 0,
+          "bestChain": 3,
+          "calls": 8,
+          "callsWon": 3,
+          "penalty": null,
+          "lostPart": null,
+          "objE": 18,
+          "bestPos": 13,
+          "beatMate": true,
+          "beatRival": true,
+          "rival": "Tommy Kessler",
+          "objMet": 3,
+          "tierFrom": "Strong",
+          "sponsor": "bolt",
+          "retainer": 300,
+          "salary": 0,
+          "pts": 24,
+          "ptsTotal": 24,
+          "rank": 13,
+          "rankBefore": 19,
+          "dmg": 0,
+          "drvMom": 0,
+          "hype": 1,
+          "hypeWhy": ["5 spots over expected"],
+          "xp": 25,
+          "lvlUp": 0,
+          "wages": 0,
+          "crewXp": {
+            "Spotter": 23,
+            "Engineer": 13
+          },
+          "crewUp": [],
+          "rvWreck": false,
+          "rvPaid": false,
+          "paybacks": 0,
+          "inboxNew": 0,
+          "rvWeek": "grinder",
+          "objectives": [
+            {
+              "id": "clean",
+              "name": "No critical failures",
+              "ask": false,
+              "ok": true,
+              "pay": 300
+            },
+            {
+              "id": "mate",
+              "name": "Finish ahead of your teammate",
+              "ask": false,
+              "ok": true,
+              "pay": 200
+            },
+            {
+              "id": "gain5",
+              "name": "Finish 5+ spots ahead of where you started",
+              "ask": true,
+              "ok": true,
+              "pay": 600
+            }
+          ]
+        },
+        {
+          "season": 1,
+          "raceNo": 2,
+          "track": "bramble",
+          "trackName": "Bramble Hill Kart Club",
+          "start": 15,
+          "finish": 15,
+          "expected": 18,
+          "dnf": false,
+          "tier": "Strong",
+          "mul": 0.15,
+          "purse": 540,
+          "bonus": 180,
+          "total": 2320,
+          "plays": 62,
+          "succ": 46,
+          "crits": 0,
+          "bestChain": 3,
+          "calls": 5,
+          "callsWon": 3,
+          "penalty": null,
+          "lostPart": null,
+          "objE": 18,
+          "bestPos": 6,
+          "beatMate": true,
+          "beatRival": true,
+          "rival": "Jet Alvarez",
+          "objMet": 3,
+          "tierFrom": "Solid",
+          "sponsor": "bolt",
+          "retainer": 300,
+          "salary": 0,
+          "pts": 22,
+          "ptsTotal": 46,
+          "rank": 14,
+          "rankBefore": 13,
+          "dmg": 5,
+          "drvMom": 0,
+          "hype": 0,
+          "hypeWhy": [],
+          "xp": 25,
+          "lvlUp": 0,
+          "wages": 0,
+          "crewXp": {
+            "CrewChief": 10,
+            "Spotter": 10,
+            "Engineer": 7
+          },
+          "crewUp": [],
+          "rvWreck": false,
+          "rvPaid": false,
+          "paybacks": 0,
+          "inboxNew": 1,
+          "rvWeek": "hothead",
+          "objectives": [
+            {
+              "id": "top10",
+              "name": "Run in the top 10 at any point",
+              "ask": false,
+              "ok": true,
+              "pay": 300
+            },
+            {
+              "id": "rival",
+              "name": "Finish ahead of your rival (Jet Alvarez)",
+              "ask": false,
+              "ok": true,
+              "pay": 400
+            },
+            {
+              "id": "combo3",
+              "name": "Land a ×3 combo",
+              "ask": true,
+              "ok": true,
+              "pay": 600
+            }
+          ]
+        }
+      ],
+      "shop": {
+        "rolled": true,
+        "part": "low_spoiler",
+        "rerolls": 0
+      },
+      "deckFor": 1002,
+      "deckNote": null,
+      "reward": null,
+      "field": [
+        {
+          "id": 0,
+          "team": 0,
+          "rating": 9,
+          "num": 87,
+          "me": false,
+          "name": "Kenta Tanaka",
+          "trait": "Closer",
+          "stats": [8, 9, 8, 5, 8, 10, 10, 10],
+          "rec": [2, 2, 2, 2, 1],
+          "rv": null
+        },
+        {
+          "id": 1,
+          "team": 0,
+          "rating": 9,
+          "num": 68,
+          "me": false,
+          "name": "Luc Dubois",
+          "trait": "Rookie",
+          "stats": [10, 9, 10, 5, 6, 6, 7, 7],
+          "rec": [2, 0, 0, 2, 2],
+          "rv": null
+        },
+        {
+          "id": 2,
+          "team": 1,
+          "rating": 8,
+          "num": 35,
+          "me": false,
+          "name": "Shane Sullivan",
+          "trait": "Wall",
+          "stats": [8, 7, 9, 5, 7, 7, 7, 7],
+          "rec": [2, 0, 0, 0, 6],
+          "rv": null
+        },
+        {
+          "id": 3,
+          "team": 1,
+          "rating": 8,
+          "num": 66,
+          "me": false,
+          "name": "Wade Haskins",
+          "trait": "Wall",
+          "stats": [9, 9, 9, 4, 7, 5, 7, 5],
+          "rec": [2, 0, 0, 2, 3],
+          "rv": null
+        },
+        {
+          "id": 4,
+          "team": 2,
+          "rating": 8,
+          "num": 22,
+          "me": false,
+          "name": "Ivan Petrov",
+          "trait": "Veteran",
+          "stats": [8, 8, 7, 6, 9, 10, 9, 7],
+          "rec": [2, 0, 0, 2, 2],
+          "rv": null
+        },
+        {
+          "id": 5,
+          "team": 2,
+          "rating": 8,
+          "num": 62,
+          "me": false,
+          "name": "Ana Ruiz",
+          "trait": "Rookie",
+          "stats": [8, 7, 8, 5, 9, 9, 10, 9],
+          "rec": [2, 0, 0, 2, 5],
+          "rv": null
+        },
+        {
+          "id": 6,
+          "team": 3,
+          "rating": 7,
+          "num": 14,
+          "me": false,
+          "name": "Erik Lindqvist",
+          "trait": "Aggressive",
+          "stats": [9, 8, 8, 6, 6, 4, 4, 4],
+          "rec": [2, 0, 0, 0, 7],
+          "rv": null
+        },
+        {
+          "id": 7,
+          "team": 3,
+          "rating": 7,
+          "num": 10,
+          "me": false,
+          "name": "Brock Hollister",
+          "trait": "Rookie",
+          "stats": [8, 8, 7, 5, 4, 3, 4, 4],
+          "rec": [2, 0, 0, 0, 9],
+          "rv": "heir"
+        },
+        {
+          "id": 8,
+          "team": 4,
+          "rating": 6,
+          "num": 8,
+          "me": false,
+          "name": "Jace Whitaker",
+          "trait": "Wall",
+          "stats": [8, 6, 5, 5, 6, 6, 6, 6],
+          "rec": [2, 0, 0, 0, 9],
+          "rv": null
+        },
+        {
+          "id": 9,
+          "team": 4,
+          "rating": 6,
+          "num": 7,
+          "me": false,
+          "name": "Nina Valdez",
+          "trait": "Smooth",
+          "stats": [5, 8, 6, 4, 6, 5, 5, 7],
+          "rec": [2, 0, 0, 0, 8],
+          "rv": "prodigy"
+        },
+        {
+          "id": 10,
+          "team": 5,
+          "rating": 6,
+          "num": 46,
+          "me": false,
+          "name": "Kasey Kowalski",
+          "trait": "Rookie",
+          "stats": [5, 7, 7, 4, 7, 8, 8, 7],
+          "rec": [2, 0, 0, 0, 7],
+          "rv": null
+        },
+        {
+          "id": 11,
+          "team": 5,
+          "rating": 6,
+          "num": 65,
+          "me": false,
+          "name": "Femi Adeyemi",
+          "trait": "Veteran",
+          "stats": [6, 8, 6, 5, 5, 5, 7, 6],
+          "rec": [2, 0, 0, 0, 10],
+          "rv": null
+        },
+        {
+          "id": 12,
+          "team": 6,
+          "rating": 5,
+          "num": 15,
+          "me": false,
+          "name": "Tobi Okafor",
+          "trait": "Smooth",
+          "stats": [6, 6, 6, 4, 5, 5, 4, 3],
+          "rec": [2, 0, 0, 0, 12],
+          "rv": null
+        },
+        {
+          "id": 13,
+          "team": 6,
+          "rating": 5,
+          "num": 31,
+          "me": false,
+          "name": "Cal Bram",
+          "trait": "Closer",
+          "stats": [7, 5, 5, 5, 6, 6, 4, 6],
+          "rec": [2, 0, 0, 0, 11],
+          "rv": null
+        },
+        {
+          "id": 14,
+          "team": 7,
+          "rating": 4,
+          "num": 56,
+          "me": false,
+          "name": "Remy Moreau",
+          "trait": "Aggressive",
+          "stats": [5, 3, 4, 4, 5, 3, 3, 4],
+          "rec": [2, 0, 0, 0, 14],
+          "rv": null
+        },
+        {
+          "id": 15,
+          "team": 7,
+          "rating": 4,
+          "num": 88,
+          "me": false,
+          "name": "Skye Rennick",
+          "trait": "Drafter",
+          "stats": [4, 4, 3, 4, 4, 6, 4, 6],
+          "rec": [2, 0, 0, 0, 15],
+          "rv": "talker"
+        },
+        {
+          "id": 16,
+          "team": 8,
+          "rating": 3,
+          "num": 13,
+          "me": false,
+          "name": "Diego Reyes",
+          "trait": "Wall",
+          "stats": [2, 2, 3, 6, 2, 2, 3, 3],
+          "rec": [2, 0, 0, 0, 18],
+          "rv": null
+        },
+        {
+          "id": 17,
+          "team": 8,
+          "rating": 3,
+          "num": 42,
+          "me": false,
+          "name": "Tommy Kessler",
+          "trait": "Veteran",
+          "stats": [3, 4, 2, 6, 5, 3, 5, 4],
+          "rec": [2, 0, 0, 0, 16],
+          "rv": "grinder"
+        },
+        {
+          "id": 18,
+          "team": 9,
+          "rating": 3,
+          "num": 77,
+          "me": true,
+          "name": null,
+          "trait": "None",
+          "stats": null,
+          "rec": [2, 0, 0, 0, 13],
+          "rv": null
+        },
+        {
+          "id": 19,
+          "team": 9,
+          "rating": 3,
+          "num": 51,
+          "me": false,
+          "name": "Jet Alvarez",
+          "trait": "Aggressive",
+          "stats": [2, 3, 3, 6, 5, 5, 4, 6],
+          "rec": [2, 0, 0, 0, 17],
+          "rv": "hothead"
+        }
+      ],
+      "pts": {
+        "0": 80,
+        "1": 68,
+        "2": 62,
+        "3": 68,
+        "4": 68,
+        "5": 64,
+        "6": 59,
+        "7": 52,
+        "8": 54,
+        "9": 47,
+        "10": 57,
+        "11": 52,
+        "12": 48,
+        "13": 43,
+        "14": 44,
+        "15": 42,
+        "16": 36,
+        "17": 40,
+        "18": 46,
+        "19": 38
+      },
+      "contract": {
+        "per": 0,
+        "team": 9,
+        "series": "Kart",
+        "since": 1,
+        "clauses": []
+      },
+      "sponsor": {
+        "id": "bolt",
+        "per": 450,
+        "bonus": 1500,
+        "renew": false,
+        "since": 1,
+        "trust": 1
+      },
+      "sponsorOffers": null,
+      "objectives": [
+        {
+          "id": "gain5",
+          "ask": false
+        },
+        {
+          "id": "top15",
+          "ask": false
+        },
+        {
+          "id": "combo3",
+          "ask": true
+        }
+      ],
+      "rival": 15,
+      "past": [],
+      "review": null,
+      "offers": null,
+      "ladder": ["Kart"],
+      "calendar": ["pinek", "bramble", "hollow", "lake", "bramble", "lake"],
+      "qual": {
+        "season": 1,
+        "race": 2,
+        "track": "hollow",
+        "grid": [1, 0, 3, 4, 5, 2, 6, 7, 10, 8, 13, 11, 9, 12, 15, 18, 14, 17, 19, 16],
+        "times": [24.092, 24.16, 24.183, 24.198, 24.28, 24.399, 24.446, 24.492, 24.639, 24.662, 24.748, 24.754, 24.799, 24.881, 25.12, 25.221, 25.227, 25.285, 25.383, 25.567],
+        "pos": 16,
+        "time": 25.220909763234424,
+        "skip": false,
+        "card": null,
+        "avg": 1.351,
+        "best": 4,
+        "counts": [6, 7, 3, 0, 0]
+      },
+      "qualRunning": false,
+      "driver": {
+        "bg": "hero",
+        "attr": {
+          "Presence": 14,
+          "Wits": 12,
+          "Composure": 9,
+          "Savvy": 11,
+          "Rapport": 13,
+          "Grit": 15
+        },
+        "prof": ["Media", "Endure"],
+        "lvl": 2,
+        "xp": 60,
+        "pts": 0,
+        "hype": 3,
+        "fans": 49,
+        "respect": 35,
+        "img": [-2, 0],
+        "trail": [
+          [1, 1],
+          [0, 0],
+          [-1, 1],
+          [-2, 0]
+        ],
+        "log": [
+          {
+            "ev": "Reply to Kessler",
+            "opt": "Return the respect",
+            "skill": "Read",
+            "tier": "Mixed",
+            "txt": "8 +1 = 9 vs DC 10",
+            "s": 1,
+            "r": 2
+          },
+          {
+            "ev": "Sponsor dinner",
+            "opt": "Offer fan appearances",
+            "skill": "Fans",
+            "tier": "Crit",
+            "txt": "20 +2 = 22 vs DC 12",
+            "s": 1,
+            "r": 2
+          },
+          {
+            "ev": "Sponsor dinner",
+            "opt": "Stay till the last toast",
+            "skill": "Endure",
+            "tier": "Success",
+            "txt": "19 +4 = 23 vs DC 11",
+            "s": 1,
+            "r": 2
+          },
+          {
+            "ev": "Press scrum",
+            "opt": "Call your shot",
+            "skill": "Media",
+            "tier": "Success",
+            "txt": "17 +4 = 21 vs DC 14",
+            "s": 1,
+            "r": 1
+          }
+        ],
+        "nextMom": 0
+      },
+      "event": {
+        "id": "dinner",
+        "ri": 2,
+        "season": 1,
+        "after": 2,
+        "ctx": {
+          "ev": "dinner",
+          "track": "Bramble Hill Kart Club",
+          "trackId": "bramble",
+          "rival": "Jet Alvarez",
+          "fin": 15,
+          "start": 15,
+          "exp": 18,
+          "dmg": 5,
+          "dnf": false,
+          "top3": false,
+          "big": true,
+          "beatRival": true
+        },
+        "ceil": 900,
+        "revealed": false,
+        "advFor": -1,
+        "hist": [
+          {
+            "ri": 0,
+            "opt": "late",
+            "n": "Stay till the last toast",
+            "auto": false,
+            "tier": "Success",
+            "fx": {
+              "trust": 1
+            }
+          },
+          {
+            "ri": 1,
+            "opt": "appear",
+            "n": "Offer fan appearances",
+            "auto": false,
+            "tier": "Crit",
+            "fx": {
+              "fans": 6,
+              "hype": 1,
+              "per": 150
+            }
+          }
+        ],
+        "done": true,
+        "walked": false,
+        "cur": null
+      },
+      "eventsHeld": ["press", "dinner"],
+      "staff": [
+        {
+          "role": "CrewChief",
+          "name": "Wes Calloway",
+          "lvl": 3,
+          "xp": 10,
+          "trait": null,
+          "wage": 0,
+          "perks": [0, 0, 0],
+          "since": 1,
+          "kept": 0
+        },
+        {
+          "role": "Spotter",
+          "name": "Rita Okafor",
+          "lvl": 3,
+          "xp": 33,
+          "trait": null,
+          "wage": 0,
+          "perks": [0, 0, 0],
+          "since": 1,
+          "kept": 0
+        },
+        {
+          "role": "Engineer",
+          "name": "Cal Brennan",
+          "lvl": 3,
+          "xp": 20,
+          "trait": null,
+          "wage": 0,
+          "perks": [0, 0, 0],
+          "since": 1,
+          "kept": 0
+        },
+        {
+          "role": "PitCrew",
+          "name": "Lena Park",
+          "lvl": 3,
+          "xp": 0,
+          "trait": null,
+          "wage": 0,
+          "perks": [0, 0, 0],
+          "since": 1,
+          "kept": 0
+        }
+      ],
+      "hire": [],
+      "hireFor": -1,
+      "poach": null,
+      "poached": 0,
+      "class": {
+        "rng": 3014196202,
+        "drivers": [
+          {
+            "id": "prodigy",
+            "series": "Kart",
+            "team": 4,
+            "skill": 6,
+            "g": 0,
+            "rec": [1, 1, 0, 0, 0, 0, 0, 1],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "hothead",
+            "series": "Kart",
+            "team": 9,
+            "skill": 5,
+            "g": 0,
+            "rec": [2, 0, 0, 0, 0, 0, 0, 1],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "talker",
+            "series": "Kart",
+            "team": 7,
+            "skill": 5,
+            "g": 1,
+            "rec": [2, 0, 0, 0, 0, 0, 0, 1],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "heir",
+            "series": "Kart",
+            "team": 3,
+            "skill": 3,
+            "g": -0.5,
+            "rec": [0, 2, 0, 0, 0, 0, 0, 1],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "grinder",
+            "series": "Kart",
+            "team": 8,
+            "skill": 4,
+            "g": -3,
+            "rec": [2, 0, 0, 0, 0, 0, 0, 1],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "enforcer",
+            "series": "Late",
+            "team": 7,
+            "skill": 6,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "grudge",
+            "series": "Late",
+            "team": 6,
+            "skill": 6,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "local",
+            "series": "Late",
+            "team": 8,
+            "skill": 5,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "journey",
+            "series": "Late",
+            "team": 9,
+            "skill": 5,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "pro",
+            "series": "Stock",
+            "team": 1,
+            "skill": 8,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "wall",
+            "series": "Stock",
+            "team": 2,
+            "skill": 7,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          },
+          {
+            "id": "ice",
+            "series": "Stock",
+            "team": 4,
+            "skill": 8,
+            "g": 0,
+            "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+            "retired": false,
+            "hist": [],
+            "path": []
+          }
+        ],
+        "inbox": [
+          {
+            "id": "m1",
+            "rid": "grinder",
+            "kind": "respect",
+            "track": "Bramble Hill Kart Club",
+            "subj": "Good racing",
+            "body": "\"Hard and clean all day at Bramble Hill Kart Club. I'll give you the same.\"",
+            "season": 1,
+            "race": 1,
+            "g": -2,
+            "reply": "thanks",
+            "replyText": "It lands, just about. Grudge −1, now -3 (Respect).",
+            "tier": "Mixed",
+            "roll": "Read the Room: d20 8 +1 = 9 vs DC 10, Mixed"
+          }
+        ],
+        "msgN": 1,
+        "news": []
+      }
+    }
+  }
+}

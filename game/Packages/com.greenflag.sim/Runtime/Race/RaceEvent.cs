@@ -17,6 +17,8 @@ namespace GreenFlag.Sim
         AutoLift, AutoAlongside,
         // kart field (step 40): an AI bumper hits your rear bumper (your fairing takes it); an AI kart covers the inside from you
         KartBump, KartCover,
+        // rivals (step 43): a class driver's Grudge turns Hot, a Hot one gets to your bumper, payback
+        RivalHot, RivalBumper, Payback,
     }
 
     /// <summary>

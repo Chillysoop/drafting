@@ -29,6 +29,10 @@ namespace GreenFlag.Sim
         public CarStats Stats;
         /// <summary>Career record (step 37): starts, wins, wins this season, top 5s and best finish (99 = none yet).</summary>
         public int Starts, Wins, SeasonWins, Top5, Best = 99;
+        /// <summary>Step 43: the class driver in this seat (RivalBook id), or null for a field driver. Grudge is their Grudge
+        /// toward you, copied in for the race (the career keeps the real one).</summary>
+        public string Rival;
+        public double Grudge;
 
         public Entrant Clone() { var e = (Entrant)MemberwiseClone(); e.Stats = Stats?.Clone(); return e; }
     }

@@ -47,6 +47,8 @@ namespace GreenFlag.Sim
         /// <summary>Step 42: the premier stock series' track rules. Each kind of stock car track (superspeedway, intermediate,
         /// short track, road course) moves card reads and the race its own way (Race.Rules.cs). Off = the browser slice's stock races.</summary>
         public bool StockRules = true;
+        /// <summary>Step 43: class drivers race you by their Grudge (Race.Rivals.cs). A field without class drivers is unchanged.</summary>
+        public bool Rivals = true;
         /// <summary>Extra pace lost per point of tire wear on an intermediate, and pace per notch of aero on a road course.</summary>
         public double IntFalloff = 0.06, RoadAero = 0.002;
         public double LateCrossMe = 0.45, LateCrossAi = 0.004, LateCrossCd = 14, LateCrossWin = 0.6;

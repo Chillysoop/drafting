@@ -234,6 +234,7 @@ namespace GreenFlag.Sim
             if (Heat > 0 && (f == CardFamily.Pass || f == CardFamily.Risk)) R.A(-Heat * 3, $"Heat ×{Heat}", "heat");
             if ((f == CardFamily.Pass || f == CardFamily.Draft) && c.Ahead != null && c.Ahead.HasEffect(EffectKind.Block)) R.A(-22, "He is blocking", "block");
             DriverOdds(cd, c, R);
+            RivalOdds(cd, c, R);
             if (Bal.OddsAdj != 0) R.B(Bal.OddsAdj);
 
             var o = new Odds { Read = R.V, Sd = Math.Max(9, 21 - st.Consistency * 1.1), Mods = R.Mods };
@@ -573,6 +574,7 @@ namespace GreenFlag.Sim
                 if (rf > 0.005) { FocusMeter += rf; CardStats.FocusGain += rf; CardStats.RiskRefills++; } else rf = 0;
             }
             c.Card = cd;
+            RivalPlay(cd, tier, a.Target);
             cd.Effect(tier)?.Invoke(c);
             if (Bal.ChainDraw > 0)
             {

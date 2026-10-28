@@ -27,6 +27,10 @@ namespace GreenFlag.Sim
         /// <summary>The objective's text for an expected finish e (karts word the combo one differently).</summary>
         public Func<int, bool, string> Name;
         public Func<RaceReport, bool, bool> Test;
+        /// <summary>Drawn at random for a race (step 43: the rival's Warm and Hot objectives replace the rival one instead).</summary>
+        public bool Drawn = true;
+        /// <summary>Names this week's rival.</summary>
+        public bool Rival;
     }
 
     public enum GoalState { Open, On, Behind, Met, Missed }
@@ -153,8 +157,11 @@ namespace GreenFlag.Sim
             new ObjectiveDef { Id = "clean", Pay = 2000, Name = (e, k) => "No critical failures", Test = (r, k) => r.Crits == 0 },
             new ObjectiveDef { Id = "land4", Pay = 2000, Name = (e, k) => "Land 12 successful cards", Test = (r, k) => r.Succ >= 12 },
             new ObjectiveDef { Id = "mate", Pay = 1500, Name = (e, k) => "Finish ahead of your teammate", Test = (r, k) => r.BeatMate },
-            new ObjectiveDef { Id = "rival", Pay = 2500, Name = (e, k) => "Finish ahead of your rival", Test = (r, k) => r.BeatRival },
+            new ObjectiveDef { Id = "rival", Pay = 2500, Rival = true, Name = (e, k) => "Finish ahead of your rival", Test = (r, k) => r.BeatRival },
             new ObjectiveDef { Id = "combo3", Pay = 2500, Name = (e, k) => k ? "Land a ×3 combo" : "Land a ×4 combo", Test = (r, k) => r.BestChain >= (k ? 3 : 4) },
+            // step 43 (the slice's rclean and rsurv): the rival objective when this week's rival has a Grudge
+            new ObjectiveDef { Id = "rclean", Pay = 3000, Rival = true, Drawn = false, Name = (e, k) => "Beat your rival with no wreck between you", Test = (r, k) => r.BeatRival && !r.RvWreck },
+            new ObjectiveDef { Id = "rsurv", Pay = 3500, Rival = true, Drawn = false, Name = (e, k) => "Finish ahead of your rival and dodge the payback", Test = (r, k) => !r.Dnf && r.BeatRival && !r.RvPaid },
         };
 
         public static ObjectiveDef Objective(string id)

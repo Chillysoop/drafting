@@ -42,6 +42,7 @@ namespace GreenFlag.Sim
                 if (a.HasEffect(EffectKind.Block)) def += 35;
                 if (a.HasEffect(EffectKind.Hold)) def += 30;
                 if (a.IsMe) read += D.VsMe + (Heat >= 3 ? Heat * 4 : 0) + IdlePressure();
+                if (a.IsMe && IsRival(car)) { var lean = RivalAttack(car); if (lean == null) return; read += lean.Value; }
                 if (car.IsMe) read += D.Auto;
                 double sd = Math.Max(8, 16 - car.Stats.Consistency * 0.6) + (car.Trait == Trait.Rookie ? 4 : 0);
                 double raw = read + Rng.Gauss() * sd, roll = raw - def;
@@ -68,7 +69,7 @@ namespace GreenFlag.Sim
             if (!car.IsMe)
             {
                 var b = BehindOf(car);
-                if (b != null && b.IsMe && GapSec(car, b) < 0.6 && Rng.NextDouble() < D.AiBlock * 3 * (1 + Heat * 0.5))
+                if (b != null && b.IsMe && GapSec(car, b) < 0.6 && Rng.NextDouble() < D.AiBlock * 3 * (1 + Heat * 0.5) * RivalBlock(car))
                 {
                     BlockFor(car, 8);
                     Emit(RaceEventKind.Block, car, b);

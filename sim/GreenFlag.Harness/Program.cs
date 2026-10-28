@@ -26,6 +26,7 @@ namespace GreenFlag.Harness
     ///   lateseason [n] [seasons] [seed] [on|off]     step 41: late model races per track, persona and style, the tire strategy check,
     ///                                                then whole late model seasons through the menus (CI); off = the slice's field
     ///   stockseason [n] [seasons] [seed] [on|off]    step 42: premier stock races per track, persona and style, the best deck and setup
+    ///   classarc [n] [seed] [maxSeasons] [grudgeSeasons]  step 43: careers from karts until a kart rival is your stock car teammate or rival, then Grudge
     ///                                                on each kind of track, then whole premier seasons through the menus (CI);
     ///                                                off = the slice's rules (no track rules)
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
@@ -60,9 +61,10 @@ namespace GreenFlag.Harness
                     case "hud": return HudShots.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "hud.html"), int.Parse(Arg(args, 4, "6")));
                     case "kartseason": return KartSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
                     case "stockseason": return StockSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
+                    case "classarc": return ClassArc.Run(int.Parse(Arg(args, 1, "2")), uint.Parse(Arg(args, 2, "61")), int.Parse(Arg(args, 3, "6")), int.Parse(Arg(args, 4, "2")));
                     case "lateseason": return LateSeason.Run(int.Parse(Arg(args, 1, "10")), int.Parse(Arg(args, 2, "2")), uint.Parse(Arg(args, 3, "61")), Arg(args, 4, "on") != "off");
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n] | career [races] [persona] [seed] | menus [persona] [seed] [out.html] | kartseason [n] [seasons] [seed] [on|off] | lateseason [n] [seasons] [seed] [on|off] | stockseason [n] [seasons] [seed] [on|off]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n] | career [races] [persona] [seed] | menus [persona] [seed] [out.html] | kartseason [n] [seasons] [seed] [on|off] | lateseason [n] [seasons] [seed] [on|off] | stockseason [n] [seasons] [seed] [on|off] | classarc [n] [seed] [maxSeasons] [grudgeSeasons]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }

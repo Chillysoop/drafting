@@ -125,6 +125,11 @@ namespace GreenFlag.Harness
             Write("whisperer-late-models-race-4", MenuBot.Run(new CareerMenu { PickPersona = "whisperer", PickSeries = Series.Late, NewSeed = 23 }, 3));
             // step 42 (format 7): a premier stock career three races into the new calendar, Ridgeback road course next
             Write("bully-premier-race-4", MenuBot.Run(new CareerMenu { PickPersona = "bully", NewSeed = 24 }, 3));
+            // step 43 (format 8): a kart career promoted to late models with the class around it, a silly season behind it
+            // and rivals' messages waiting unanswered
+            var rv = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = 25 }, 8, null, new MenuBot { SkipRivals = true });
+            if (rv.Career.Unanswered == 0 || rv.Career.Series != Series.Late) throw new InvalidOperationException("no unanswered message in late models");
+            Write("brawler-late-models-rivals-inbox", rv);
             return 0;
         }
     }
