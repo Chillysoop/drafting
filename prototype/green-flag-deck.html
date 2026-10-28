@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Green Flag Deck</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -630,6 +631,7 @@ body.aiming.aimout .gauge .gplay{background:var(--panel3);color:var(--muted);ani
 #pitgame .pgc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:3px 0 0 3px;background:#8a96b0}
 #pitgame .pgc.tire::before{background:#e9b52f}#pitgame .pgc.fuel::before{background:#e5484d}#pitgame .pgc.any::before{background:#c9c9c9}#pitgame .pgc.su::before{background:#2a8bd7}#pitgame .pgc.adj::before{background:#a06bd6}
 #pitgame .pgc i{font-style:normal;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+#pitgame .pgc i{display:block;padding-right:40px}
 #pitgame .pgc b{font-family:var(--display);text-transform:uppercase;font-size:14px;line-height:1.05;padding-right:34px}
 #pitgame .pgc .pgc-o{position:absolute;right:7px;top:4px;font-family:var(--display);font-weight:800;font-size:18px}
 #pitgame .pgc .pgc-o.t{font-size:13px;color:#9fc7ff;top:6px}
@@ -3108,7 +3110,7 @@ function showPitBox(){
  k._shown=k.stage+k.mine;pitBoxTick();
 }
 function pitBoxTick(){const r=race,k=r&&r.caution;if(!k||k.done||r.phase!=='caution')return;if(k._shown!==k.stage+k.mine){showPitBox();return;}
- const e=$('#pb-eta');if(e)e.textContent=k.stage==='closed'?'Opens next time by':`Pit entry in ${Math.ceil(myEntryEta())} s`;}
+ const e=$('#pb-eta');if(e)e.textContent=k.stage==='closed'?'Pit road opens next time you come by':`Pit entry in ${Math.ceil(myEntryEta())} s`;}
 $('#pitbox').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-pit]');if(!b||!race||!race.caution||race.caution.done)return;race.caution.mine=b.dataset.pit;if(b.dataset.pit!=='stay')race.caution.lastPit=b.dataset.pit;if(TUT)TUT.flag='pit';showPitBox();renderPitMod(true);});
 $('#pitmod').addEventListener('pointerdown',e=>{pitModClick(e);});
 
@@ -3180,7 +3182,7 @@ function renderTitle(){
  const el=$('#title');
  el.innerHTML=`<div class="page-in">
   <div class="grid" style="gap:10px"><span class="eyebrow">Vertical slice · ${seasonLen()}-race season</span><h1>Green Flag <em>Deck</em></h1>
-  <p class="muted">A stock car race you drive with a hand of cards. The race runs on its own: 20 cars, 10 teams, tires, drafts, wrecks and cautions. Every time you reach the braking zone at the end of a straight, the race pauses and you draw cards (twice a lap, once at Millbrook). Every card shows its live odds. Sit back and the field will race you instead: play the right card at the right moment.</p></div>
+  <p class="muted">A racing career you drive with a hand of cards, from karts to late models to stock cars. The race runs on its own: 20 cars, 10 teams, tires, drafts and wrecks. Every time you reach a braking zone, the race pauses and you draw cards. Every card shows its live odds. Sit back and the field will race you instead: play the right card at the right moment.</p></div>
   ${(()=>{const sv=readSave();if(!sv)return '';const g=sv.G,n=Math.min(g.results.length+1,seasonLen(g));return `<div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Saved season</span><h2>${esc(g.name)} · ${esc(ARCH[g.arch]?ARCH[g.arch].n:g.arch)}</h2><p class="muted">${g.reward?`After race ${g.results.length}`:`Race ${n}`} of ${seasonLen(g)} · P${myRank(g)} in points with ${(g.pts||{})[g.cars.find(c=>c.isMe).id]||0} · ${money(g.money)} · saved ${savedAgo(sv.at)}${g.inRace?(g.stakes==='standard'?' · the race in progress starts over':' · the race in progress counts as a DNF ('+esc(STAKES[g.stakes].n)+')'):''}</p><div class="row"><button class="btn primary" id="t-cont" style="font-size:18px">Continue season</button><button class="btn small" id="t-del">Delete save</button></div></div>`;})()}
   <div class="panel grid" style="gap:10px"><h3>Driver name</h3><input id="t-name" value="${esc(titleSel.name)}" maxlength="18" style="background:var(--panel3);border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:4px;font:inherit;max-width:280px"></div>
   <div class="panel grid" style="gap:8px"><h3>Look <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· style test, roadmap step 11. Press L in a race to flip between them.</span></h3><div class="lookpick">${LOOK_ORDER.map(k=>`<button class="panel sel${LOOK===k?' on':''}" data-look="${k}"><b>${LOOKS[k].n}</b><small>${LOOKS[k].d}</small></button>`).join('')}</div></div>
@@ -3229,7 +3231,7 @@ function showGarage(){
   ${sel?`<div class="panel grid" id="g-spons" style="gap:10px;border-color:var(--amber)"><div class="grid" style="gap:2px"><span class="eyebrow">Season ${G.season||1} · sponsor offers</span><h3>Sign a sponsor for the season</h3><p class="muted" style="font-size:13px">One contract for the whole season: money every race, a season goal with a bonus, and one race objective of their choosing each week that pays ${ASK_MUL}×. Hit the goal and they renew with a raise. Miss it and they walk.</p></div><div class="grid g4">${sel.map(o=>sponsorCard(o,true)).join('')}</div></div>`:''}
   <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${seasonLen()} · ${esc(evName(G.raceIdx)||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
    ${sponsorStrip()}
-   <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish())}</div>
+   <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish(),DIFF[G.diff].purse*(1+INFO[G.info].bonus+STAKES[G.stakes].bonus)*(typeof econMul==='function'?econMul():1))}</div>
    <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor&&evClear()?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${evClear()?'':`<span style="color:var(--amber)">${esc(EVENTS[G.event.id].n)} first (above).</span>`}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
   ${typeof rivalGaragePanel==='function'?rivalGaragePanel():''}
   <div class="grid g2">
