@@ -9,8 +9,8 @@ namespace GreenFlag.Sim
     {
         static JsonValue Ints(IEnumerable<int> v) { var a = JsonValue.Arr(); foreach (var x in v) a.Add(JsonValue.Of((long)x)); return a; }
         static List<int> IntsFrom(JsonValue j) => j.Items.Select(x => x.Int()).ToList();
-        static JsonValue DealJson(SponsorDeal d) => d == null ? JsonValue.Null : JsonValue.Obj().Set("id", d.Id).Set("per", d.Per).Set("bonus", d.Bonus).Set("renew", d.Renew).Set("since", d.Since);
-        static SponsorDeal DealFrom(JsonValue j) => j.IsNull ? null : new SponsorDeal { Id = j["id"].Str(), Per = j["per"].Int(), Bonus = j["bonus"].Int(), Renew = j["renew"].Bool(), Since = j["since"].Int(1) };
+        static JsonValue DealJson(SponsorDeal d) => d == null ? JsonValue.Null : JsonValue.Obj().Set("id", d.Id).Set("per", d.Per).Set("bonus", d.Bonus).Set("renew", d.Renew).Set("since", d.Since).Set("trust", d.Trust);
+        static SponsorDeal DealFrom(JsonValue j) => j.IsNull ? null : new SponsorDeal { Id = j["id"].Str(), Per = j["per"].Int(), Bonus = j["bonus"].Int(), Renew = j["renew"].Bool(), Since = j["since"].Int(1), Trust = (int)SimMath.Clamp(j["trust"].Int(), -2, 2) };
 
         static JsonValue StatsJson(CarStats c) => JsonValue.Arr().Add(JsonValue.Of((long)c.Power)).Add(JsonValue.Of((long)c.Handling)).Add(JsonValue.Of((long)c.Aero)).Add(JsonValue.Of((long)c.Durability))
             .Add(JsonValue.Of((long)c.Racecraft)).Add(JsonValue.Of((long)c.Defense)).Add(JsonValue.Of((long)c.Consistency)).Add(JsonValue.Of((long)c.TireMgmt));
@@ -35,7 +35,7 @@ namespace GreenFlag.Sim
             var pts = JsonValue.Obj();
             foreach (var kv in Pts.OrderBy(kv => kv.Key)) pts.Set(kv.Key.ToString(System.Globalization.CultureInfo.InvariantCulture), kv.Value);
             j.Set("field", FieldJson(Field)).Set("pts", pts)
-                .Set("contract", JsonValue.Obj().Set("per", Contract.Per).Set("team", Contract.Team).Set("series", Contract.Series.ToString()).Set("since", Contract.Since))
+                .Set("contract", JsonValue.Obj().Set("per", Contract.Per).Set("team", Contract.Team).Set("series", Contract.Series.ToString()).Set("since", Contract.Since).Set("clauses", JsonValue.Of(Contract.Clauses)))
                 .Set("sponsor", DealJson(Sponsor));
             if (SponsorOffers == null) j.Set("sponsorOffers", JsonValue.Null);
             else { var a = JsonValue.Arr(); foreach (var d in SponsorOffers) a.Add(DealJson(d)); j.Set("sponsorOffers", a); }
@@ -58,7 +58,7 @@ namespace GreenFlag.Sim
             else
             {
                 var a = JsonValue.Arr();
-                foreach (var o in Offers) a.Add(JsonValue.Obj().Set("kind", o.Kind.ToString()).Set("series", o.Series.ToString()).Set("team", o.Team).Set("name", o.Name).Set("rating", o.Rating).Set("per", o.Per).Set("sign", o.Sign));
+                foreach (var o in Offers) a.Add(JsonValue.Obj().Set("kind", o.Kind.ToString()).Set("series", o.Series.ToString()).Set("team", o.Team).Set("name", o.Name).Set("rating", o.Rating).Set("per", o.Per).Set("sign", o.Sign).Set("neg", NegJson(o.Neg)));
                 j.Set("offers", a);
             }
             j.Set("ladder", JsonValue.Of(Ladder.Select(x => x.ToString())));
@@ -92,7 +92,7 @@ namespace GreenFlag.Sim
             Pts = new Dictionary<int, int>();
             foreach (var kv in j["pts"].Fields) Pts[int.Parse(kv.Key, System.Globalization.CultureInfo.InvariantCulture)] = kv.Value.Int();
             var k = j["contract"];
-            Contract = new Contract { Per = k["per"].Int(), Team = k["team"].Int(Teams.PlayerTeam), Series = k["series"].Enum(Series), Since = k["since"].Int(1) };
+            Contract = new Contract { Per = k["per"].Int(), Team = k["team"].Int(Teams.PlayerTeam), Series = k["series"].Enum(Series), Since = k["since"].Int(1), Clauses = k["clauses"].Strings() };
             Sponsor = DealFrom(j["sponsor"]);
             SponsorOffers = j["sponsorOffers"].IsNull ? null : j["sponsorOffers"].Items.Select(DealFrom).ToList();
             Objectives = j["objectives"].IsNull ? null : j["objectives"].Items.Select(o => new RaceObjective { Id = o["id"].Str(), Ask = o["ask"].Bool() }).ToList();
@@ -106,7 +106,7 @@ namespace GreenFlag.Sim
             };
             Offers = j["offers"].IsNull ? null : j["offers"].Items.Select(o => new ContractOffer
             {
-                Kind = o["kind"].Enum(OfferKind.Stay), Series = o["series"].Enum(Series.Stock), Team = o["team"].Int(), Name = o["name"].Str(""), Rating = o["rating"].Int(), Per = o["per"].Int(), Sign = o["sign"].Int(),
+                Kind = o["kind"].Enum(OfferKind.Stay), Series = o["series"].Enum(Series.Stock), Team = o["team"].Int(), Name = o["name"].Str(""), Rating = o["rating"].Int(), Per = o["per"].Int(), Sign = o["sign"].Int(), Neg = NegFrom(o["neg"]),
             }).ToList();
             Ladder = j["ladder"].Strings().Select(x => JsonValue.Of(x).Enum(Series.Stock)).ToList();
             var q = j["qual"];

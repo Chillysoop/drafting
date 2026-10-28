@@ -144,7 +144,7 @@ namespace GreenFlag.Sim
             CardRng.Shuffle(Pile);
             if (qualiCard != null) { int k = Pile.LastIndexOf(qualiCard); if (k >= 0) { Pile.RemoveAt(k); Discard.Add(qualiCard); } }
             CardStats.BestPos = Me.Start;
-            Momentum = (int)Loadout.PartSum(p => p.StartMom);
+            Momentum = (int)SimMath.Clamp(Loadout.PartSum(p => p.StartMom) + Loadout.DriverMom, 0, 5);
             NextDraw = 99999;
             if (Track.Kart) Tow = (int)Loadout.PartSum(p => p.StartTow);
             lastPos = Me.Start;

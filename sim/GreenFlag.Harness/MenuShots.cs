@@ -127,14 +127,33 @@ namespace GreenFlag.Harness
             if (R.Parts != null) m.Press("reward.part:" + R.Parts[0]);
             Shot("Reward screen after picking");
             m.Press("reward.go");
+            Shot("Garage before race 2: tonight's press scrum comes first (step 38)");
+            m.Press("ev.open");
+            Shot("Off-track event: every answer's whole d20 check, its odds and what each tier does");
+            var opt = m.Career.EventRound().Opts.First(o => !o.Auto);
+            m.Press("ev.opt:" + opt.Id);
+            Shot("The roll: both dice, the math, the result and what would have helped");
+            m.Press("ev.next");
+            m.Career.Driver.AddXp(100);
+            m.Press("drv");
+            Shot("Driver sheet with a level-up point to spend");
+            m.Press("drv.back");
             Shot("Garage before race 2");
             m.Press("quit");
             Shot("Title after Save and quit (two careers saved, Continue picks the newest)");
             m.Press("title.delete:2");
             Shot("Delete takes a second press");
             // the season wrap: a kart season of 6 races, then the season-end screen and a promotion
-            m = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = seed + 2 }, 6, null, new MenuBot { QualiSkill = "great" });
-            Shot("Season end: final standings, sponsor review and contract offers");
+            m = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = seed + 2 }, 5, null, new MenuBot { QualiSkill = "great" });
+            var sb2 = new MenuBot { QualiSkill = "great" };
+            for (int i = 0; i < 2000 && m.Screen != CareerScreen.Season; i++)
+            {
+                if (m.RaceWanted != null) { m.RaceFinished(MousePlayer.Play(new Race(m.TakeRace())).desk.Race); continue; }
+                sb2.Step(m);
+            }
+            Shot("Season end: final standings, sponsor review and contract offers, each with a Negotiate check");
+            m.Press("neg:0");
+            Shot("After negotiating the first offer (step 38)");
             int up = m.Career.Offers.FindIndex(o => o.Kind == OfferKind.Promote);
             m.Press("offer:" + Math.Max(0, up));
             Shot("Garage after signing (a promotion when one was offered): next season's sponsor offers");

@@ -16,7 +16,9 @@ namespace GreenFlag.View
     {
         /// <summary>Money it keeps in the bank after a purchase.</summary>
         public int Reserve = 3000;
-        public int Presses, Bought, PartsBought, Rerolls, Skips, QualiRuns, Contracts;
+        public int Presses, Bought, PartsBought, Rerolls, Skips, QualiRuns, Contracts, Checks, Negotiations, Points;
+        /// <summary>Skip every off-track event instead of answering (tests that only care about racing).</summary>
+        public bool SkipEvents;
         /// <summary>How well it qualifies: poor, avg, good, great; null skips qualifying.</summary>
         public string QualiSkill = "avg";
         public uint QualiSeed = 1;
@@ -43,6 +45,9 @@ namespace GreenFlag.View
             if (id == "part.buy") PartsBought++;
             if (id == "reward.skip") Skips++;
             if (id.StartsWith("offer:", StringComparison.Ordinal)) Contracts++;
+            if (id.StartsWith("ev.opt:", StringComparison.Ordinal)) Checks++;
+            if (id.StartsWith("neg:", StringComparison.Ordinal)) Negotiations++;
+            if (id.StartsWith("drv.up:", StringComparison.Ordinal)) Points++;
             return true;
         }
 
@@ -60,13 +65,37 @@ namespace GreenFlag.View
                     var o = c.Offers;
                     int i = o.FindIndex(x => x.Kind == OfferKind.Promote);
                     if (i < 0) i = o.FindIndex(x => x.Kind == OfferKind.Move);
-                    return "offer:" + Math.Max(0, i);
+                    i = Math.Max(0, i);
+                    // negotiate when better terms are at least as likely as worse ones
+                    if (o[i].Neg == null) { var b = c.NegBuild(o[i]); if (b.Pass >= b.Odds[(int)CheckTier.Fail] + b.Odds[(int)CheckTier.Fumble]) return "neg:" + i; }
+                    return "offer:" + i;
+                }
+                case CareerScreen.Event:
+                {
+                    var ev = c.Event;
+                    if (ev.Cur != null) return "ev.next";
+                    if (SkipEvents) return "ev.walk";
+                    // the answer most likely to pass (ties: the first)
+                    var r = c.EventRound();
+                    var best = r.Opts.Where(x => !x.Auto).Select(x => (x.Id, pass: c.CheckFor(x).Pass)).OrderByDescending(x => x.pass).FirstOrDefault();
+                    return "ev.opt:" + (best.Id ?? r.Opts[0].Id);
+                }
+                case CareerScreen.Driver:
+                {
+                    var d = c.Driver;
+                    if (d.Pts == 0) return "drv.back";
+                    // Savvy for contracts, then Grit for race day, then Composure
+                    foreach (var a in new[] { DAttr.Savvy, DAttr.Grit, DAttr.Composure, DAttr.Wits, DAttr.Presence, DAttr.Rapport })
+                        if (d.Score(a) < (a == DAttr.Savvy || a == DAttr.Grit ? 16 : DriverRules.AttrMax)) return "drv.up:" + a;
+                    return "drv.back";
                 }
                 case CareerScreen.DeckBuilder:
                     if (builtFor != Key(c)) { builtFor = Key(c); return "deck.auto"; }
                     return "deck.done";
                 case CareerScreen.Garage:
                 {
+                    if (c.Event != null && !c.Event.Done) return "ev.open";
+                    if (c.Driver.Pts > 0) return "drv";
                     if (c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0)
                         return "sponsor:" + c.SponsorOffers.OrderByDescending(d => d.Renew).ThenByDescending(d => d.Per).ThenBy(d => d.Id, StringComparer.Ordinal).First().Id;
                     var buy = p.Pressables().Where(i => i.Id.StartsWith("buy:", StringComparison.Ordinal))
@@ -132,7 +161,7 @@ namespace GreenFlag.View
             int done = 0;
             CareerMenu Reload(CareerMenu x)
             {
-                if (x.Career == null || x.Screen == CareerScreen.DeckBuilder || x.Screen == CareerScreen.Quali || x.Screen == CareerScreen.QualiRun || x.Screen == CareerScreen.QualiDone) return x;
+                if (x.Career == null || x.Screen == CareerScreen.DeckBuilder || x.Screen == CareerScreen.Driver || x.Screen == CareerScreen.Quali || x.Screen == CareerScreen.QualiRun || x.Screen == CareerScreen.QualiDone) return x;
                 x.Flush();
                 var n = new CareerMenu(x.Saves) { NewSeed = x.NewSeed, PickPersona = x.PickPersona, PickDiff = x.PickDiff, PickStakes = x.PickStakes, PickSlot = x.PickSlot };
                 if (!n.Load(x.Slot)) throw new InvalidOperationException("Reload failed: " + n.Toast);

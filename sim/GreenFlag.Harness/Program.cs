@@ -90,18 +90,33 @@ namespace GreenFlag.Harness
                     Console.WriteLine($"  season {c.Season} · {SeasonRules.SeriesName(c.Series)} · {c.TeamName} (rating {c.SeriesTeams[c.Team].Rating}, {c.Contract.Per:N0} a race) · sponsor {sp.Name} {c.Sponsor.Per:N0} a race, goal: {SeasonRules.Goal(sp.Goal).Name(c.SeasonLength)}");
                 }
             }
+            OffTrackEvent printed = null;
+            int reviewShown = 0;
+            void OffTrackLine()
+            {
+                var ev = m.Career?.Event;
+                if (ev == null || !ev.Done || ev == printed) return;
+                printed = ev;
+                var d = m.Career.Driver;
+                Console.WriteLine($"  off track after race {ev.After}: {ev.Def.Name} · " + (ev.Walked ? "skipped" : string.Join(" · ", ev.Hist.Select(h => h.Auto ? h.Name : $"{h.Name} {DriverRules.Name(h.Tier)} ({GreenFlag.View.CareerMenu.FxText(h.Fx, ev)})")))
+                    + $" · driver L{d.Lvl} Hype {d.Hype} fans {d.Fans} respect {d.Respect}{(m.Career.Sponsor != null ? $" trust {m.Career.Sponsor.Trust}" : "")} salary {m.Career.Contract.Per:N0}");
+            }
             for (int done = 0; done < races; done++)
             {
                 for (int i = 0; i < 1000 && m.RaceWanted == null; i++)
                 {
-                    if (m.Screen == GreenFlag.View.CareerScreen.Season && m.Career.Review != null)
+                    if (m.Screen == GreenFlag.View.CareerScreen.Season && m.Career.Review != null && reviewShown < m.Career.Review.Season)
                     {
+                        reviewShown = m.Career.Review.Season;
                         var rv = m.Career.Review;
                         var ch = rv.Champion;
                         Console.WriteLine($"  season {rv.Season} over: P{rv.Rank} with {rv.Pts} pts (champion {ch.Name}, {ch.Pts}){(rv.Sponsor != null ? $"; sponsor goal {(rv.Met ? "met, bonus " + rv.Bonus.ToString("N0") : "missed")} ({rv.Prog})" : "")}; offers: {string.Join(", ", m.Career.Offers.Select(o => $"{o.Kind} {o.Name} r{o.Rating} {o.Per:N0}"))}");
                     }
+                    int negs = bot.Negotiations;
                     if (!bot.Step(m)) break;
+                    if (bot.Negotiations > negs) { var o = m.Career.Offers.First(x => x.Neg != null); Console.WriteLine($"  negotiated with {o.Name}: d20 {o.Neg.Kept} {DriverRules.Sgn(o.Neg.Mod)} = {o.Neg.Total} vs DC {o.Neg.Dc}, {o.Neg.Txt} Now {o.Per:N0} a race, {o.Sign:N0} to sign"); }
                     Season();
+                    OffTrackLine();
                 }
                 if (m.RaceWanted == null) { Console.Error.WriteLine("the menus stalled on " + m.Screen); return 1; }
                 var (desk, _) = GreenFlag.View.MousePlayer.Play(new Race(m.TakeRace()));
@@ -118,6 +133,8 @@ namespace GreenFlag.Harness
             Console.WriteLine($"after {k.Results.Count} races: {k.Money:N0} in the bank, {k.Collection.Count} cards, parts {string.Join(", ", k.PartsOwned)}, upgrades bought {bot.Bought}, dealer parts {bot.PartsBought}, menu presses {bot.Presses}");
             Console.WriteLine($"car: power {k.Car.Power} handling {k.Car.Handling} aero {k.Car.Aero} durability {k.Car.Durability} racecraft {k.Car.Racecraft} defense {k.Car.Defense} consistency {k.Car.Consistency} tires {k.Car.TireMgmt}");
             Console.WriteLine($"average finish P{k.Results.Average(r => r.Finish):F1} vs expected P{k.Results.Average(r => r.Expected):F1}; tiers {string.Join(", ", k.Results.GroupBy(r => r.Tier).OrderBy(g => g.Key).Select(g => CareerRules.TierName(g.Key) + " " + g.Count()))}");
+            var dv = k.Driver;
+            Console.WriteLine($"driver: {dv.Background.Name} level {dv.Lvl} ({dv.Xp} XP), {string.Join(" ", Enum.GetValues(typeof(DAttr)).Cast<DAttr>().Select(x => DriverRules.AttrAbbr[(int)x] + " " + dv.Score(x)))}, image {(dv.Image != null ? DriverRules.Image(dv.Image).Name : "fresh face")} ({dv.ImgX},{dv.ImgY}), Hype {dv.Hype}, fans {dv.Fans}, respect {dv.Respect}; off-track checks {bot.Checks} (made {dv.Log.Count(l => l.Tier <= CheckTier.Success)} of the last {dv.Log.Count}), negotiations {bot.Negotiations}, points spent {bot.Points}");
             return bad == 0 ? 0 : 1;
         }
 

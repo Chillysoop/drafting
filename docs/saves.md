@@ -51,7 +51,7 @@ What is saved is listed in `Career.SaveCoverage`. `SaveTests.EveryCareerFieldIsC
 3. Run `dotnet run --project sim/GreenFlag.Harness -- savefixtures` to add this version's sample saves (`v<N>-*.json`) to `sim/GreenFlag.Sim.Tests/Saves`.
 4. **Never delete or regenerate older samples.** They are the saves real players have.
 
-`SaveTests.OldSavesLoadAndPlayOn` loads every sample in CI, migrates it, checks it loads into the menus and plays two more races, then saves it in the current format. Samples in the current format must also write back byte for byte, so a layout change without a version bump fails. `EveryFormatVersionHasSampleSaves` checks that each version has samples and a migration. The real chain has one step: format 1 to 2 (step 37) adds the season (`Career.MigrateV1`, see [season.md](season.md)); the `v1-*` samples load through it. `MigrationsRunInOrder` also tests the machinery with a made-up chain.
+`SaveTests.OldSavesLoadAndPlayOn` loads every sample in CI, migrates it, checks it loads into the menus and plays two more races, then saves it in the current format. Samples in the current format must also write back byte for byte, so a layout change without a version bump fails. `EveryFormatVersionHasSampleSaves` checks that each version has samples and a migration. The real chain has two steps: format 1 to 2 (step 37) adds the season (`Career.MigrateV1`, see [season.md](season.md)), and format 2 to 3 (step 38) adds the driver sheet, the pending off-track event and contract clauses (`Career.MigrateV2`, see [driver.md](driver.md)). The `v1-*` and `v2-*` samples load through them. `MigrationsRunInOrder` also tests the machinery with a made-up chain.
 
 ## Determinism
 

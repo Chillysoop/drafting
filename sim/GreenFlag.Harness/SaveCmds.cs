@@ -82,12 +82,31 @@ namespace GreenFlag.Harness
             Write("bully-ironman-part-pick", ToReward(new CareerMenu { PickPersona = "bully", NewSeed = 13, PickStakes = Stakes.Ironman }, 1, R => R.Parts != null));
             Write("gambler-hard-season-2", MenuBot.Run(new CareerMenu { PickPersona = "gambler", NewSeed = 14, PickDiff = DifficultyLevel.Hard }, 11));
             // step 37 (format 2): the season-end screen with contract offers waiting, a promoted career, and a qualified grid
-            Write("brawler-season-end-offers", MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = 15 }, 6));
+            CareerMenu ToSeasonEnd(CareerMenu m)
+            {
+                m = ToReward(m, 6);
+                var bot = new MenuBot();
+                for (int i = 0; i < 20 && m.Screen == CareerScreen.Reward; i++) bot.Step(m);
+                if (m.Screen != CareerScreen.Season) throw new InvalidOperationException("not at the season end");
+                return m;
+            }
+            Write("brawler-season-end-offers", ToSeasonEnd(new CareerMenu { PickPersona = "brawler", NewSeed = 15 }));
             Write("linepainter-promoted-late-models", MenuBot.Run(new CareerMenu { PickPersona = "linepainter", NewSeed = 16 }, 7, null, new MenuBot { QualiSkill = "great" }));
             var q = MenuBot.Run(new CareerMenu { PickPersona = "restart", NewSeed = 17 }, 2);
             var qb = new MenuBot();
             for (int i = 0; i < 100 && q.Screen != CareerScreen.QualiDone; i++) qb.Step(q);
             Write("restart-qualified", q);
+            // step 38 (format 3): an off-track event with a roll on the table, a driver with a point to spend, and a
+            // negotiated season-end offer
+            var e = MenuBot.Run(new CareerMenu { PickPersona = "drafter", NewSeed = 18 }, 1);
+            var eb = new MenuBot();
+            for (int i = 0; i < 100 && e.Screen != CareerScreen.Event; i++) eb.Step(e);
+            eb.Step(e);
+            if (e.Career.Event?.Cur == null) throw new InvalidOperationException("no roll on the table");
+            Write("drafter-event-roll-waiting", e);
+            var n = ToSeasonEnd(new CareerMenu { PickPersona = "linepainter", NewSeed = 19 });
+            if (!n.Press("neg:0")) throw new InvalidOperationException("couldn't negotiate");
+            Write("linepainter-season-end-negotiated", n);
             return 0;
         }
     }

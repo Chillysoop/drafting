@@ -66,6 +66,8 @@ namespace GreenFlag.Sim
         /// <summary>A renewal after a season goal was met (+20%).</summary>
         public bool Renew;
         public int Since;
+        /// <summary>How the sponsor feels about you, −2 to 2 (step 38: dinners, shoots and storms move it).</summary>
+        public int Trust;
         public SponsorDeal Clone() => (SponsorDeal)MemberwiseClone();
     }
 
@@ -78,6 +80,9 @@ namespace GreenFlag.Sim
         public Series Series;
         public int Team, Rating, Per, Sign;
         public string Name;
+        /// <summary>The Negotiate check on this offer (step 38), or null before you try.</summary>
+        public NegResult Neg;
+        public ContractOffer Clone() { var o = (ContractOffer)MemberwiseClone(); o.Neg = Neg?.Clone(); return o; }
     }
 
     /// <summary>Your team contract: salary every race. A new career starts at the series' smallest team with no salary.</summary>
@@ -85,7 +90,9 @@ namespace GreenFlag.Sim
     {
         public int Per, Team = Teams.PlayerTeam, Since = 1;
         public Series Series;
-        public Contract Clone() => (Contract)MemberwiseClone();
+        /// <summary>Extras written in at a contract talk (step 38): power, handling, crewChief.</summary>
+        public List<string> Clauses = new List<string>();
+        public Contract Clone() { var c = (Contract)MemberwiseClone(); c.Clauses = new List<string>(Clauses); return c; }
     }
 
     /// <summary>One line of the points table.</summary>

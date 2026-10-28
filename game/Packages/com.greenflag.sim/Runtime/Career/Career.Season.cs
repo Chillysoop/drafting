@@ -246,6 +246,7 @@ namespace GreenFlag.Sim
             Pts.Clear();
             foreach (var e in Field) e.SeasonWins = 0;
             Objectives = null; Qual = null; QualRunning = false;
+            Event = null; EventsHeld.Clear();
             return rv;
         }
 
@@ -315,7 +316,6 @@ namespace GreenFlag.Sim
         public string ContractNote;
 
         static int Clamp10(int v) => Math.Max(1, Math.Min(10, v));
-        static string MoneyText(int v) => "$" + v.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>The field for the next race: copies, with your car as the race will run it.</summary>
         List<Entrant> RaceField(CarStats mine)

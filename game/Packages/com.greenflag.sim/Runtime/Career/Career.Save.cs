@@ -15,9 +15,10 @@ namespace GreenFlag.Sim
         public static readonly IReadOnlyDictionary<Type, string[]> SaveCoverage = new Dictionary<Type, string[]>
         {
             [typeof(Career)] = new[] { "Name", "Persona", "Series", "Diff", "Info", "Stakes", "Survive", "Money", "Season", "RaceIdx", "Over", "Base", "Collection", "Deck", "PartsOwned", "Equipped", "Tune", "Hist", "TrackDecks", "Results", "ShopPart", "ShopRerolls", "shopRolled", "Reward", "DeckNote", "deckFor", "Seed", "Rng",
-                "Field", "Pts", "Contract", "Sponsor", "SponsorOffers", "Objectives", "RivalId", "Past", "Review", "Offers", "Ladder", "Qual", "QualRunning", "-ContractNote" },
+                "Field", "Pts", "Contract", "Sponsor", "SponsorOffers", "Objectives", "RivalId", "Past", "Review", "Offers", "Ladder", "Qual", "QualRunning", "-ContractNote",
+                "Driver", "Event", "EventsHeld" },
             // Deck, Parts and Tune on the career's base loadout are always empty or unused: Loadout() fills them from the career
-            [typeof(PlayerLoadout)] = new[] { "Car", "CrewChief", "Spotter", "Engineer", "PitCrew", "PitDeck", "Grit", "Wits", "Radio", "Crew", "-Deck", "-Parts", "-Tune" },
+            [typeof(PlayerLoadout)] = new[] { "Car", "CrewChief", "Spotter", "Engineer", "PitCrew", "PitDeck", "Grit", "Wits", "Radio", "Crew", "-Deck", "-Parts", "-Tune", "-DriverMom" },
             [typeof(CarStats)] = new[] { "Power", "Handling", "Aero", "Durability", "Racecraft", "Defense", "Consistency", "TireMgmt" },
             [typeof(Tune)] = new[] { "Hand", "Aero", "Focus" },
             [typeof(CrewPerks)] = new[] { "LaneCut", "Chance", "TireOdds", "FuelOdds", "PitHand", "Prep", "ReleaseWindow", "BodyMen", "Chief", "Spotter", "Engineer", "ChanceAll", "MomAll", "SoftAll", "Rate", "Reroll", "Xp" },
@@ -25,20 +26,33 @@ namespace GreenFlag.Sim
             [typeof(CardHistory)] = new[] { "Plays", "Succ" },
             // a finished race's top 10 and play log are only shown on its reward screen, so older results keep the summary
             [typeof(RaceReport)] = new[] { "Season", "RaceNo", "TrackId", "TrackName", "Start", "Finish", "Expected", "Dnf", "Tier", "Mul", "Purse", "Bonus", "Total", "Plays", "Succ", "Crits", "BestChain", "Calls", "CallsWon", "Order", "Log", "Penalty", "LostPart",
-                "ObjE", "BestPos", "BeatMate", "BeatRival", "Rival", "Objectives", "ObjMet", "TierFrom", "Sponsor", "Retainer", "Salary", "Pts", "PtsTotal", "Rank", "RankBefore" },
+                "ObjE", "BestPos", "BeatMate", "BeatRival", "Rival", "Objectives", "ObjMet", "TierFrom", "Sponsor", "Retainer", "Salary", "Pts", "PtsTotal", "Rank", "RankBefore",
+                "Dmg", "DrvMom", "Hype", "Xp", "LvlUp", "HypeWhy" },
             [typeof(FinishLine)] = new[] { "Pos", "Id", "Name", "Team", "IsMe", "Dnf" },
             [typeof(RewardOffer)] = new[] { "Res", "Cards", "CardRerolls", "Picked", "InDeck", "Parts", "PartRerolls", "PartPicked" },
             // step 37: the season. Your own entrant's Stats are your car (Base.Car) and aren't written twice.
             [typeof(Entrant)] = new[] { "Id", "Team", "TeamRating", "Number", "IsMe", "Name", "Trait", "Stats", "Starts", "Wins", "SeasonWins", "Top5", "Best" },
             [typeof(ObjectiveResult)] = new[] { "Id", "Name", "Ask", "Ok", "Pay" },
             [typeof(RaceObjective)] = new[] { "Id", "Ask" },
-            [typeof(SponsorDeal)] = new[] { "Id", "Per", "Bonus", "Renew", "Since" },
-            [typeof(Contract)] = new[] { "Per", "Team", "Since", "Series" },
-            [typeof(ContractOffer)] = new[] { "Kind", "Series", "Team", "Rating", "Per", "Sign", "Name" },
+            [typeof(SponsorDeal)] = new[] { "Id", "Per", "Bonus", "Renew", "Since", "Trust" },
+            [typeof(Contract)] = new[] { "Per", "Team", "Since", "Series", "Clauses" },
+            [typeof(ContractOffer)] = new[] { "Kind", "Series", "Team", "Rating", "Per", "Sign", "Name", "Neg" },
             [typeof(StandRow)] = new[] { "Pos", "Id", "Pts", "Wins", "Best", "Name", "Team", "IsMe" },
             [typeof(PastSeason)] = new[] { "Season", "Rank", "Pts", "Series", "Sponsor", "Met" },
             [typeof(SeasonReview)] = new[] { "Season", "Rank", "Pts", "Series", "Table", "Sponsor", "Goal", "Prog", "Met", "Bonus", "RenewPer", "RenewBonus" },
             [typeof(QualiResult)] = new[] { "Season", "RaceIdx", "Pos", "Best", "TrackId", "Card", "Grid", "Times", "Time", "Avg", "Skip", "Counts" },
+            // step 38: the driver. A rolled check keeps its dice and its lines; its sums, odds and tier are worked out again on load.
+            [typeof(Driver)] = new[] { "Bg", "Attr", "Prof", "Lvl", "Xp", "Pts", "Hype", "Fans", "Respect", "ImgX", "ImgY", "Trail", "Log", "NextMom" },
+            [typeof(CheckLog)] = new[] { "Ev", "Opt", "Txt", "Skill", "Tier", "Season", "Race" },
+            [typeof(OffTrackEvent)] = new[] { "Id", "Ri", "Season", "After", "Ctx", "Ceil", "Revealed", "AdvFor", "Hist", "Cur", "Done", "Walked" },
+            [typeof(CheckCtx)] = new[] { "Ev", "Track", "TrackId", "Rival", "Fin", "Start", "Exp", "Dmg", "Dnf", "Top3", "Big", "BeatRival" },
+            [typeof(EvHist)] = new[] { "Ri", "Opt", "Name", "Auto", "Tier", "Fx" },
+            [typeof(EvPending)] = new[] { "Opt", "Name", "Say", "Hit", "Miss", "TX", "TY", "Hype", "Rerolled", "B", "R", "R0", "Tiers", "Info", "-Xp" },
+            [typeof(CheckBuild)] = new[] { "Skill", "L", "Dcl", "Adv", "Dis", "BaseDc", "-Mod", "-Dc", "-Mode", "-Odds", "-Need" },
+            [typeof(CheckRoll)] = new[] { "A", "B", "-Kept", "-Other", "-Total", "-Tier" },
+            [typeof(ModLine)] = new[] { "V", "Src", "K" },
+            [typeof(OffFx)] = new[] { "Fans", "Respect", "Hype", "Money", "Trust", "Per", "Bonus", "Mom", "Sal", "Clause", "Adv", "Reveal" },
+            [typeof(NegResult)] = new[] { "Kept", "Other", "Mod", "Dc", "Total", "Tier", "Txt" },
         };
 
         public JsonValue ToJson()
@@ -66,6 +80,7 @@ namespace GreenFlag.Sim
                 .Set("deckFor", deckFor).Set("deckNote", DeckNote)
                 .Set("reward", Reward == null ? JsonValue.Null : RewardJson(Reward));
             SeasonToJson(j);
+            DriverToJson(j);
             return j;
         }
 
@@ -105,6 +120,7 @@ namespace GreenFlag.Sim
                     else c.Results.Add(c.Reward.Res);
                 }
                 c.SeasonFromJson(j);
+                c.DriverFromJson(j);
                 c.Check();
                 return c;
             }
@@ -188,7 +204,8 @@ namespace GreenFlag.Sim
                 .Set("penalty", r.Penalty).Set("lostPart", r.LostPart)
                 .Set("objE", r.ObjE).Set("bestPos", r.BestPos).Set("beatMate", r.BeatMate).Set("beatRival", r.BeatRival).Set("rival", r.Rival)
                 .Set("objMet", r.ObjMet).Set("tierFrom", r.TierFrom?.ToString()).Set("sponsor", r.Sponsor).Set("retainer", r.Retainer).Set("salary", r.Salary)
-                .Set("pts", r.Pts).Set("ptsTotal", r.PtsTotal).Set("rank", r.Rank).Set("rankBefore", r.RankBefore);
+                .Set("pts", r.Pts).Set("ptsTotal", r.PtsTotal).Set("rank", r.Rank).Set("rankBefore", r.RankBefore)
+                .Set("dmg", r.Dmg).Set("drvMom", r.DrvMom).Set("hype", r.Hype).Set("hypeWhy", JsonValue.Of(r.HypeWhy)).Set("xp", r.Xp).Set("lvlUp", r.LvlUp);
             var objs = JsonValue.Arr();
             foreach (var o in r.Objectives) objs.Add(JsonValue.Obj().Set("id", o.Id).Set("name", o.Name).Set("ask", o.Ask).Set("ok", o.Ok).Set("pay", o.Pay));
             j.Set("objectives", objs);
@@ -217,6 +234,7 @@ namespace GreenFlag.Sim
                 ObjE = j["objE"].Int(), BestPos = j["bestPos"].Int(99), BeatMate = j["beatMate"].Bool(), BeatRival = j["beatRival"].Bool(), Rival = j["rival"].Str(),
                 ObjMet = j["objMet"].Int(), TierFrom = j["tierFrom"].IsNull ? (RewardTier?)null : j["tierFrom"].Enum(RewardTier.Solid), Sponsor = j["sponsor"].Str(),
                 Retainer = j["retainer"].Int(), Salary = j["salary"].Int(), Pts = j["pts"].Int(), PtsTotal = j["ptsTotal"].Int(), Rank = j["rank"].Int(), RankBefore = j["rankBefore"].Int(),
+                Dmg = j["dmg"].Int(), DrvMom = j["drvMom"].Int(), Hype = j["hype"].Int(), HypeWhy = j["hypeWhy"].Strings(), Xp = j["xp"].Int(), LvlUp = j["lvlUp"].Int(),
             };
             foreach (var o in j["objectives"].Items)
                 r.Objectives.Add(new ObjectiveResult { Id = o["id"].Str(), Name = o["name"].Str(""), Ask = o["ask"].Bool(), Ok = o["ok"].Bool(), Pay = o["pay"].Int() });

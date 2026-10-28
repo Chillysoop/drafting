@@ -48,6 +48,12 @@ namespace GreenFlag.Sim
         public int Retainer, Salary;
         /// <summary>Points this race, your season total after it, and your points position before and after.</summary>
         public int Pts, PtsTotal, Rank, RankBefore;
+
+        // the driver (step 38)
+        /// <summary>Your car's damage at the flag, Momentum the driver brought to the green flag, Hype earned (and why),
+        /// XP for racing and the levels it reached.</summary>
+        public int Dmg, DrvMom, Hype, Xp, LvlUp;
+        public List<string> HypeWhy = new List<string>();
     }
 
     /// <summary>The reward screen's choices: a card for the collection (or $1,000), and a part after a strong run. Both reroll for money.</summary>
@@ -73,7 +79,7 @@ namespace GreenFlag.Sim
     /// pay out and roll rewards, so race, rewards, shop and the next race loop. Every roll comes from the career's own
     /// generator, so a career replays the same from its seed.
     /// The season around it (field, points, sponsors, objectives, qualifying, the season wrap) is in Career.Season.cs (step 37).
-    /// Not here yet: the driver sheet (38) and Crew HQ (39).
+    /// The driver sheet and off-track events are in Career.Driver.cs (step 38). Not here yet: Crew HQ (39).
     /// </summary>
     public sealed partial class Career
     {
@@ -120,8 +126,8 @@ namespace GreenFlag.Sim
         public int RerollCost(int rerolls) => CareerRules.RerollCost(Diff, rerolls);
 
         /// <summary>A new career for a persona: its deck (which is also the whole collection), its part fitted, its stat bonus,
-        /// tune and driver, and $6,000. A kart persona starts in karts.</summary>
-        public static Career New(string persona, DifficultyLevel diff = DifficultyLevel.Normal, Stakes stakes = Stakes.Standard, uint seed = 1, string name = "Rookie", InfoLevel info = InfoLevel.Full)
+        /// tune and driver, and $6,000. A kart persona starts in karts. The driver's background defaults to the persona's.</summary>
+        public static Career New(string persona, DifficultyLevel diff = DifficultyLevel.Normal, Stakes stakes = Stakes.Standard, uint seed = 1, string name = "Rookie", InfoLevel info = InfoLevel.Full, string background = null)
         {
             var p = Personas.Get(persona);
             var l = PlayerLoadout.ForPersona(persona);
@@ -134,6 +140,8 @@ namespace GreenFlag.Sim
             c.Collection.AddRange(l.Deck);
             c.AddPart(p.Part);
             l.Deck = new List<string>(); l.Parts = new List<string>();
+            c.Driver = Driver.New(background ?? DriverRules.BgFor(persona));
+            c.SyncDriverStats();
             c.Contract.Series = c.Series;
             c.Ladder.Add(c.Series);
             c.BuildField();
@@ -165,6 +173,7 @@ namespace GreenFlag.Sim
         public bool DeckOk(TrackDef t = null) => DeckRules.Ok(this, t ?? NextTrack);
         /// <summary>Why "Go racing" is off, or null.</summary>
         public string CantRace => Over ? "The run is over" : Reward != null ? "Finish the reward screen first" : Offers != null ? "Sign a contract for next season first"
+            : Event != null && !Event.Done ? $"Finish tonight's {Event.Def.Name.ToLowerInvariant()} first, or skip it"
             : Sponsor == null ? "Sign a sponsor for the season first" : !DeckOk() ? $"Your race deck breaks a rule for {DeckRules.ShortName(NextTrack)}" : null;
 
         /// <summary>The loadout the next race uses: your car and crew with the race deck, the fitted parts and the tune.</summary>
@@ -174,6 +183,9 @@ namespace GreenFlag.Sim
             l.Deck = new List<string>(Deck);
             l.Parts = Equipped.Values.Where(x => x != null).ToList();
             l.Tune = Tune.Clone();
+            l.Grit = Driver.Score(DAttr.Grit);
+            l.Wits = Driver.Score(DAttr.Wits);
+            l.DriverMom = Driver.NextMom;
             return l;
         }
 
@@ -275,8 +287,8 @@ namespace GreenFlag.Sim
 
         // ------------------------------------------------------------------ after the race
 
-        /// <summary>Pays out a finished race and puts up the reward screen (the slice's endRace without objectives, sponsor,
-        /// salary, Hype and points, which come with steps 37 to 39).</summary>
+        /// <summary>Pays out a finished race and puts up the reward screen (the slice's endRace): purse, bonus, the season's
+        /// objectives, sponsor money, salary and points (step 37), and the driver's XP and Hype (step 38).</summary>
         public RaceReport FinishRace(Race race)
         {
             if (!race.Done) throw new InvalidOperationException("The race isn't over");
@@ -311,6 +323,7 @@ namespace GreenFlag.Sim
                 h.Succ += kv.Value[(int)Tier.Success] + kv.Value[(int)Tier.CritSuccess];
             }
             ScoreSeason(race, res);
+            DriverAfterRace(race, res);
             Money += res.Total;
             Results.Add(res);
             ApplyStakes(res);
@@ -394,6 +407,7 @@ namespace GreenFlag.Sim
             Qual = null;
             RaceIdx++;
             if (RaceIdx >= SeasonLength) WrapSeason();
+            else RollEvent();
             shopRolled = false; ShopPart = null; ShopRerolls = 0;
             EnterGarage();
         }
@@ -457,8 +471,11 @@ namespace GreenFlag.Sim
             c.SponsorOffers = SponsorOffers?.Select(o => o.Clone()).ToList();
             c.Objectives = Objectives?.ToList();
             c.Past = new List<PastSeason>(Past);
-            c.Offers = Offers?.ToList();
             c.Ladder = new List<Series>(Ladder);
+            c.Offers = Offers?.Select(o => o.Clone()).ToList();
+            c.Driver = Driver.Clone();
+            c.Event = Event == null ? null : EventFrom(EventJson(Event));
+            c.EventsHeld = new List<string>(EventsHeld);
             return c;
         }
 

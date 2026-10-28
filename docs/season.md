@@ -14,12 +14,12 @@ A full season now plays start to finish through the career menus: sign a sponsor
 - **Garage**: next race (expected finish, points, team), sponsor (offers until you sign; you can't race without one), this race's objectives with their pay, standings top 10 and you.
 - **Qualifying**: pick a qualifying card or skip; the run (`QualiHud`: the real track outline from `QualiPanel`, the brake bar, the prompt, marks, chain, Focus, lap times, BRAKE held with the mouse, Space/Enter or the controller's A; Esc or B gives up); the grid.
 - **Reward**: payout rows for the retainer, salary and objectives, points and rank, the objectives met.
-- **Season end**: final standings, results, the sponsor review, and the contract offers. Contract talks (a d20 Negotiate check) are step 38; for now offers sign at their listed terms.
+- **Season end**: final standings, results, the sponsor review, and the contract offers. Each offer can be talked up once with a d20 Negotiate check (step 38, see [driver.md](driver.md)) before you sign.
 
 ## Not in this step
 
 - **No playoffs.** The slice has a straight points title per series and so does this; a playoff format waits for the Grand Slam endgame (step 42). Board Q118.
-- Negotiation, XP and Hype (step 38); Crew HQ wages (step 39); the off-season d20 events (step 38).
+- Crew HQ wages (step 39). Negotiation, XP, Hype and off-track events are in since step 38 ([driver.md](driver.md)).
 
 ## Checks
 

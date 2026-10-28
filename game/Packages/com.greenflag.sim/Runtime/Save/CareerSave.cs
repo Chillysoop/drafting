@@ -8,11 +8,11 @@ namespace GreenFlag.Sim
     /// the race on the reward screen, so Retry this race still works after a reload.</summary>
     public sealed class SaveGame
     {
-        public const string Garage = "garage", Reward = "reward", Over = "over";
+        public const string Garage = "garage", Reward = "reward", Over = "over", Event = "event";
 
         public Career Career;
-        /// <summary>Where the career picks up: Garage, Reward or Over. A save made at Go racing is a Garage save, so quitting
-        /// mid-race restarts that race on every stakes setting (board Q48).</summary>
+        /// <summary>Where the career picks up: Garage, Reward, Over or Event (tonight's off-track event, step 38). A save made
+        /// at Go racing is a Garage save, so quitting mid-race restarts that race on every stakes setting (board Q48).</summary>
         public string Screen = Garage;
         public Career Retry;
         public uint RetrySeed;
@@ -48,7 +48,7 @@ namespace GreenFlag.Sim
     {
         public const string Format = "green-flag-deck-career";
         /// <summary>The format this build writes. Bump it whenever the JSON layout changes, and add a migration.</summary>
-        public const int Version = 2;
+        public const int Version = 3;
 
         /// <summary>Version n to n + 1, in order.</summary>
         public static readonly IReadOnlyList<SaveMigration> Migrations = new SaveMigration[]
@@ -57,6 +57,11 @@ namespace GreenFlag.Sim
             {
                 From = 1, What = "Step 37: the season (field, points, sponsor, contract, qualifying)",
                 Up = root => { foreach (var c in Careers(root)) Career.MigrateV1(c); return root; },
+            },
+            new SaveMigration
+            {
+                From = 2, What = "Step 38: the driver sheet and off-track events",
+                Up = root => { foreach (var c in Careers(root)) Career.MigrateV2(c); return root; },
             },
         };
 
@@ -97,8 +102,9 @@ namespace GreenFlag.Sim
                 Screen = root["screen"].Str(SaveGame.Garage),
                 Career = Career.FromJson(root["career"]),
             };
-            if (g.Screen != SaveGame.Garage && g.Screen != SaveGame.Reward && g.Screen != SaveGame.Over) throw new FormatException($"Save file: unknown screen {g.Screen}");
+            if (g.Screen != SaveGame.Garage && g.Screen != SaveGame.Reward && g.Screen != SaveGame.Over && g.Screen != SaveGame.Event) throw new FormatException($"Save file: unknown screen {g.Screen}");
             if (g.Screen == SaveGame.Reward && g.Career.Reward == null) g.Screen = SaveGame.Garage;
+            if (g.Screen == SaveGame.Event && (g.Career.Event == null || g.Career.Event.Done)) g.Screen = SaveGame.Garage;
             if (DateTime.TryParse(root["savedAt"].Str(""), inv, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var at)) g.SavedAt = at;
             var r = root["retry"];
             if (!r.IsNull) { g.Retry = Career.FromJson(r["career"]); g.RetrySeed = r["seed"].UInt(); }

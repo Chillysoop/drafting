@@ -114,6 +114,8 @@ namespace GreenFlag.Sim
         /// <summary>Crew radio calls on (the slice always has them; tests and old harness runs can turn them off).</summary>
         public bool Radio = true;
         public CrewPerks Crew = new CrewPerks();
+        /// <summary>Momentum at the green flag that the driver promised off track (step 38), on top of the parts'.</summary>
+        public int DriverMom;
 
         public int PitSkill => PitCrew > 0 ? PitCrew : CrewChief;
 

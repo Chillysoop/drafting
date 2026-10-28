@@ -7,8 +7,8 @@ using GreenFlag.Sim;
 namespace GreenFlag.View
 {
     /// <summary>The career's screens. Qualifying (step 37) is three: pick a card, the timed run, the grid. Season is the
-    /// season-end review with its contract offers.</summary>
-    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season }
+    /// season-end review with its contract offers. Event is tonight's off-track event and Driver the driver sheet (step 38).</summary>
+    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season, Event, Driver }
 
     /// <summary>What a menu line is: plain text, a label and value row, a button, a small toggle chip, a card or part tile.</summary>
     public enum MenuKind { Text, Row, Button, Chip, Card, Part }
@@ -84,7 +84,7 @@ namespace GreenFlag.View
     /// Page() and calls Press(id) for clicks, Enter or the A button; MenuBot drives the same buttons in tests and the harness.
     /// When you press Go racing, RaceWanted holds the race to run; hand the finished race back with RaceFinished.
     /// </summary>
-    public sealed class CareerMenu
+    public sealed partial class CareerMenu
     {
         public Career Career { get; private set; }
         public CareerScreen Screen { get; private set; } = CareerScreen.Title;
@@ -98,6 +98,8 @@ namespace GreenFlag.View
 
         // the title screen's picks
         public string PickPersona = "drafter";
+        /// <summary>The driver background (null = the persona's own).</summary>
+        public string PickBg;
         public DifficultyLevel PickDiff = DifficultyLevel.Normal;
         public Stakes PickStakes = Stakes.Standard;
         public uint NewSeed = 1;
@@ -145,7 +147,7 @@ namespace GreenFlag.View
         public SaveGame Snapshot() => new SaveGame
         {
             Career = Career,
-            Screen = Screen == CareerScreen.Reward ? SaveGame.Reward : Screen == CareerScreen.Over || (Career != null && Career.Over && Career.Reward == null) ? SaveGame.Over : SaveGame.Garage,
+            Screen = Screen == CareerScreen.Reward ? SaveGame.Reward : Screen == CareerScreen.Event ? SaveGame.Event : Screen == CareerScreen.Over || (Career != null && Career.Over && Career.Reward == null) ? SaveGame.Over : SaveGame.Garage,
             Retry = Screen == CareerScreen.Reward && Career.CanRetry ? snap : null,
             RetrySeed = snapSeed,
         };
@@ -173,9 +175,9 @@ namespace GreenFlag.View
             if (info.State != SlotState.Ok) { Toast = info.State == SlotState.Empty ? $"Slot {slot} is empty." : info.Error; return false; }
             var g = info.Game;
             Career = g.Career; Slot = slot; snap = g.Retry; snapSeed = g.RetrySeed; RaceWanted = null; Dirty = false;
-            Screen = g.Screen == SaveGame.Reward ? CareerScreen.Reward : g.Screen == SaveGame.Over ? CareerScreen.Over : CareerScreen.Garage;
+            Screen = g.Screen == SaveGame.Reward ? CareerScreen.Reward : g.Screen == SaveGame.Over ? CareerScreen.Over : g.Screen == SaveGame.Event ? CareerScreen.Event : CareerScreen.Garage;
             Quali = null; QualiCard = null;
-            if (Screen == CareerScreen.Garage) { Career.EnterGarage(); if (Career.Offers != null) Screen = CareerScreen.Season; }
+            if (Screen == CareerScreen.Garage || Screen == CareerScreen.Event) { Career.EnterGarage(); if (Career.Offers != null) Screen = CareerScreen.Season; }
             Toast = info.FromBackup ? $"Slot {slot}'s newest save was damaged, so this is the one before it." : g.LoadedFrom < CareerSave.Version ? $"Save from an older version, updated." : null;
             return true;
         }
@@ -210,7 +212,8 @@ namespace GreenFlag.View
         {
             if (Career == null || Screen == CareerScreen.Title || id.StartsWith("title.", StringComparison.Ordinal)) return;
             bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward || id.StartsWith("quali.", StringComparison.Ordinal)
-                || id.StartsWith("offer:", StringComparison.Ordinal) || id.StartsWith("sponsor:", StringComparison.Ordinal);
+                || id.StartsWith("offer:", StringComparison.Ordinal) || id.StartsWith("sponsor:", StringComparison.Ordinal)
+                || id.StartsWith("ev.", StringComparison.Ordinal) || id.StartsWith("neg:", StringComparison.Ordinal) || id.StartsWith("drv.up:", StringComparison.Ordinal);
             if (now) SaveNow();
             else Dirty = true;
         }
@@ -226,13 +229,14 @@ namespace GreenFlag.View
             {
                 // title
                 case "title.persona": PickPersona = arg; return true;
+                case "title.bg": PickBg = arg == "auto" ? null : arg; return true;
                 case "title.diff": PickDiff = (DifficultyLevel)Enum.Parse(typeof(DifficultyLevel), arg); return true;
                 case "title.stakes": PickStakes = (Stakes)Enum.Parse(typeof(Stakes), arg); return true;
                 case "title.start":
                 {
                     var into = Saves != null ? Slots.FirstOrDefault(i => i.Slot == PickSlot) : null;
                     if (into != null && into.Used && !again) { armed = id; Toast = $"Slot {PickSlot} already has a career. Press Start career again to replace it."; return true; }
-                    Career = Career.New(PickPersona, PickDiff, PickStakes, NewSeed);
+                    Career = Career.New(PickPersona, PickDiff, PickStakes, NewSeed, background: PickBg);
                     Career.EnterGarage();
                     Screen = CareerScreen.Garage;
                     snap = null;
@@ -325,7 +329,7 @@ namespace GreenFlag.View
                     return true;
                 case "over.new": Career = null; Slot = 0; snap = null; Screen = CareerScreen.Title; RefreshSlots(); return true;
             }
-            return false;
+            return DoDriver(key, arg);
         }
 
         /// <summary>Advances the qualifying run by dt seconds with brake held or not (Space, A or the BRAKE button). When the
@@ -367,6 +371,8 @@ namespace GreenFlag.View
                 case CareerScreen.QualiRun: return QualiRunPage();
                 case CareerScreen.QualiDone: return QualiDonePage();
                 case CareerScreen.Season: return SeasonPage();
+                case CareerScreen.Event: return EventPage();
+                case CareerScreen.Driver: return DriverPage();
                 default: return TitlePage();
             }
         }
@@ -418,6 +424,7 @@ namespace GreenFlag.View
                 var part = Parts.Get(pr.Part);
                 (pr.Kart ? kart : stock).Add(new MenuItem { Kind = MenuKind.Chip, Id = "title.persona:" + pr.Id, Label = pr.Name, Value = pr.Tag, On = PickPersona == pr.Id, Note = $"Part: {part.Name}. {part.Text} Tune: {TuneLabel(pr.Tune, pr.Kart)}. Cards: {string.Join(", ", pr.Add.Select(id => CardBook.Get(id).Name))}." });
             }
+            BackgroundSection(p);
             var d = p.Section("AI skill", 0, "Harder fields pay less and cost more to reroll.");
             foreach (DifficultyLevel l in Enum.GetValues(typeof(DifficultyLevel)))
                 d.Chip("title.diff:" + l, l.ToString(), PickDiff == l, note: $"Purse ×{Difficulty.For(l).Purse.ToString("0.##", inv)} · rerolls from {Money(CareerRules.RerollBase(l))}");
@@ -497,11 +504,13 @@ namespace GreenFlag.View
             nx.Row("Points", c.SeasonResults.Count > 0 ? $"P{c.MyRank()} · {c.MyPoints} pts" : "Season starts here");
             nx.Row("Team", $"{c.TeamName} · rating {c.SeriesTeams[c.Team].Rating}{(c.Contract.Per > 0 ? " · " + Money(c.Contract.Per) + " a race" : " · no salary yet")}");
             if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
+            EventPanel(p);
             SponsorSection(p);
             ObjectivesSection(p);
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "go", Label = "Go racing", Enabled = why == null, Primary = true, Note = why });
-            p.Default = why == null ? "go" : c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0 ? "sponsor:" + c.SponsorOffers[0].Id : "deck";
+            p.Default = why == null ? "go" : c.Event != null && !c.Event.Done ? "ev.open" : c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0 ? "sponsor:" + c.SponsorOffers[0].Id : "deck";
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "deck", Label = "Build race deck" });
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "drv", Label = "Driver sheet" + (c.Driver.Pts > 0 ? $" · {c.Driver.Pts} point{(c.Driver.Pts > 1 ? "s" : "")} to spend" : ""), Note = "Attributes, skills, image, Hype and recent checks" });
             if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit", Note = $"Saves to slot {Slot} and goes back to the title screen" });
 
             TuneSection(p, t, 0);
@@ -634,6 +643,8 @@ namespace GreenFlag.View
             if (res.Penalty == "survive") pay.Text($"Survive token used: the DNF would have ended your run. It still cost {Money(CareerRules.DnfFine)}{(res.LostPart != null ? " and your spare " + Parts.Get(res.LostPart).Name : "")}. No tokens left.", Amber);
             else if (res.Penalty == "ironman") pay.Text($"Ironman penalty: the DNF cost {Money(CareerRules.DnfFine)}{(res.LostPart != null ? " and your spare " + Parts.Get(res.LostPart).Name : "")}.", Red);
             else if (res.Penalty == "dead") pay.Text("Permadeath: the DNF ends the run.", Red);
+
+            DriverRewardRows(pay, res);
 
             if (res.Objectives.Count > 0)
             {
@@ -843,8 +854,9 @@ namespace GreenFlag.View
                 if (o.Kind == OfferKind.Promote) what += o.Series == Series.Late ? " Late models: pit stops and cautions, an 11 to 15 card deck." : " Stock cars: the full schedule, 12 to 16 cards.";
                 string kind = o.Kind == OfferKind.Stay ? "Stay" : o.Kind == OfferKind.Move ? "Better team" : "Step up · " + SeasonRules.SeriesName(o.Series);
                 off.Add(new MenuItem { Kind = MenuKind.Part, Id = "offer:" + i.ToString(inv), Label = $"{kind}: {o.Name}", Value = $"rating {o.Rating} · {Money(o.Per)} a race{(o.Sign > 0 ? " · " + Money(o.Sign) + " to sign" : "")}", Note = what, Color = o.Kind == OfferKind.Promote ? Amber : o.Kind == OfferKind.Move ? Green : (Rgb?)null });
+                NegRows(off, o, i);
             }
-            off.Text("Contract talks (a d20 Negotiate check) come with the driver sheet in step 38. For now each offer signs at its listed terms.", Dim);
+            off.Text("Negotiate before you sign: one d20 Negotiate (Savvy) check per offer. A success raises the salary and signing bonus, a failure lowers them, a mixed result changes nothing.", Dim);
             int best = c.Offers.FindIndex(o => o.Kind == OfferKind.Promote);
             if (best < 0) best = c.Offers.FindIndex(o => o.Kind == OfferKind.Move);
             p.Default = "offer:" + Math.Max(0, best).ToString(inv);
@@ -897,7 +909,9 @@ namespace GreenFlag.View
             return cur != null && m.Press(cur.Id);
         }
 
-        /// <summary>B / Esc: leave the deck builder if the deck is legal, or qualifying's card pick for the garage.</summary>
-        public bool Back(CareerMenu m) => m.Screen == CareerScreen.DeckBuilder ? m.Press("deck.done") : m.Screen == CareerScreen.Quali && m.Press("quali.back");
+        /// <summary>B / Esc: leave the deck builder if the deck is legal, the driver sheet, the event (it waits in the garage),
+        /// or qualifying's card pick for the garage.</summary>
+        public bool Back(CareerMenu m) => m.Screen == CareerScreen.DeckBuilder ? m.Press("deck.done") : m.Screen == CareerScreen.Driver ? m.Press("drv.back")
+            : m.Screen == CareerScreen.Event ? m.Press("ev.back") : m.Screen == CareerScreen.Quali && m.Press("quali.back");
     }
 }
