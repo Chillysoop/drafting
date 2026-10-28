@@ -16,9 +16,9 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const click=async sel=>{await p.click(sel);await p.waitForTimeout(80);};
   const noScroll=async id=>p.evaluate(id=>document.documentElement.scrollWidth>innerWidth+1||document.getElementById(id).scrollWidth>document.getElementById(id).clientWidth+1,id);
   // fake a finished season with you at points position rk, then open the season review
-  const endSeason=async rk=>p.evaluate(rk=>{const g=window.__gfd,G=g.G;G.results=Array.from({length:10},()=>({start:12,finish:rk,expected:12,dnf:false,tier:'solid',track:'x',objs:[]}));G.raceIdx=9;
+  const endSeason=async rk=>p.evaluate(rk=>{const g=window.__gfd,G=g.G;const len=g.seasonLen();G.results=Array.from({length:len},()=>({start:12,finish:rk,expected:12,dnf:false,tier:'solid',track:'x',objs:[]}));G.raceIdx=len-1;
    const st=g.standings();G.pts={};st.forEach((s,i)=>{G.pts[s.c.id]=400-i*10;});const mi=G.cars.find(c=>c.isMe).id,o=st[rk-1].c.id;G.pts[o]=G.pts[mi];G.pts[mi]=400-(rk-1)*10;if(o!==mi)G.pts[o]=400-st.findIndex(s=>s.c.isMe)*10;
-   g.showEnd();return {rk:G.offers&&G.offers.rk,offers:G.offers&&G.offers.list.map(o=>o.kind+':'+o.series+':'+o.r)};},rk);
+   g.showEnd();return {len:G.past[G.past.length-1]&&G.past.length,rk:G.offers&&G.offers.rk,offers:G.offers&&G.offers.list.map(o=>o.kind+':'+o.series+':'+o.r)};},rk);
 
   await load();await p.evaluate(()=>localStorage.clear());await load();
   const t0=await p.evaluate(()=>({arch:[...document.querySelectorAll('#title .personas [data-arch]')].map(b=>b.dataset.arch).join(),chips:[...document.querySelectorAll('#title [data-series]')].map(b=>b.dataset.series+(b.classList.contains('on')?'*':'')).join(),
@@ -30,8 +30,8 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(await noScroll('title'))fail(W+': title scroll');
   await p.evaluate(()=>document.querySelector('#title .series-pick').scrollIntoView());await shot('ladder-title');
   await click('[data-series="kart"]');await click('[data-arch="packrat"]');await click('#t-go');
-  const k0=await p.evaluate(()=>{const g=window.__gfd,G=g.G;return {series:G.series,team:G.team,tn:g.TEAMS[G.team].name,ride:(document.getElementById('g-ride')||{}).innerText||''};});
-  if(k0.series!=='kart'||k0.team!==9||k0.tn!=='Garage 77 Karting'||!/Rung 1/i.test(k0.ride))fail('kart career '+JSON.stringify(k0));
+  const k0=await p.evaluate(()=>{const g=window.__gfd,G=g.G;return {len:g.seasonLen(),eb:document.querySelector('#garage .eyebrow').innerText,series:G.series,team:G.team,tn:g.TEAMS[G.team].name,ride:(document.getElementById('g-ride')||{}).innerText||''};});
+  if(k0.len!==6||!/of 6/i.test(k0.eb)||k0.series!=='kart'||k0.team!==9||k0.tn!=='Garage 77 Karting'||!/Rung 1/i.test(k0.ride))fail('kart career '+JSON.stringify(k0));
   // a grudge to carry up
   await p.evaluate(()=>{const G=window.__gfd.G;const id=Object.keys(G.riv)[0];G.riv[id].g=6;G.money=20000;});
   // kart season ends P2: stay, a better kart team, and three late model teams
@@ -50,11 +50,11 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const l0=await p.evaluate(()=>{const g=window.__gfd,G=g.G,L=window.__gfdLate,o=G.contract;const rv=Object.keys(G.riv).map(id=>G.riv[id].g);
    return {series:G.series,ct:G.carType,sched:G.sched,arch:G.arch,kartCards:G.coll.filter(id=>g.CARDS[id].kart).length,coll:G.coll.length,deck:G.deck.length,size:g.deckSize(),kartRelics:G.relics.filter(k=>RELICS[k].kart).length,
     power:G.stats.power,spotter:G.stats.spotter,racecraft:G.stats.racecraft,money:G.money,drv:JSON.stringify(G.drv.attr),per:o.per,team:G.team,tn:g.TEAMS[G.team].name,mine:G.cars.find(c=>c.isMe).team,
-    rv:Math.max(...rv),rivals:Object.keys(G.riv).length,next:g.TRACKS[g.arcTi(G.raceIdx)].id,screen:!document.getElementById('garage').hidden,ride:(document.getElementById('g-ride')||{}).innerText||'',ladder:G.ladder.join()};});
+    rv:Math.max(...rv),rivals:Object.keys(G.riv).length,len:g.seasonLen(),next:g.TRACKS[g.arcTi(G.raceIdx)].id,screen:!document.getElementById('garage').hidden,ride:(document.getElementById('g-ride')||{}).innerText||'',ladder:G.ladder.join()};});
   const o=before.o;
   if(l0.series!=='late'||l0.ct!=='late'||l0.sched!=='late'||l0.arch!=='drafter'||l0.kartCards||l0.coll!==before.coll||l0.kartRelics||l0.deck<11||l0.deck>l0.size.max||l0.size.min!==11)fail('promotion '+JSON.stringify(l0));
   if(l0.power!==o.r||l0.spotter!==window_crew(o.r)||l0.racecraft!==before.racecraft||l0.money!==before.money+o.sign||l0.drv!==before.drv||l0.per!==o.per||l0.team!==o.team||l0.mine!==o.team||l0.tn!==o.name)fail('team switch '+JSON.stringify({l0,o}));
-  if(l0.rv!==3||l0.rivals<5||l0.next!=='cedar'||!l0.screen||!/Late models/i.test(l0.ride)||l0.ladder!=='kart,late')fail('after promotion '+JSON.stringify(l0));
+  if(l0.len!==8||l0.rv!==3||l0.rivals<5||l0.next!=='cedar'||!l0.screen||!/Late models/i.test(l0.ride)||l0.ladder!=='kart,late')fail('after promotion '+JSON.stringify(l0));
   if(await noScroll('garage'))fail(W+': late garage scroll');
   await shot('late-garage');
   // the save keeps the series and the team names
@@ -62,7 +62,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const sv=await p.evaluate(()=>{const tc=document.getElementById('t-cont');const eb=tc.closest('.panel').querySelector('.eyebrow').innerText;tc.click();const g=window.__gfd,G=g.G;return {eb,series:G.series,tn:g.TEAMS[G.team].name,t0:g.TEAMS[0].name};});
   if(sv.series!=='late'||sv.tn!==o.name||sv.t0!=='Delmar Late Models'||!/Late models/i.test(sv.eb))fail('late save '+JSON.stringify(sv));
   // a late model race on the figure-8, through the real garage and qualifying
-  await p.evaluate(()=>{const g=window.__gfd;g.G.raceIdx=3;g.G.deckFor=null;g.showGarage();});
+  await p.evaluate(()=>{const g=window.__gfd;g.G.raceIdx=2;g.G.deckFor=null;g.showGarage();});
   await click('#g-spons [data-sign]');if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');
   await click('#g-go');if(await p.isVisible('#q-skip'))await click('#q-skip');await click('#q-race');
   const r0=await p.evaluate(()=>{const g=window.__gfd,r=g.race;window.__gfdHeadless=true;let k=0;while(r.phase!=='green'&&k++<400){r.paused=false;g.update(0.05);}for(let i=0;i<200;i++){r.paused=false;g.update(0.05);}window.__gfdHeadless=false;renderPitMod(true);
@@ -84,8 +84,8 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await click('#e-next');
   const si=await p.evaluate(()=>window.__gfd.G.offers.list.findIndex(o=>o.kind==='promote'));
   await click(`[data-pick="${si}"]`);await click('#o-sign');if(await p.isVisible('#o-sign'))await click('#o-sign');
-  const s0=await p.evaluate(()=>{const g=window.__gfd,G=g.G;return {series:G.series,ct:G.carType,sched:G.sched,arch:G.arch,tn:g.TEAMS[G.team].name,t0:g.TEAMS[0].name,ladder:G.ladder.join(),size:g.deckSize(),next:g.TRACKS[g.arcTi(G.raceIdx)].id};});
-  if(s0.series!=='stock'||s0.ct!=='stock'||s0.sched!=='mixed'||s0.arch!=='drafter'||s0.t0!=='Apex Motorsports'||s0.ladder!=='kart,late,stock'||s0.size.min!==12||s0.next!=='mill')fail('stock promotion '+JSON.stringify(s0));
+  const s0=await p.evaluate(()=>{const g=window.__gfd,G=g.G;return {len:g.seasonLen(),series:G.series,ct:G.carType,sched:G.sched,arch:G.arch,tn:g.TEAMS[G.team].name,t0:g.TEAMS[0].name,ladder:G.ladder.join(),size:g.deckSize(),next:g.TRACKS[g.arcTi(G.raceIdx)].id};});
+  if(s0.len!==10||s0.series!=='stock'||s0.ct!=='stock'||s0.sched!=='mixed'||s0.arch!=='drafter'||s0.t0!=='Apex Motorsports'||s0.ladder!=='kart,late,stock'||s0.size.min!==12||s0.next!=='mill')fail('stock promotion '+JSON.stringify(s0));
   // the top rung: no promotion; a low finish anywhere brings only a stay offer
   const e3=await endSeason(17);
   if(e3.offers.join()!=='stay:stock:'+(await p.evaluate(()=>window.__gfd.TEAMS[window.__gfd.G.team].r)))fail('low finish offers '+JSON.stringify(e3));
