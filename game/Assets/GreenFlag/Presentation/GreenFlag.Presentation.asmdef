@@ -1,7 +1,7 @@
 {
     "name": "GreenFlag.Presentation",
     "rootNamespace": "GreenFlag.Presentation",
-    "references": ["GreenFlag.Sim"],
+    "references": ["GreenFlag.Sim", "GreenFlag.View"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

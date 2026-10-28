@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The race view's engine-free half lives once, in the Unity package com.greenflag.view. This project compiles the same files for CI. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>GreenFlag.View</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../game/Packages/com.greenflag.view/Runtime/**/*.cs" LinkBase="Runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GreenFlag.Sim/GreenFlag.Sim.csproj" />
+  </ItemGroup>
+</Project>

@@ -20,13 +20,16 @@ namespace GreenFlag.EditorTools
         public const string UrpAssetPath = SettingsDir + "/URP.asset";
         public const string RendererPath = SettingsDir + "/URP_Renderer.asset";
         public const string BootScenePath = "Assets/GreenFlag/Scenes/Boot.unity";
+        public const string RaceScenePath = "Assets/GreenFlag/Scenes/Race.unity";
+        /// <summary>The race view clones this material for every colour, so the URP Lit shader is always in the build.</summary>
+        public const string LookBasePath = "Assets/GreenFlag/Resources/GreenFlag/LookBase.mat";
 
         static ProjectBootstrap()
         {
             if (Application.isBatchMode) return; // CI calls Run() itself
             EditorApplication.delayCall += () =>
             {
-                if (!File.Exists(BootScenePath) || GraphicsSettings.defaultRenderPipeline == null) Run();
+                if (!File.Exists(BootScenePath) || !File.Exists(RaceScenePath) || GraphicsSettings.defaultRenderPipeline == null) Run();
             };
         }
 
@@ -35,9 +38,13 @@ namespace GreenFlag.EditorTools
         {
             EnsurePlayerSettings();
             EnsureUrp();
+            EnsureLookBase();
             EnsureBootScene();
+            EnsureRaceScene();
+            // the race view opens first; the boot scene (sim fingerprint) stays in the build for checks
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(RaceScenePath, true), new EditorBuildSettingsScene(BootScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("[GreenFlag] Project setup checked: URP, player settings, boot scene.");
+            Debug.Log("[GreenFlag] Project setup checked: URP, player settings, boot and race scenes.");
         }
 
         static void EnsurePlayerSettings()
@@ -89,7 +96,28 @@ namespace GreenFlag.EditorTools
                 new GameObject("BootInfo").AddComponent<BootInfo>();
                 EditorSceneManager.SaveScene(scene, BootScenePath);
             }
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(BootScenePath, true) };
+        }
+
+        static void EnsureLookBase()
+        {
+            if (File.Exists(LookBasePath)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(LookBasePath));
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) { Debug.LogWarning("[GreenFlag] URP Lit shader not found; the race view will look shaders up by name."); return; }
+            var mat = new Material(shader) { name = "LookBase" };
+            mat.SetFloat("_Smoothness", 0.15f);
+            mat.SetFloat("_Cull", 0f); // double-sided: generated track meshes don't have to care about winding
+            AssetDatabase.CreateAsset(mat, LookBasePath);
+        }
+
+        /// <summary>Step 29: the race view scene, a camera, a sun and the RaceView script (which builds everything else at runtime).</summary>
+        static void EnsureRaceScene()
+        {
+            if (File.Exists(RaceScenePath)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(RaceScenePath));
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            new GameObject("RaceView").AddComponent<RaceView>();
+            EditorSceneManager.SaveScene(scene, RaceScenePath);
         }
     }
 }
