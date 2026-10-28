@@ -42,7 +42,7 @@ The same seed and settings give identical results, so compare two builds on the 
 
 ## Unity project and sim tests
 
-See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set. How the race and the cards work: `docs/sim.md` and `docs/cards.md`.
+See `docs/unity-setup.md`. Sim tests run without Unity: `dotnet test sim/GreenFlag.Sim.sln`. The `nightly` workflow builds a Windows player once the Unity licence secrets are set. How the race and the cards work: `docs/sim.md` and `docs/cards.md`. How the C# sim is kept in line with the browser slice: `docs/parity.md`.
 
 ## Working rules
 

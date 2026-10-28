@@ -78,6 +78,7 @@ namespace GreenFlag.Sim
             l.Parts.Add(p.Part);
             foreach (var kv in p.Bonus) l.AddStat(kv.Key, kv.Value);
             l.Tune = p.Tune.Clone();
+            l.Grit = p.Grit;
             return l;
         }
 
@@ -102,7 +103,7 @@ namespace GreenFlag.Sim
         }
     }
 
-    /// <summary>A starting persona: six extra cards, a part, a stat bonus and a default tune.</summary>
+    /// <summary>A starting persona: six extra cards, a part, a stat bonus, a default tune and the driver background a new career gets.</summary>
     public sealed class Persona
     {
         public string Id, Name, Tag;
@@ -111,6 +112,9 @@ namespace GreenFlag.Sim
         public string Part;
         public Dictionary<string, int> Bonus;
         public Tune Tune;
+        /// <summary>The driver background a new career with this persona starts with (the slice's ARCH bg), and its Grit.</summary>
+        public string Background;
+        public int Grit = 10;
     }
 
     public static class Personas
@@ -123,15 +127,15 @@ namespace GreenFlag.Sim
 
         static Personas()
         {
-            all.Add(new Persona { Id = "drafter", Name = "The Drafter", Tag = "Superspeedway specialist", Add = new[] { "bump_draft", "slingshot", "tuck_in", "side_draft", "push_limit", "dive_bomb" }, Part = "slick_nose", Bonus = B(("aero", 1)), Tune = T(0, 1, ComboFocus.Draft) });
-            all.Add(new Persona { Id = "bully", Name = "The Bully", Tag = "Short-track enforcer", Add = new[] { "bump_run", "bump_run", "bump_draft", "block", "dive_bomb", "push_limit" }, Part = "chrome_horn", Bonus = B(("defense", 1), ("durability", 1), ("racecraft", 1)), Tune = T(0, -2, ComboFocus.Bumper) });
-            all.Add(new Persona { Id = "whisperer", Name = "Tire Whisperer", Tag = "Long-run closer", Add = new[] { "save_tires", "high_line", "high_line", "push_limit", "clear_air", "regroup" }, Part = "long_run_tires", Bonus = B(("tireMgmt", 2)), Tune = T(-1, -1, ComboFocus.LongRun) });
-            all.Add(new Persona { Id = "restart", Name = "Restart Ace", Tag = "Chaos merchant", Add = new[] { "restart_jump", "restart_jump", "choose_lane", "block", "dive_bomb", "send_it" }, Part = "launch_control", Bonus = B(("racecraft", 1), ("crewChief", 1)), Tune = T(1, 0, ComboFocus.Restart) });
-            all.Add(new Persona { Id = "gambler", Name = "Pit Road Gambler", Tag = "Track-position thief", Add = new[] { "stay_out", "stay_out", "choose_lane", "restart_jump", "tuck_in", "fast_stop" }, Part = "pit_clipboard", Bonus = B(("defense", 1), ("crewChief", 1)), Tune = T(-1, 0, ComboFocus.Restart) });
-            all.Add(new Persona { Id = "brawler", Kart = true, Name = "The Brawler", Tag = "Club-track scrapper", Add = new[] { "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake" }, Part = "nerf_bar", Bonus = B(("durability", 1), ("racecraft", 1), ("defense", 1)), Tune = T(1, -1, ComboFocus.Bumper) });
-            all.Add(new Persona { Id = "linepainter", Kart = true, Name = "The Line Painter", Tag = "Clean and consistent", Add = new[] { "k_outside", "k_owninside", "k_smooth", "k_smooth", "k_limit", "k_cover" }, Part = "chalk_line", Bonus = B(("consistency", 1), ("handling", 1), ("tireMgmt", 1)), Tune = T(-1, 0, ComboFocus.LongRun) });
-            all.Add(new Persona { Id = "packrat", Kart = true, Name = "The Pack Rat", Tag = "Lives in the tow", Add = new[] { "k_tow", "k_smooth", "k_push", "k_pullout", "k_pullout", "k_latebrake" }, Part = "tow_hitch", Bonus = B(("aero", 1), ("racecraft", 1)), Tune = T(0, 1, ComboFocus.Draft) });
-            all.Add(new Persona { Id = "latebraker", Kart = true, Name = "The Late Braker", Tag = "Hairpin hunter", Add = new[] { "k_latebrake", "k_latebrake", "k_pullout", "k_smooth", "k_cover", "k_limit" }, Part = "big_rotors", Bonus = B(("racecraft", 1), ("handling", 1)), Tune = T(1, -1, ComboFocus.Bumper) });
+            all.Add(new Persona { Id = "drafter", Background = "sim", Grit = 12, Name = "The Drafter", Tag = "Superspeedway specialist", Add = new[] { "bump_draft", "slingshot", "tuck_in", "side_draft", "push_limit", "dive_bomb" }, Part = "slick_nose", Bonus = B(("aero", 1)), Tune = T(0, 1, ComboFocus.Draft) });
+            all.Add(new Persona { Id = "bully", Background = "hero", Grit = 15, Name = "The Bully", Tag = "Short-track enforcer", Add = new[] { "bump_run", "bump_run", "bump_draft", "block", "dive_bomb", "push_limit" }, Part = "chrome_horn", Bonus = B(("defense", 1), ("durability", 1), ("racecraft", 1)), Tune = T(0, -2, ComboFocus.Bumper) });
+            all.Add(new Persona { Id = "whisperer", Background = "dirt", Grit = 15, Name = "Tire Whisperer", Tag = "Long-run closer", Add = new[] { "save_tires", "high_line", "high_line", "push_limit", "clear_air", "regroup" }, Part = "long_run_tires", Bonus = B(("tireMgmt", 2)), Tune = T(-1, -1, ComboFocus.LongRun) });
+            all.Add(new Persona { Id = "restart", Background = "crew", Grit = 12, Name = "Restart Ace", Tag = "Chaos merchant", Add = new[] { "restart_jump", "restart_jump", "choose_lane", "block", "dive_bomb", "send_it" }, Part = "launch_control", Bonus = B(("racecraft", 1), ("crewChief", 1)), Tune = T(1, 0, ComboFocus.Restart) });
+            all.Add(new Persona { Id = "gambler", Background = "rich", Grit = 9, Name = "Pit Road Gambler", Tag = "Track-position thief", Add = new[] { "stay_out", "stay_out", "choose_lane", "restart_jump", "tuck_in", "fast_stop" }, Part = "pit_clipboard", Bonus = B(("defense", 1), ("crewChief", 1)), Tune = T(-1, 0, ComboFocus.Restart) });
+            all.Add(new Persona { Id = "brawler", Background = "hero", Grit = 15, Kart = true, Name = "The Brawler", Tag = "Club-track scrapper", Add = new[] { "k_push", "k_door", "k_door", "k_switch", "k_smooth", "k_latebrake" }, Part = "nerf_bar", Bonus = B(("durability", 1), ("racecraft", 1), ("defense", 1)), Tune = T(1, -1, ComboFocus.Bumper) });
+            all.Add(new Persona { Id = "linepainter", Background = "dirt", Grit = 15, Kart = true, Name = "The Line Painter", Tag = "Clean and consistent", Add = new[] { "k_outside", "k_owninside", "k_smooth", "k_smooth", "k_limit", "k_cover" }, Part = "chalk_line", Bonus = B(("consistency", 1), ("handling", 1), ("tireMgmt", 1)), Tune = T(-1, 0, ComboFocus.LongRun) });
+            all.Add(new Persona { Id = "packrat", Background = "sim", Grit = 12, Kart = true, Name = "The Pack Rat", Tag = "Lives in the tow", Add = new[] { "k_tow", "k_smooth", "k_push", "k_pullout", "k_pullout", "k_latebrake" }, Part = "tow_hitch", Bonus = B(("aero", 1), ("racecraft", 1)), Tune = T(0, 1, ComboFocus.Draft) });
+            all.Add(new Persona { Id = "latebraker", Background = "crew", Grit = 12, Kart = true, Name = "The Late Braker", Tag = "Hairpin hunter", Add = new[] { "k_latebrake", "k_latebrake", "k_pullout", "k_smooth", "k_cover", "k_limit" }, Part = "big_rotors", Bonus = B(("racecraft", 1), ("handling", 1)), Tune = T(1, -1, ComboFocus.Bumper) });
         }
 
         public static Persona Get(string id)
