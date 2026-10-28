@@ -203,7 +203,7 @@ namespace GreenFlag.Presentation
             GUI.Label(new Rect(rect.x, rect.y + 12 * s, w, 40 * s), res.MyDnf ? "OUT OF THE RACE" : "YOU FINISHED P" + res.MyFinish, title);
             var st = new GUIStyle(small) { alignment = TextAnchor.MiddleCenter }; st.normal.textColor = Dim;
             GUI.Label(new Rect(rect.x, rect.y + 56 * s, w, 50 * s), $"Started P{res.MyStart}, expected P{res.MyExpected} · {res.Cautions} caution(s)\nfingerprint {fingerprint}", st);
-            GUI.Label(new Rect(rect.x, rect.y + 108 * s, w, 30 * s), "R new race · T next track", st);
+            GUI.Label(new Rect(rect.x, rect.y + 108 * s, w, 30 * s), view.Pad != null && view.Pad.Active ? $"{PadGlyphs.Of(view.Pad.Style, PadButton.Confirm)} or {PadGlyphs.Of(view.Pad.Style, PadButton.Pause)} new race · R new race · T next track" : "R new race · T next track", st);
         }
     }
 }

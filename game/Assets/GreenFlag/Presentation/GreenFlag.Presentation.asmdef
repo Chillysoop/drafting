@@ -1,7 +1,7 @@
 {
     "name": "GreenFlag.Presentation",
     "rootNamespace": "GreenFlag.Presentation",
-    "references": ["GreenFlag.Sim", "GreenFlag.View"],
+    "references": ["GreenFlag.Sim", "GreenFlag.View", "Unity.InputSystem"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -9,6 +9,8 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        { "name": "com.unity.inputsystem", "expression": "1.0.0", "define": "GF_INPUT_SYSTEM" }
+    ],
     "noEngineReferences": false
 }

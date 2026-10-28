@@ -41,6 +41,7 @@ namespace GreenFlag.View
         /// <summary>Lays the HUD out for a w x h screen and the desk's current hand.</summary>
         public void Update(double w, double h, PlayDesk d, HudReadouts ro)
         {
+            last = ro;
             W = w; H = h;
             S = Math.Max(0.6, Math.Min(2, h / 1080));
             double s = S, m = 16 * s, side = 300 * s;
@@ -71,6 +72,11 @@ namespace GreenFlag.View
             LayChips(d);
             LayPit(d, ro);
         }
+
+        HudReadouts last;
+
+        /// <summary>Lays out again at the same size after the hand changed mid-frame (a controller press played a card).</summary>
+        public void Relayout(PlayDesk d) { if (last != null) Update(W, H, d, last); }
 
         void LayCards(PlayDesk d)
         {
@@ -196,6 +202,17 @@ namespace GreenFlag.View
             {
                 case HitKind.Card: desk.DragStart(hit.Arg, x, y); break;
                 case HitKind.PlayButton: aimMouse = desk.AimStart(false); break;
+                default: Activate(hit); break;
+            }
+        }
+
+        /// <summary>Does what a chip, the pause box or a pit button does when clicked (or confirmed on a controller). A card is
+        /// clicked (picked, or played if picked).</summary>
+        public void Activate(Hit hit)
+        {
+            switch (hit.Kind)
+            {
+                case HitKind.Card: desk.Click(hit.Arg); break;
                 case HitKind.Sort: desk.SetSort((HandSort)hit.Arg); break;
                 case HitKind.AllFamilies: desk.SetFilter(null); break;
                 case HitKind.Family: desk.SetFilter(desk.Filter == (CardFamily)hit.Arg ? (CardFamily?)null : (CardFamily)hit.Arg); break;

@@ -54,6 +54,21 @@ namespace GreenFlag.EditorTools
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
+            EnsureInputBoth();
+        }
+
+        /// <summary>Step 32 reads controllers with the Input System package; the old input manager stays on as well ("Both"),
+        /// so nothing that reads it breaks. Unity applies the change after an editor restart.</summary>
+        static void EnsureInputBoth()
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
+            if (assets == null || assets.Length == 0) return;
+            var so = new SerializedObject(assets[0]);
+            var p = so.FindProperty("activeInputHandler");
+            if (p == null || p.intValue == 2) return;
+            p.intValue = 2;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.LogWarning("[GreenFlag] Active Input Handling set to Both for controller play. Restart the editor to apply it.");
         }
 
         static void EnsureUrp()

@@ -36,6 +36,26 @@ namespace GreenFlag.Harness
             return bad == 0 ? 0 : 1;
         }
 
+        /// <summary>Races played on a controller only (step 32): the pad player walks the focus, taps A, holds the trigger, tosses with X.</summary>
+        public static int Pad(string tracks, int n, string persona, uint seed0, string style)
+        {
+            var list = tracks == "all" ? Tracks.All.ToList() : tracks.Split(',').Select(Tracks.ById).ToList();
+            var st = (PadStyle)Enum.Parse(typeof(PadStyle), style, true);
+            Console.WriteLine("track   seed  fin exp start  plays  tap hold toss beats stops perfect  moves presses lost  real-min  ms");
+            int bad = 0;
+            foreach (var t in list)
+                for (int i = 0; i < n; i++)
+                {
+                    uint seed = seed0 + (uint)i;
+                    var sw = Stopwatch.StartNew();
+                    var (desk, bot) = PadPlayer.Run(t, seed, persona, style: st);
+                    var r = desk.Race; var res = r.Result();
+                    if (!r.Done || bot.Lost > 0) bad++;
+                    Console.WriteLine($"{t.Id,-7}{seed,5} {(res.MyDnf ? "DNF" : "P" + res.MyFinish),4} {res.MyExpected,3} {res.MyStart,5}  {desk.Plays,5} {bot.Taps,4} {bot.Holds,4} {desk.Tosses,4} {desk.BeatStops,5} {r.CardStats.PitStops,5} {r.CardStats.Perfect,7}  {bot.Moves,5} {bot.Moves + bot.Taps * 2 + bot.Tosses + bot.PitPresses + bot.Resumes,7} {bot.Lost,4}  {desk.Clock / 60,8:F1} {sw.ElapsedMilliseconds,5}");
+                }
+            return bad == 0 ? 0 : 1;
+        }
+
         public static int Run(string track, uint seed, string outPath, int n)
         {
             var t = Tracks.ById(track);
