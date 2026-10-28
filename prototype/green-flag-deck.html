@@ -1031,6 +1031,7 @@ body.look-tv .dragghost::after{display:block}
 <div id="deckb" class="screen page" hidden></div>
 <div id="quali" class="screen page" hidden></div>
 <div id="event" class="screen page" hidden></div>
+<div id="crewhq" class="screen page" hidden></div>
 <div id="race" class="screen" hidden>
   <canvas id="cv"></canvas><div id="crt"></div>
   <div id="pylon" class="bug"></div>
@@ -1165,7 +1166,7 @@ function saveSeason(){if(!G||(typeof window!=='undefined'&&window.__gfdHeadless)
 function readSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&s.G&&s.G.cars?s:null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 // your car's stats object is G.stats itself; JSON restores break that link
-function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();ensureDrv();}
+function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();ensureDrv();if(typeof ensureCrew==='function')ensureCrew();}
 function continueSeason(){
  const s=readSave();if(!s)return false;G=s.G;relinkG();
  if(G.inRace){
@@ -1206,7 +1207,7 @@ const TRAITS={
 const STAT_INFO={
  power:['Power','Straight-line pace.'],handling:['Handling','Corner pace (matters most on short tracks) and corner card reads.'],aero:['Aero','How much the draft pulls you.'],durability:['Durability','Less damage from wrecks and contact.'],
  racecraft:['Racecraft','+2 read per point above 5 on Passing and Drafting cards; better auto moves.'],defense:['Defense','+2.5 read per point above 5 on Defending cards; harder to pass.'],consistency:['Consistency','Narrower outcome spread on every card and move.'],tireMgmt:['Tire management','Slower tire wear.'],
- crewChief:['Crew chief','Pit stop speed and crew chief radio calls.'],engineer:['Engineer','Success chance on engineer radio gambles.'],spotter:['Spotter','Narrower odds ranges and +1 read per point above 5 on every card.']
+ crewChief:['Crew chief','Pit lane base time and crew chief radio calls.'],engineer:['Engineer','Engineer radio calls: odds and payoff.'],spotter:['Spotter','Spotter radio calls, narrower odds ranges and +1 read per point above 5 on every card.'],pitCrew:['Pit crew','Pit card odds and the release window.']
 };
 
 /* ---------- cards ---------- */
@@ -1630,6 +1631,7 @@ function newCareer(){
  G.drv=newDriver(titleSel.bg||BG_FOR[titleSel.arch]);G.contract={per:0,clauses:[]};G.event=null; // step 18
  G.equipped[RELICS[a.relic].slot]=a.relic;
  for(const k in a.bonus)G.stats[k]+=a.bonus[k];
+ G.stats.pitCrew=G.stats.crewChief;if(typeof newCrew==='function')G.crew=newCrew(); // step 19
  buildField();
 }
 function buildField(){
@@ -2067,7 +2069,7 @@ function update(dt){reelTick();
  else if(BAL.beat&&r.phase!=='finished'&&r.t>=r.nextBeat){r.nextBeat+=BAL.beat;if(r.phase!=='start')drawBeat();}
  // radio
  if(r.phase==='green'&&!r.radio&&r.t>=r.radioNext&&!TUT)spawnRadio();
- if(r.radio&&r.t>r.radio.until){r.radio=null;$('#radio').hidden=true;r.radioNext=r.t+rand(22,34)*relicMul('radioRate');}
+ if(r.radio&&r.t>r.radio.until){r.radio=null;$('#radio').hidden=true;r.radioNext=r.t+rand(22,34)*relicMul('radioRate')*(typeof crewRate==='function'?crewRate():1);}
  // lanes for visuals
  motionTick(dt);
  // smoke
@@ -2479,24 +2481,32 @@ function motionTick(dt){
 
 /* ================= radio ================= */
 const RADIO_CALLS=[
- {who:'Spotter',kind:'mech',w:3,when:c=>c.ahead&&c.gapA<1.2,line:'"Clear high! Want to throw it up there?"',stat:'spotter',base:38,per:6,s:'It stuck up high: +2% speed for 12 s.',f:'Pinched off up top: −0.6 s.',onS:(c,q)=>pace(c,1+0.02*q,12),onF:(c,q)=>slow(c,0.6/q)},
- {who:'Spotter',kind:'mech',w:2,when:c=>c.behind&&c.gapB<0.7,line:'"Car low, he’s got a run on you. Chop him off?"',stat:'spotter',base:40,per:6,s:'He had to lift: he loses half a second.',f:'He got under you anyway: −0.5 s and +1 Heat.',onS:(c,q)=>{const b=ctxFor(c).behind;if(b)slow(b,0.5*q);},onF:(c,q)=>{slow(c,0.5/q);race.heat=Math.min(5,race.heat+1);race.heatAt=race.t;}},
- {who:'Crew chief',kind:'mech',w:2,when:()=>true,line:'"Lift early and save some rubber this run? It pays off at the end."',stat:'crewChief',base:45,per:6,s:'Tires saved: wear −30% for 40 s.',f:'Too slow saving them: −1.5% speed for 15 s.',onS:(c,q)=>wearFx(c,Math.max(0.4,1-0.3*q),40),onF:(c,q)=>pace(c,1-0.015/q,15)},
- {who:'Engineer',kind:'mech',w:2,when:c=>c.ahead&&c.gapA<race.track.draftRange,line:'"The car’s good in dirty air. Run it in tight?"',stat:'engineer',base:40,per:6,s:'Tucked in the tow: +2.5% speed for 10 s.',f:'Overheated in the dirty air: body −4.',onS:(c,q)=>pace(c,1+0.025*q,10),onF:(c,q)=>dmg(c,4/q,'nose')},
- {who:'Engineer',kind:'mech',w:2,line:'"We can take a turn of brake bias. Want it?"',stat:'engineer',base:40,per:6,s:'Brake bias dialed in: +0.8% speed for the rest of the race.',f:'Too much. The rear is loose: −2% speed for 20 s.',onS:c=>{c.permPace*=1.008;},onF:c=>pace(c,0.98,20)},
- {who:'Engineer',kind:'mech',w:2,line:'"Pressures are running high. Bleed a pound off?"',stat:'engineer',base:45,per:5,s:'Pressures fixed: tire wear −25% for 60 s.',f:'Wrong call: tire wear +25% for 40 s.',onS:c=>wearFx(c,0.75,60),onF:c=>wearFx(c,1.25,40)},
- {who:'Crew chief',kind:'mech',w:1,when:c=>c.car.damage>0,line:'"Water temp is climbing. Get some air on the grille?"',stat:'crewChief',base:45,per:6,s:'Temps are down: 8 damage repaired.',f:'You lost the draft doing it: −0.4 s.',onS:c=>{dzFix(c,8,'nose');},onF:c=>slow(c,0.4)},
- {who:'Engineer',kind:'mech',w:1,line:'"Try short-shifting off turn 4. Might find speed."',stat:'engineer',base:35,per:6,s:'Found it: +1 Momentum and +1.5% speed for 20 s.',f:'Bogged down off the corner: −0.5 s.',onS:c=>{mom(1);pace(c,1.015,20);},onF:c=>slow(c,0.5)},
+ {who:'Spotter',nm:'High line',kind:'mech',w:3,when:c=>c.ahead&&c.gapA<1.2,line:'"Clear high! Want to throw it up there?"',stat:'spotter',base:38,per:6,s:'It stuck up high: +2% speed for 12 s.',f:'Pinched off up top: −0.6 s.',onS:(c,q)=>pace(c,1+0.02*q,12),onF:(c,q)=>slow(c,0.6/q)},
+ {who:'Spotter',nm:'Chop him off',kind:'mech',w:2,when:c=>c.behind&&c.gapB<0.7,line:'"Car low, he’s got a run on you. Chop him off?"',stat:'spotter',base:40,per:6,s:'He had to lift: he loses half a second.',f:'He got under you anyway: −0.5 s and +1 Heat.',onS:(c,q)=>{const b=ctxFor(c).behind;if(b)slow(b,0.5*q);},onF:(c,q)=>{slow(c,0.5/q);race.heat=Math.min(5,race.heat+1);race.heatAt=race.t;}},
+ {who:'Crew chief',nm:'Save tires',kind:'mech',w:2,when:()=>true,line:'"Lift early and save some rubber this run? It pays off at the end."',stat:'crewChief',base:45,per:6,s:'Tires saved: wear −30% for 40 s.',f:'Too slow saving them: −1.5% speed for 15 s.',onS:(c,q)=>wearFx(c,Math.max(0.4,1-0.3*q),40),onF:(c,q)=>pace(c,1-0.015/q,15)},
+ {who:'Engineer',nm:'Run it tight',kind:'mech',w:2,when:c=>c.ahead&&c.gapA<race.track.draftRange,line:'"The car’s good in dirty air. Run it in tight?"',stat:'engineer',base:40,per:6,s:'Tucked in the tow: +2.5% speed for 10 s.',f:'Overheated in the dirty air: body −4.',onS:(c,q)=>pace(c,1+0.025*q,10),onF:(c,q)=>dmg(c,4/q,'nose')},
+ {who:'Engineer',nm:'Brake bias',kind:'mech',w:2,line:'"We can take a turn of brake bias. Want it?"',stat:'engineer',base:40,per:6,s:'Brake bias dialed in: +0.8% speed for the rest of the race.',f:'Too much. The rear is loose: −2% speed for 20 s.',onS:c=>{c.permPace*=1.008;},onF:(c,q)=>pace(c,1-0.02/q,20)},
+ {who:'Engineer',nm:'Bleed pressures',kind:'mech',w:2,line:'"Pressures are running high. Bleed a pound off?"',stat:'engineer',base:45,per:5,s:'Pressures fixed: tire wear −25% for 60 s.',f:'Wrong call: tire wear +25% for 40 s.',onS:c=>wearFx(c,0.75,60),onF:(c,q)=>wearFx(c,1+0.25/q,40)},
+ {who:'Crew chief',nm:'Cool the motor',kind:'mech',w:1,when:c=>c.car.damage>0,line:'"Water temp is climbing. Get some air on the grille?"',stat:'crewChief',base:45,per:6,s:'Temps are down: 8 damage repaired.',f:'You lost the draft doing it: −0.4 s.',onS:c=>{dzFix(c,8,'nose');},onF:(c,q)=>slow(c,0.4/q)},
+ {who:'Engineer',nm:'Short-shift',kind:'mech',w:1,line:'"Try short-shifting off turn 4. Might find speed."',stat:'engineer',base:35,per:6,s:'Found it: +1 Momentum and +1.5% speed for 20 s.',f:'Bogged down off the corner: −0.5 s.',onS:c=>{mom(1);pace(c,1.015,20);},onF:(c,q)=>slow(c,0.5/q)},
+ // step 19 (Q13): bigger calls a levelled crew member unlocks. lvl = the level that unlocks it.
+ {who:'Spotter',nm:'Bump and run',lvl:6,kind:'mech',w:2,when:c=>c.ahead&&c.gapA<0.5,line:'"He\u2019s loose off two. Move him. He\u2019d do it to you."',stat:'spotter',base:24,per:6,s:'Moved him: you take the spot, he loses time.',f:'He didn\u2019t budge: −0.6 s, body −6 and +1 Heat.',onS:(c,q)=>{const a=aheadOf(c);overtake(c,1);if(a)slow(a,0.6*q);mom(1);},onF:(c,q)=>{slow(c,0.6/q);dmg(c,6/q);race.heat=Math.min(5,race.heat+1);race.heatAt=race.t;}},
+ {who:'Spotter',nm:'Three-wide hole',lvl:8,kind:'mech',w:2,when:c=>c.ahead&&c.gapA<0.9&&c.pos>2,line:'"Hole opening three-wide! Go now and you clear two of them."',stat:'spotter',base:12,per:6,s:'Through the hole: two spots in one move.',f:'It closed on you: −1 s and body −5.',onS:c=>{overtake(c,2);mom(1);},onF:(c,q)=>{slow(c,1/q);dmg(c,5/q);}},
+ {who:'Crew chief',nm:'Fuel stretch',lvl:6,kind:'mech',w:2,line:'"Save fuel this run and we can short the next stop."',stat:'crewChief',base:24,per:6,s:'Fuel saved: your next stop is 1.5 s shorter.',f:'Saved nothing, lost speed: −1.5% for 15 s.',onS:(c,q)=>{race.pitBonus=(race.pitBonus||0)+1.5*q;},onF:(c,q)=>pace(c,1-0.015/q,15)},
+ {who:'Crew chief',nm:'All in',lvl:8,kind:'mech',w:3,when:c=>lapOf(c.car)>=race.track.laps*0.7,line:'"This is it. Use everything the car has left."',stat:'crewChief',base:12,per:6,s:'All in: +3% speed for 25 s and +1 Momentum.',f:'Cooked the tires: wear +50% for 30 s.',onS:(c,q)=>{pace(c,1+0.03*q,25);mom(1);},onF:(c,q)=>wearFx(c,1+0.5/q,30)},
+ {who:'Engineer',nm:'Engine map',lvl:6,kind:'mech',w:2,line:'"I can turn the motor up for a few laps. It\u2019ll run hot."',stat:'engineer',base:24,per:6,s:'Motor turned up: +4% speed for 12 s.',f:'It ran hot: body −8.',onS:(c,q)=>pace(c,1+0.04*q,12),onF:(c,q)=>dmg(c,8/q)},
+ {who:'Engineer',nm:'Setup trick',lvl:8,kind:'mech',w:1,line:'"Found something in the data. Want to try it live?"',stat:'engineer',base:12,per:6,s:'It works: +1.2% speed for the rest of the race.',f:'Wrong direction: −3% speed for 20 s.',onS:(c,q)=>{c.permPace*=1+0.012*q;},onF:(c,q)=>pace(c,1-0.03/q,20)},
  {kind:'advice',w:3}
 ];
 /* Crew calls are a risk layer of their own, separate from cards and combos: the chance and the payoff both grow with
    the crew member's stat (Crew HQ upgrades). q = 1 at stat 3, +10% per point above. */
 const CREW_NAME={spotter:'Spotter',crewChief:'Crew chief',engineer:'Engineer'};
 function crewQ(stat){return 1+Math.max(0,(G.stats[stat]||3)-3)*0.1;}
-function armCall(o){o.chance=clamp(o.base+G.stats[o.stat]*o.per+relicSum('radioBonus'),5,95);o.q=crewQ(o.stat);return o;}
+function armCall(o){o.chance=clamp(o.base+G.stats[o.stat]*o.per+relicSum('radioBonus')+(typeof crewChance==='function'?crewChance(o.stat):0),5,95);o.q=crewQ(o.stat)*(typeof crewPay==='function'?crewPay(o.stat):1);o.qf=o.q/(typeof crewSoft==='function'?crewSoft(o.stat):1);return o;}
 function spawnRadio(){
  const r=race,car=meCar();if(car.dnf)return;const c=ctxFor(car);
- const opts=RADIO_CALLS.filter(x=>!x.when||x.when(c));
+ let opts=RADIO_CALLS.filter(x=>(!x.lvl||G.stats[x.stat]>=x.lvl)&&(!x.when||x.when(c)));
+ if(typeof crewWeight==='function')opts=opts.map(x=>{const k=crewWeight(x);return k===1?x:{...x,w:(x.w||1)*k};});
  let call=wpick(opts);
  if(call.kind==='advice'){const a=adviceLine(c);if(!a){r.radioNext=r.t+10;return;}call={kind:'advice',who:a[0],line:a[1]};}
  const dur=call.kind==='advice'?6:7;
@@ -2521,15 +2531,21 @@ function renderRadio(){
  box.hidden=false;box.className='bug'+(r.kind==='advice'?' advice':'');
  let btns='';
  if(r.kind==='buff')btns=`<div class="rb"><button id="r-acc">Accept (A): ${esc(r.label)}</button><button class="ig" id="r-ig">Ignore (X)</button></div>`;
- if(r.kind==='mech')btns=`<div class="rb"><button id="r-acc">Try it (A): ${r.chance}% to work</button><button class="ig" id="r-ig">No thanks (X)</button><span style="font-size:12px">${esc(r.s)} / risk: ${esc(r.f.toLowerCase())}</span></div><div class="rq">${CREW_NAME[r.stat]||'Crew'} level ${G.stats[r.stat]}: a better crew makes calls land more often and pay more (Crew HQ).</div>`;
+ if(r.kind==='mech')btns=`<div class="rb"><button id="r-acc">Try it (A): ${r.chance}% to work</button><button class="ig" id="r-ig">No thanks (X)</button><span style="font-size:12px">${esc(r.s)} / risk: ${esc(r.f.toLowerCase())}</span></div><div class="rq">${CREW_NAME[r.stat]||'Crew'} level ${G.stats[r.stat]}${r.lvl?` · level ${r.lvl} call`:''}: a better crew makes calls land more often and pay more (Crew HQ).</div>`;
  box.innerHTML=`<div class="rw"><span>📻 ${esc(r.who)}</span><span>${r.kind==='advice'?'Advice':r.kind==='buff'?'Call':'Risky call'}</span></div><div class="rl">${esc(r.line)}</div>${btns}<div class="rt"><i id="r-t"></i></div>`;
  const a=$('#r-acc'),i=$('#r-ig');if(a)a.onclick=acceptRadio;if(i)i.onclick=ignoreRadio;layoutBugs();
 }
 function acceptRadio(){const r=race&&race.radio;if(!r||r.kind==='advice')return;const car=meCar();
  if(r.kind==='buff'){buff(r.v,r.fam||null,r.who);commentate(`${r.who} call accepted: ${r.label}.`);}
- else{const ok=Math.random()*100<r.chance;if(ok)r.onS(car,r.q||1);else r.onF(car,r.q||1);commentate(`${r.who} call ${ok?'works':'goes wrong'}.`);toast(ok?'Radio gamble works':'Radio gamble fails',ok?r.s:r.f,ok?'#2fb36a':'#e5484d',ok?'#04150b':'#fff');}
- race.radio=null;$('#radio').hidden=true;race.radioNext=race.t+rand(22,34)*relicMul('radioRate');renderHand();}
-function ignoreRadio(){if(!race||!race.radio)return;race.radio=null;$('#radio').hidden=true;race.radioNext=race.t+rand(22,34)*relicMul('radioRate');}
+ else{let ok=Math.random()*100<r.chance,note='';
+  // step 19 perks: Second opinion rerolls one miss a race; Safety net lets some spotter misses cost nothing
+  if(!ok&&typeof crewFx==='function'&&crewFx('reroll')&&!race.crewReroll){race.crewReroll=1;ok=Math.random()*100<r.chance;note=ok?' Second opinion saved it.':'';}
+  const nv=!ok&&typeof crewFx==='function'?crewFx('net',r.stat):0,net=nv>0&&Math.random()<nv;
+  if(ok)r.onS(car,r.q||1);else if(!net)r.onF(car,r.qf||r.q||1);
+  if(typeof crewAfterCall==='function')crewAfterCall(r,ok,car);
+  commentate(`${r.who} call ${ok?'works':'goes wrong'}.${note}${net?' The spotter bailed you out: no harm done.':''}`);toast(ok?'Radio gamble works':'Radio gamble fails',ok?r.s+note:net?'Safety net: the miss cost nothing.':r.f,ok?'#2fb36a':'#e5484d',ok?'#04150b':'#fff');}
+ race.radio=null;$('#radio').hidden=true;race.radioNext=race.t+(race.radioSoon?race.radioSoon:rand(22,34)*relicMul('radioRate')*(typeof crewRate==='function'?crewRate():1));race.radioSoon=0;renderHand();}
+function ignoreRadio(){if(!race||!race.radio)return;race.radio=null;$('#radio').hidden=true;race.radioNext=race.t+rand(22,34)*relicMul('radioRate')*(typeof crewRate==='function'?crewRate():1);}
 
 /* ================= rendering ================= */
 const cv=$('#cv');let g=cv.getContext('2d');const gMain=g;let W=0,H=0,DPR=1;
@@ -3095,8 +3111,9 @@ function endRace(){
  res.tid=r.track.id;res.dmg=Math.round(m.damage||0);
  if(G.contract&&G.contract.per)res.salary=G.contract.per;
  if(G.drv){const hy=raceHype(res);res.hype=Math.min(hy.length,3-G.drv.hype);res.hypeWhy=hy;G.drv.hype+=res.hype;res.xp=DXP.race;res.lvlUp=addXp(DXP.race);}
+ if(typeof crewEndRace==='function')crewEndRace(res,r); // step 19: crew XP and wages
  res.log=r.log;
- res.total=res.purse+res.bonus+(res.retainer||0)+(res.salary||0)+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
+ res.total=res.purse+res.bonus+(res.retainer||0)+(res.salary||0)-(res.wages||0)+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
  G.money+=res.total;G.results.push(res);
  stakesPenalty(res,m.dnf);
  scoreRace(res,fo);G.inRace=null;G.notice=null;
@@ -3125,7 +3142,7 @@ function rollRelics(n){const pool=Object.keys(RELICS).filter(k=>!G.relics.includ
 const rerollCost=k=>DIFF[G.diff].reroll+k*1000;
 
 /* ================= screens ================= */
-function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb','quali','event'])$('#'+s).hidden=s!==id;}
+function showScreen(id){screen=id;document.body.classList.toggle('screen-off',id!=='race');for(const s of ['title','garage','reward','race','deckb','quali','event','crewhq'])$('#'+s).hidden=s!==id;}
 function famDot(f){return `<i class="famdot" style="background:${FAM[f].c}"></i>`;}
 function miniCard(id,extra=''){const cd=CARDS[id];const cost=cd.cost.tire?`${cd.cost.tire}% tire`:cd.cost.mom?`${cd.cost.mom} Momentum`:'Free';
  return `<div class="minicard ${extra}" data-card="${id}" style="--fc:${FAM[cd.fam].c}"><div class="fl"><span>${FAM[cd.fam].n}</span><span>${cd.rar}</span></div><div class="nm">${esc(cd.n)}</div><p>${esc(cd.txt)}</p><div class="rl">${esc(cd.real)}</div><div class="fl"><span>${cost}</span><span>${cd.wreck?'Can wreck':cd.noFail?'Never fails':'Safe'}</span></div></div>`;}
@@ -3175,9 +3192,9 @@ function renderTitle(){
 
 const SHOP=[
  ['Car',['power','handling','aero','durability'],l=>3500+1500*Math.max(0,l-3)],
- ['Driver coaching',['racecraft','defense','consistency','tireMgmt'],l=>3000+1200*Math.max(0,l-4)],
- ['Crew',['crewChief','engineer','spotter'],l=>2500+1000*Math.max(0,l-3)]
+ ['Driver coaching',['racecraft','defense','consistency','tireMgmt'],l=>3000+1200*Math.max(0,l-4)]
 ];
+// step 19: crew training, hiring and pit cards live in Crew HQ (crew-js)
 function showGarage(){
  const t=TRACKS[arcTi(G.raceIdx)];if(!G.relicShop)G.relicShop=rollRelics(1)[0]||null;
  ensureColl();if(G.deckFor!==G.raceIdx){G.deckFor=G.raceIdx;if(!deckOk(t)){const was=[...G.deck];G.deck=fixDeck(t);G.deckNote=deckDiff(was,G.deck,t);}else G.deckNote=null;}
@@ -3199,7 +3216,7 @@ function showGarage(){
   </div>
   ${tunePanel(t)}
   <div class="grid g2">
-   <div class="panel grid" style="gap:10px"><h3>Shop upgrades</h3>${SHOP.map(([grp,keys,cost])=>`<div class="grid" style="gap:6px"><span class="eyebrow">${grp}</span>${keys.map(k=>{const l=G.stats[k],c=cost(l);return `<div class="row" style="justify-content:space-between"><span>${STAT_INFO[k][0]} <b class="mono">${l}</b> <span class="muted" style="font-size:12px">${esc(STAT_INFO[k][1])}</span></span><button class="btn small" data-buy="${k}" data-cost="${c}" ${l>=10||G.money<c?'disabled':''}>+1 · ${money(c)}</button></div>`;}).join('')}</div>`).join('')}</div>
+   <div class="panel grid" style="gap:10px"><h3>Shop upgrades</h3>${typeof crewGaragePanel==='function'?crewGaragePanel():''}${SHOP.map(([grp,keys,cost])=>`<div class="grid" style="gap:6px"><span class="eyebrow">${grp}</span>${keys.map(k=>{const l=G.stats[k],c=cost(l);return `<div class="row" style="justify-content:space-between"><span>${STAT_INFO[k][0]} <b class="mono">${l}</b> <span class="muted" style="font-size:12px">${esc(STAT_INFO[k][1])}</span></span><button class="btn small" data-buy="${k}" data-cost="${c}" ${l>=10||G.money<c?'disabled':''}>+1 · ${money(c)}</button></div>`;}).join('')}</div>`).join('')}</div>
    <div class="grid" style="gap:12px;align-content:start">
     <div class="panel grid" style="gap:8px"><h3>Parts dealer</h3>${G.relicShop?`<div class="slot full"><span class="sn">${RELICS[G.relicShop].slot}</span><b>${RELICS[G.relicShop].n}</b><p>${esc(RELICS[G.relicShop].txt)}</p></div><div class="row"><button class="btn small" id="g-relic" ${G.money<7000?'disabled':''}>Buy · ${money(7000)}</button><button class="btn small" id="g-relic-rr" ${G.money<rerollCost(G.shopRerolls)?'disabled':''}>Reroll · ${money(rerollCost(G.shopRerolls))}</button></div>`:'<p class="muted">Sold out.</p>'}</div>
     ${deckPanel(t)}
@@ -3219,6 +3236,7 @@ function showGarage(){
  el.querySelectorAll('[data-sign]').forEach(b=>b.onclick=()=>{const o=G.sponsorOffers.find(x=>x.id===b.dataset.sign);G.sponsor={id:o.id,per:o.per,bonus:o.bonus,since:G.season||1,renew:!!o.renew};G.sponsorOffers=null;G.nextObjectives=rollRaceObjectives();showGarage();});
  $('#g-go').onclick=()=>{if(!deckOk(t)||!G.sponsor||!evClear())return;G.notice=null;showQuali();};
  $('#g-dsheet').onclick=()=>{sheetTab='driver';openSheet(me().id);};wireEventPanel();
+ {const ch=$('#g-crew');if(ch)ch.onclick=()=>showCrewHQ();}
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -3329,6 +3347,7 @@ function showReward(){
     <div class="row" style="justify-content:space-between"><span>Objectives met (${res.objMet??res.objs.filter(o=>o.ok).length} of ${res.objs.length})</span><b class="mono">${money(objPay)}</b></div>
     ${spR?`<div class="row" style="justify-content:space-between"><span>${esc(spR.n)} · per race</span><b class="mono">${money(res.retainer)}</b></div>`:''}
     ${res.salary?`<div class="row" style="justify-content:space-between"><span>Team salary</span><b class="mono">${money(res.salary)}</b></div>`:''}
+    ${res.wages?`<div class="row" style="justify-content:space-between"><span>Crew wages</span><b class="mono" style="color:#ff7b7f">−${money(res.wages)}</b></div>`:''}
     <div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:8px"><b>Total</b><span class="money">+${money(res.total)}</span></div>
     <div class="row" style="justify-content:space-between"><span class="muted">Bank</span><span class="money" style="font-size:18px">${money(G.money)}</span></div></div>
    <div class="panel"><h3>Top 10 this race</h3><div class="tw"><table><tbody>${rows.map(([i,o])=>{const c=G.cars[o.id];return `<tr style="${c.isMe?'background:rgba(47,179,106,.2)':''}"><td class="num">${i+1}</td><td><i class="famdot" style="background:${TEAMS[c.team].c}"></i>${esc(c.isMe?c.name+' (you)':c.name)}</td><td class="muted">${esc(TEAMS[c.team].name)}</td><td>${o.dnf?'DNF':''}</td></tr>`;}).join('')}</tbody></table></div></div>
@@ -3396,7 +3415,7 @@ function renderSheet(car){
  const canEquip=!race;
  const tabs=[['car','Car & driver'],['driver','Driver sheet'],['gear','Equipment'],['deck','Race deck']];
  let body='';
- if(sheetTab==='car')body=`<div class="grid g2"><div class="panel grid" style="gap:10px"><h3>Driver</h3>${['racecraft','defense','consistency','tireMgmt'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Car</h3>${['power','handling','aero','durability'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Crew</h3>${['crewChief','engineer','spotter'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:6px"><h3>Persona</h3><b>${esc(ARCH[G.arch].n)}</b><p class="muted">${esc(ARCH[G.arch].desc)}</p><p class="muted" style="font-size:13px">Upgrade stats in the garage shop between races.</p></div></div>`;
+ if(sheetTab==='car')body=`<div class="grid g2"><div class="panel grid" style="gap:10px"><h3>Driver</h3>${['racecraft','defense','consistency','tireMgmt'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Car</h3>${['power','handling','aero','durability'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Crew</h3>${['crewChief','engineer','spotter','pitCrew'].map(k=>statRow(k,G.stats[k])).join('')}</div><div class="panel grid" style="gap:6px"><h3>Persona</h3><b>${esc(ARCH[G.arch].n)}</b><p class="muted">${esc(ARCH[G.arch].desc)}</p><p class="muted" style="font-size:13px">Upgrade stats in the garage shop between races.</p></div></div>`;
  if(sheetTab==='driver')body=driverTabHTML();
  if(sheetTab==='gear'){const inv=G.relics.filter(id=>!Object.values(G.equipped).includes(id));
   body=`<p class="muted" style="font-size:13px">${canEquip?'Click an equipped part to remove it, or a part in your inventory to install it in its slot.':'Parts can only be swapped in the garage.'}</p><div class="grid g4">${SLOTS.map(s=>{const id=G.equipped[s];return id?`<button class="slot full" data-unequip="${s}" ${canEquip?'':'disabled'}><span class="sn">${s}</span><b>${RELICS[id].n}</b><p>${esc(RELICS[id].txt)}</p></button>`:`<div class="slot"><span class="sn">${s}</span><p class="muted">Empty slot</p></div>`;}).join('')}</div>
@@ -4049,7 +4068,7 @@ function setupReads(cd){
  return out;
 }
 function setupWear(){const r=race;if(!r||!r.setups)return 1;let m=1;for(const s of r.setups){const d=SETUPS[s.id];if(d.wear)m*=d.wear[s.lvl-1];}for(const p of pgPkgs())if(p.wear)m*=p.wear;return m;}
-function pcOdds(id){const d=PIT_CARDS[id];if(!d.base)return null;const s=clamp((d.base+(G.stats.crewChief-5)*4)/100,0.15,0.95);
+function pcOdds(id){const d=PIT_CARDS[id];if(!d.base)return null;const s=clamp((d.base+((G.stats.pitCrew||G.stats.crewChief)-5)*4+(typeof crewLaneOdds==='function'?crewLaneOdds(d.lane):0))/100,0.15,0.95);
  return d.safe?{cs:s*0.2,s:s*0.8,n:1-s,f:0}:{cs:s*0.2,s:s*0.8,n:(1-s)*0.45,f:(1-s)*0.55};}
 function pcExp(id){const o=pcOdds(id),d=PIT_CARDS[id].d;let e=0;for(const k in o)e+=o[k]*(d[k]||0);return e;}
 function pgBase(c,svc){const R=fuelRange(),m=1-(G.stats.crewChief-5)*0.03,b=(race.pitBonus||0)+relicSum('pit'),tt=PIT.tireT[svc]||0;
@@ -4077,9 +4096,9 @@ function pgVirt(pg,except){const L=(race.setups||[]).map(s=>({...s}));
  return L;}
 function pgOpen(c){
  const r=race,svc=c.pit.svc;if(!G.pitDeck)G.pitDeck=[...PIT_DECK0];
- const prep=Math.min(PG.prepMax,BAL.board?(r.board||0):0);r.board=0;
- const base=pgBase(c,svc),pool=shuffle([...G.pitDeck]).filter(id=>!(id==='fix'&&c.damage<8)&&!(PIT_CARDS[id].lane==='tire'&&!base.tire));
- dzPool(pool,c);const hand=pool.slice(0,PG.hand+prep).map((id,i)=>({id,on:false,prep:i>=PG.hand}));
+ const xh=typeof crewFx==='function'?crewFx('pitHand'):0,prep=Math.min(PG.prepMax,BAL.board?(r.board||0):0)+(typeof crewFx==='function'?crewFx('prep'):0);r.board=0;
+ const base=pgBase(c,svc),pool=shuffle([...G.pitDeck]).filter(id=>!((id==='fix'||id==='fix+')&&c.damage<8)&&!(PIT_CARDS[id].lane==='tire'&&!base.tire));
+ dzPool(pool,c);const hand=pool.slice(0,PG.hand+xh+prep).map((id,i)=>({id,on:false,prep:i>=PG.hand+xh}));
  const pg=r.pg2={phase:'plan',svc,base,hand,prep,left:PG.planSec,t1:r.t,car:c,auto:window.__gfdHeadless?(window.__gfdPitPolicy||'human'):null,field:pgField(svc)};
  r.stats.pitStops=(r.stats.pitStops||0)+1;
  if(pg.auto){pgAutoPlan(pg,pg.auto==='human');pgGo();return;}
@@ -4092,7 +4111,7 @@ function pgAutoPlan(pg,setups){
  for(const pc of pg.hand)pc.on=false;
  const cands=pg.hand.filter(pc=>PIT_CARDS[pc.id].base&&!pcUsable(pg,pc)).sort((a,b)=>pcExp(a.id)-pcExp(b.id));
  for(const pc of cands){const before=pgTotal(pgLanes(pg));pc.on=true;if(pgTotal(pgLanes(pg))>before-0.05)pc.on=false;}
- const fx=pg.hand.find(pc=>pc.id==='fix');if(fx&&(pg.car.damage>=25||dzWorst(pg.car)[1]>=DZ.botFix))fx.on=true;
+ const fx=pg.hand.find(pc=>pc.id==='fix'||pc.id==='fix+');if(fx&&(pg.car.damage>=25||dzWorst(pg.car)[1]>=DZ.botFix))fx.on=true;
  if(!setups)return;
  const adj=pg.hand.filter(pc=>PIT_CARDS[pc.id].setup).sort((a,b)=>{const k=x=>({up:0,new:1,fresh:3,swap:2})[setupPlan(PIT_CARDS[x.id].setup).kind];return k(a)-k(b);});
  const seen=new Set();
@@ -4107,7 +4126,7 @@ function pgGo(timeout){
  if(timeout){pgAutoPlan(pg,false);commentate('Crew chief: "Clock\'s up, we\'ll go with the basics."');}
  for(const pc of pg.hand){if(!pc.on)continue;const d=PIT_CARDS[pc.id];if(d.base){pc.roll=sampleTier(pcOdds(pc.id));pc.delta=d.d[pc.roll]||0;}}
  pg.L=pgLanes(pg,true);pg.T=pgTotal(pg.L);pg.t0=r.t;pg.phase='work';
- pg.w=0.55+0.07*G.stats.crewChief;
+ pg.w=0.55+0.07*(G.stats.pitCrew||G.stats.crewChief)+(typeof crewFx==='function'?crewFx('relWin'):0);
  if(pg.auto)pg.botAt=pg.auto==='human'?pg.T+Math.random()*pg.w*1.3:pg.T+pg.w+BAL.chiefLate;
  if(TUT)TUT.flag='pggo';
  pgRender(true);
@@ -4134,7 +4153,7 @@ function pgRelease(chief){
  const done=[];
  for(const pc of pg.hand){if(!pc.on)continue;const d=PIT_CARDS[pc.id];
   if(d.fix){pg.car.damage=Math.max(0,pg.car.damage-d.fix);done.push('Body +'+d.fix);}
-  if(d.setup){done.push(setupInstall(d.setup));}}
+  if(d.setup){done.push(setupInstall(d.setup,d.up));}}
  r.setupFresh=lapOf(pg.car);for(const s of r.setups||[])s.fresh=r.t;
  pg.done=done;pg.phase='done';pg.doneAt=performance.now();
  const p=pg.car.pit;p.until=r.t;
@@ -4144,13 +4163,13 @@ function pgRelease(chief){
  else if(!chief)commentate(`Late on the release: ${(-e-pg.w>0?(-e).toFixed(1):'a bit')} s after the drop.`);
  pgRender(true);setupsRender();
 }
-function setupInstall(id){
+function setupInstall(id,two){
  const r=race;r.setups=r.setups||[];const pl=setupPlan(id),d=SETUPS[id];
  r.stats.setups=(r.stats.setups||0)+1;
  if(pl.kind==='up'){const s=r.setups.find(x=>x.id===id);s.lvl=2;s.at=r.t;return `${d.s} → Level II`;}
  if(pl.kind==='fresh')return `${d.s} freshened`;
  if(pl.kind==='swap')r.setups.splice(r.setups.indexOf(pl.old),1);
- r.setups.push({id,lvl:1,at:r.t});
+ r.setups.push({id,lvl:two?2:1,at:r.t}); // step 19: an upgraded Setup card (+) installs at Level II
  const pk=PACKAGES.find(p=>p.of.includes(id)&&p.of.every(x=>r.setups.some(s=>s.id===x)));
  if(pk){r.stats.packages=(r.stats.packages||0)+1;setTimeout(()=>{if(race===r)flag(pk.n.toUpperCase(),'#2a5bd7','#fff',2.4);},900);}
  return pl.kind==='swap'?`${d.s} in (${SETUPS[pl.old.id].s} out)`:`${d.s} installed`;
@@ -4194,7 +4213,7 @@ function pcHtml(pg,pc,i){
  let big,sub,tag=d.lane==='any'?'Any lane':LANE_N[d.lane];
  if(d.base){const s=o.s+o.cs;big=`<span class="pgc-o" style="color:${s>=0.7?'#58d68d':s>=0.5?'#ffd666':'#ff7b7f'}">${G.showOdds?Math.round(s*100)+'%':'?'}</span>`;sub=`${d.txt} · ${d.miss}`;}
  else if(d.setup){const vl=pgVirt(pg,pc),pl=setupPlan(d.setup,vl),S=SETUPS[d.setup];tag='Setup';big=`<span class="pgc-o t">+${PG.adjT} s</span>`;
-  sub=S.txt(pl.kind==='up'?2:1)+(pl.kind==='up'?' · → Level II':pl.kind==='fresh'?' · already Level II':pl.kind==='swap'?` · replaces ${SETUPS[pl.old.id].s}`:'');
+  sub=S.txt(pl.kind==='up'||d.up?2:1)+(pl.kind==='up'?' · → Level II':pl.kind==='fresh'?' · already Level II':pl.kind==='swap'?` · replaces ${SETUPS[pl.old.id].s}`:'');
   const pk=PACKAGES.find(p=>p.of.includes(d.setup)&&p.of.every(x=>x===d.setup||vl.some(s=>s.id===x)));if(pk&&pl.kind!=='up'&&pl.kind!=='fresh')sub+=` · completes ${pk.n}`;}
  else{big=`<span class="pgc-o t">+${d.time} s</span>`;sub=d.txt;}
  return `<button class="pgc ${d.setup?'su':d.lane} ${pc.on?'on':''} ${blk?'blk':''} ${pc.prep?'prep':''}" data-pc="${i}" title="${esc(blk||'')}"><i>${i+1} · ${tag}${pc.prep?' · Prep':''}</i><b>${esc(d.n)}</b>${big}<small>${esc(blk||sub)}</small></button>`;
@@ -4478,7 +4497,7 @@ function dzWear(c){return c.dz?1+c.dz.tail*DZ.wear:1;}
  return m*nu/Math.max(0.5,old);
 };}
 // a damaged car always finds the Fix card in its pit hand
-function dzPool(pool,c){if(dzWorst(c)[1]<DZ.poolFix)return;const i=pool.indexOf('fix');if(i>0){pool.splice(i,1);pool.unshift('fix');}}
+function dzPool(pool,c){if(dzWorst(c)[1]<DZ.poolFix)return;let i=pool.indexOf('fix');if(i<0)i=pool.indexOf('fix+');if(i>0){const f=pool.splice(i,1)[0];pool.unshift(f);}}
 // a crushed tail steps out now and then; a bent nose smokes
 {const _up=update;update=function(dt){_up.apply(this,arguments);
  const r=race;if(!r||!r.cars)return;for(const c of r.cars)if(c.pit&&c.dz)dzOf(c); // repairs on pit road leave tape
@@ -5087,7 +5106,8 @@ Object.defineProperty(window.__gfd,'QS',{get(){return QS;}});
 .evq{font-family:var(--display);font-weight:700;font-size:clamp(20px,3.4vw,28px);line-height:1.15}
 .tone{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:2px;background:var(--panel3);color:var(--muted)}
 .evmath{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:13px}
-.evmath .ml{background:var(--panel3);border-radius:3px;padding:2px 7px;white-space:nowrap}
+.evmath .ml{background:var(--panel3);border-radius:3px;padding:2px 7px;white-space:nowrap;flex-shrink:0;max-width:100%}
+.evmath .ml.k-sit{white-space:normal}
 .evmath .ml b{font-family:var(--mono);margin-left:4px}
 .evmath .ml.k-prof{box-shadow:inset 0 -2px 0 var(--green)}.evmath .ml.k-image{box-shadow:inset 0 -2px 0 #a99bff}.evmath .ml.k-trait{box-shadow:inset 0 -2px 0 var(--amber)}.evmath .ml.k-sit{box-shadow:inset 0 -2px 0 var(--accent)}
 .evmath .ml.neg b{color:#ff7b7f}.evmath .ml.pos b{color:#58d68d}
@@ -5458,4 +5478,205 @@ function wireDriverTab(box,car){box.querySelectorAll('[data-attr-up]').forEach(b
 function bgPickHTML(){return `<div class="grid" style="gap:10px" id="t-bgs"><h2>Background <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· off track: press, sponsors, contracts</span></h2><p class="muted" style="font-size:13px">Your driver sheet for d20 checks off track. A background sets your six attributes, two proficient skills, a trait and a flaw. It doesn't change your cards or car.</p><div class="grid g4">${Object.entries(BACKGROUNDS).map(([k,B])=>{const on=(titleSel.bg||BG_FOR[titleSel.arch])===k;return `<button class="panel sel${on?' on':''}" data-bg="${k}" style="padding:10px 12px"><h3>${esc(B.n)}</h3><p style="font-size:13px">${esc(B.blurb)}</p><p style="font-size:12px;margin-top:4px"><b>Proficient:</b> ${B.prof.map(x=>DSKILL[x].n).join(', ')}</p><p style="font-size:12px"><b style="color:var(--amber)">${esc(B.trait.n)}:</b> ${esc(B.trait.txt)}</p><p style="font-size:12px"><b style="color:#ff7b7f">${esc(B.flaw.n)}:</b> ${esc(B.flaw.txt)}</p><p class="mono muted" style="font-size:11px;margin-top:4px">${Object.keys(DATTR).map(x=>DATTR[x].ab+' '+B.attr[x]).join(' · ')}</p></button>`;}).join('')}</div>${titleSel.bg?'':'<p class="muted" style="font-size:12px">Picked to match your persona until you choose one.</p>'}</div>`;}
 if(screen==='title'&&!G)renderTitle(); // the title first renders before this script loads
 Object.assign(window.__gfd,{DATTR,DSKILL,BACKGROUNDS,IMAGES,EVENTS,OFF_SCHED,newDriver,ensureDrv,chkBuild,chkOdds,chkTier,chkRoll,chkHelp,tierFx,applyFx,makeEvent,offTrackNext,evClear,evRound,showEvent,evChoose,evNext,evWalk,evReroll,imageOf,addXp,skillTotal,raceHype,amod});
+</script>
+<style id="crew-css">
+/* step 19: Crew HQ */
+.crew-staff{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.cs{display:grid;gap:8px;align-content:start;border-top:3px solid var(--rc,var(--accent))}
+.cs .lv{font-family:var(--display);font-weight:800;font-size:38px;line-height:.9;color:var(--rc,var(--accent))}
+.cs .lv small{font-size:14px;color:var(--muted)}
+.xpb{height:6px;background:var(--panel3);border-radius:3px;overflow:hidden}.xpb i{display:block;height:100%;background:var(--rc,var(--accent))}
+.trait{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:2px;background:#2a1c00;color:var(--amber)}
+.ptiers{display:grid;gap:6px}
+.ptier{display:grid;grid-template-columns:30px 1fr 1fr;gap:6px;align-items:stretch}
+.ptier>span{font-family:var(--mono);font-size:11px;color:var(--muted);align-self:center}
+.perk{background:var(--panel3);border:1px solid var(--line);border-radius:4px;padding:6px 8px;text-align:left;display:grid;gap:2px;font-size:12px;line-height:1.3;align-content:start}
+.perk b{font-size:13px}.perk.on{border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.perk.off{opacity:.4}.perk.lock{opacity:.5;cursor:default}
+.perk.armed{border-color:var(--amber)}
+.perk.ready{border-color:var(--accent)}
+.calls{display:grid;gap:3px;font-size:12px;background:rgba(0,0,0,.18);border-radius:4px;padding:6px 8px}
+.calls .cl{display:flex;justify-content:space-between;gap:8px}.calls .cl.lock{color:var(--muted)}
+.calls .cl b{font-family:var(--mono)}
+.pitdeck{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.pcard{background:var(--panel3);border:1px solid var(--line);border-left:4px solid var(--lc,var(--accent));border-radius:4px;padding:8px;display:grid;gap:4px;font-size:12px;align-content:start;text-align:left}
+.pcard b{font-size:13px}.pcard.plus{border-color:var(--amber);border-left-color:var(--lc,var(--accent))}.pcard.pick{outline:2px dashed var(--accent);cursor:pointer}
+.pcard .o{font-family:var(--mono);font-weight:700}
+.pcard.tire{--lc:#6ea8ff}.pcard.fuel{--lc:#e9b52f}.pcard.any{--lc:#2fb36a}.pcard.adj{--lc:#a98bff}
+.crewsum{display:flex;flex-wrap:wrap;gap:6px}.crewsum span{background:var(--panel3);border-radius:3px;padding:2px 8px;font-size:12px}.crewsum b{font-family:var(--mono)}
+.cbadge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#04101f;font-size:12px;font-weight:700;text-align:center}
+</style>
+<script id="crew-js">
+/* ================= Crew HQ (roadmap step 19) =================
+   Four staff: crew chief, spotter and engineer make the radio calls (a risk layer of their own, not part of cards or combos);
+   the pit crew works your pit cards and the release window. A member's level is G.stats[role]. Training buys +1 level at the
+   driver coaching price (3000 + 1200 per level above 3, a little more than the old crew shop), and XP from the calls you take (stops, for the pit crew) levels them too. Levels 4, 6 and 8 each open a
+   two-way perk choice, and levels 6 and 8 unlock that member's bigger calls (Q13, in RADIO_CALLS). Hiring brings in a better
+   or different person: a trait, a wage, and perks picked fresh. Crew HQ also sells and upgrades pit cards (Q23).
+   A fresh crew has no perks or traits, so default-level harness runs play the same calls as before. */
+const CREW_ROLES=['crewChief','spotter','engineer','pitCrew'],CALL_ROLES=['crewChief','spotter','engineer'];
+const ROLE={crewChief:{n:'Crew chief',c:'#e9b52f',d:'Strategy and tire calls on the radio. Shorter pit lane times.'},
+ spotter:{n:'Spotter',c:'#6ea8ff',d:'Racing calls: lines, blocks and moves. Above level 5 every card also reads a little better.'},
+ engineer:{n:'Engineer',c:'#a98bff',d:'Car calls: brake bias, pressures, engine maps.'},
+ pitCrew:{n:'Pit crew',c:'#2fb36a',d:'Over the wall: pit card odds and the release window at your stops.'}};
+const CREW_TRAIN=l=>3000+1200*Math.max(0,l-3),CREW_XP=l=>60+20*l,CREW_MAX=10;
+const CXP={call:3,won:3,stop:4,perfect:4};
+const PERKS={
+ crewChief:[{lvl:4,a:{id:'tires',n:'Tire whisperer',t:'Crew chief calls pay 25% more.',fx:{pay:0.25}},b:{id:'calm',n:'Calm voice',t:'+3% on every crew call.',fx:{chanceAll:3}}},
+  {lvl:6,a:{id:'strategist',n:'Strategist',t:'+1 Prep card at every pit stop.',fx:{prep:1}},b:{id:'motivator',n:'Motivator',t:'Any crew call that works also gives +1 Momentum.',fx:{momAll:1}}},
+  {lvl:8,a:{id:'bigpic',n:'Big picture',t:'Crew calls come 15% more often.',fx:{rate:0.85}},b:{id:'safehands',n:'Safe hands',t:'Every missed crew call costs half.',fx:{softAll:2}}}],
+ spotter:[{lvl:4,a:{id:'eyes',n:'Eyes up top',t:'+5% on spotter calls.',fx:{chance:5}},b:{id:'chatter',n:'Chatter',t:'Spotter calls come up twice as often.',fx:{weight:2}}},
+  {lvl:6,a:{id:'door',n:'Door to door',t:'Spotter calls pay 30% more.',fx:{pay:0.3}},b:{id:'clean',n:'Clean racer',t:'Missed spotter calls cost 60% less.',fx:{soft:2.5}}},
+  {lvl:8,a:{id:'again',n:'Second look',t:'After a spotter call works, 35% chance another call comes right away.',fx:{again:0.35}},b:{id:'net',n:'Safety net',t:'Half of your missed spotter calls cost nothing.',fx:{net:0.5}}}],
+ engineer:[{lvl:4,a:{id:'data',n:'Data nerd',t:'+5% on engineer calls.',fx:{chance:5}},b:{id:'margins',n:'Safe margins',t:'Missed engineer calls cost half.',fx:{soft:2}}},
+  {lvl:6,a:{id:'overdrive',n:'Overdrive',t:'Engineer calls pay 30% more.',fx:{pay:0.3}},b:{id:'cool',n:'Cool running',t:'An engineer call that works also repairs 4 damage.',fx:{fixOnS:4}}},
+  {lvl:8,a:{id:'opinion',n:'Second opinion',t:'Once a race, a missed crew call is rolled again.',fx:{reroll:1}},b:{id:'telemetry',n:'Telemetry',t:'Engineer calls come up 60% more often.',fx:{weight:1.6}}}],
+ pitCrew:[{lvl:4,a:{id:'hands',n:'Quick hands',t:'Tire cards +6%.',fx:{tireOdds:6}},b:{id:'gas',n:'Gas men',t:'Fuel and any-lane cards +6%.',fx:{fuelOdds:6}}},
+  {lvl:6,a:{id:'drilled',n:'Drilled',t:'Release window +0.15 s.',fx:{relWin:0.15}},b:{id:'bench',n:'Deep bench',t:'+1 card in every pit hand.',fx:{pitHand:1}}},
+  {lvl:8,a:{id:'pitperfect',n:'Pit perfect',t:'Tire and fuel lanes start 0.4 s quicker.',fx:{laneCut:0.4}},b:{id:'bodymen',n:'Body men',t:'Fix the Damage takes 2 s less and fixes 10 more.',fx:{bodymen:1}}}]
+};
+const CTRAITS={
+ steady:{n:'Steady',t:'+5% on their calls (pit crew: pit cards).',fx:{chance:5}},
+ gambler:{n:'Gambler',t:'Their calls pay 25% more but land 5% less often.',fx:{pay:0.25,chance:-5},calls:1},
+ veteran:{n:'Veteran',t:'Their missed calls cost 30% less.',fx:{soft:1.43},calls:1},
+ chatty:{n:'Chatty',t:'Their calls come up 50% more often.',fx:{weight:1.5},calls:1},
+ clutch:{n:'Clutch',t:'+12% on their calls in the last 30% of a race.',fx:{late:12},calls:1},
+ mentor:{n:'Mentor',t:'The whole crew earns 50% more XP.',fx:{xp:0.5}},
+ lightning:{n:'Lightning',t:'Pit cards +5% and release window +0.1 s.',fx:{tireOdds:5,fuelOdds:5,relWin:0.1},pit:1}
+};
+const CREW_MULT={rate:1,soft:1,softAll:1,weight:1};
+const CREW_NAMES=['Dale Pruitt','Rita Okafor','Hank Lowery','Mo Delgado','Teddy Vance','Jo Whitlock','Cal Brennan','Nia Foster','Gus Harlan','Shay Moreno','Boone Ritter','Lena Park','Wes Calloway','Dot Pickens','Ray Tillman','Kit Sorensen'];
+// names from the clock, not Math.random, so a new career leaves seeded harness runs untouched
+function newCrew(){const o=Date.now()%CREW_NAMES.length,c={};CREW_ROLES.forEach((k,i)=>c[k]={name:CREW_NAMES[(o+i*5)%CREW_NAMES.length],xp:0,trait:null,wage:0,perks:{},since:1});return c;}
+function ensureCrew(){if(!G)return;if(G.stats.pitCrew==null)G.stats.pitCrew=G.stats.crewChief;if(!G.crew)G.crew=newCrew();for(const k of CREW_ROLES)if(!G.crew[k])G.crew[k]={name:pick(CREW_NAMES),xp:0,trait:null,wage:0,perks:{}};if(!G.pitDeck)G.pitDeck=[...PIT_DECK0];}
+// every active fx entry: chosen perks (tier unlocked by level) and traits, with the role they belong to
+function crewList(){const out=[];if(!G||!G.crew)return out;
+ for(const k of CREW_ROLES){const m=G.crew[k];if(!m)continue;const lv=G.stats[k]||3;
+  PERKS[k].forEach((t,i)=>{const ch=m.perks&&m.perks[i];if(ch&&lv>=t.lvl)out.push([k,t[ch].fx]);});
+  if(m.trait&&CTRAITS[m.trait])out.push([k,CTRAITS[m.trait].fx]);}
+ return out;}
+function crewFx(key,role){const mul=key in CREW_MULT;let v=mul?1:0;
+ for(const [k,fx] of crewList()){if(role&&k!==role)continue;const x=fx[key];if(x==null)continue;v=mul?v*x:v+x;}return v;}
+function crewLate(){const r=race;if(!r)return false;const m=meCar();return m&&lapOf(m)>=r.track.laps*0.7;}
+function crewChance(stat){return crewFx('chance',stat)+crewFx('chanceAll')+(crewLate()?crewFx('late',stat):0);}
+function crewPay(stat){return 1+crewFx('pay',stat);}
+function crewSoft(stat){return crewFx('soft',stat)*crewFx('softAll');}
+function crewWeight(call){return call.stat?crewFx('weight',call.stat):1;}
+// more calls with a better crew: -2% gap per level above 3 (talking crew members), times perks
+function crewRate(){if(!G||!G.stats)return 1;const a=CALL_ROLES.reduce((s,k)=>s+Math.max(0,(G.stats[k]||3)-3),0)/CALL_ROLES.length;return Math.max(0.5,(1-0.02*a)*crewFx('rate'));}
+function crewLaneOdds(lane){return crewFx('chance','pitCrew')+(lane==='tire'?crewFx('tireOdds'):lane==='fuel'||lane==='any'?crewFx('fuelOdds'):0);}
+function cxp(role,n){const r=race;if(!r||!role)return;r.crewXp=r.crewXp||{};r.crewXp[role]=(r.crewXp[role]||0)+n;}
+function crewAfterCall(call,ok,car){const r=race;r.stats.calls=(r.stats.calls||0)+1;if(ok)r.stats.callsWon=(r.stats.callsWon||0)+1;
+ cxp(call.stat,CXP.call+(ok?CXP.won:0));if(!ok)return;
+ const m=crewFx('momAll');if(m)mom(m);
+ const fx=crewFx('fixOnS',call.stat);if(fx&&car.damage>0)dzFix(car,Math.min(fx,car.damage),'nose');
+ const ag=crewFx('again',call.stat);if(ag&&Math.random()<ag)r.radioSoon=2;}
+function crewEndRace(res,r){
+ if(!G.crew||G._pti!=null)return;
+ res.wages=CREW_ROLES.reduce((s,k)=>s+(G.crew[k].wage||0),0)||0;if(!res.wages)delete res.wages;
+ const xp=r.crewXp||{};let k=1+crewFx('xp');if(G.drv&&G.drv.attr&&typeof amod==='function')k+=0.1*Math.max(0,amod(G.drv.attr.rapport||10));
+ res.crewXp={};res.crewUp=[];res.calls=r.stats.calls||0;res.callsWon=r.stats.callsWon||0;
+ for(const role of CREW_ROLES){const n=Math.round((xp[role]||0)*k);if(!n)continue;res.crewXp[role]=n;const m=G.crew[role];m.xp=(m.xp||0)+n;
+  while(G.stats[role]<CREW_MAX&&m.xp>=CREW_XP(G.stats[role])){m.xp-=CREW_XP(G.stats[role]);G.stats[role]++;res.crewUp.push(role);}
+  if(G.stats[role]>=CREW_MAX)m.xp=Math.min(m.xp,CREW_XP(CREW_MAX));}
+}
+/* ---- pit crew hooks ---- */
+const _pgRelease19=pgRelease;
+pgRelease=function(chief){const pg=race&&race.pg2,was=pg&&pg.phase;_pgRelease19(chief);if(pg&&was==='work'&&pg.phase==='done')cxp('pitCrew',CXP.stop+(pg.perfect?CXP.perfect:0));};
+const _pgBase19=pgBase;
+pgBase=function(c,svc){const o=_pgBase19(c,svc),k=crewFx('laneCut');if(k){if(o.tire)o.tire=Math.max(2.5,o.tire-k);o.fuel=Math.max(1,o.fuel-k);}return o;};
+/* ---- pit cards: three new ones, and a + version of every card (Q23) ---- */
+Object.assign(PIT_CARDS,{
+ lightning_lugs:{n:'Lightning Lugs',lane:'tire',base:58,d:{cs:-3,s:-2.2,n:0,f:2},txt:'Tires −2.2 s',miss:'miss +2 s'},
+ gas_man:{n:'Gas Man Pro',lane:'fuel',base:78,safe:1,d:{cs:-1.4,s:-1,n:-0.3},txt:'Fuel −1 s',miss:'never slower'},
+ swing_man:{n:'Swing Man',lane:'any',base:80,safe:1,d:{cs:-1,s:-0.7,n:-0.2},txt:'Slowest lane −0.7 s',miss:'never slower'}
+});
+const PIT_SHOP=['lightning_lugs','gas_man','swing_man'],PIT_BUY=2000,PIT_UP=1500;
+const fmtD=v=>(Math.round(Math.abs(v)*10)/10).toString();
+for(const id of Object.keys(PIT_CARDS)){const d=PIT_CARDS[id],u={...d,n:d.n+'+',up:1,of:id};
+ if(d.base){u.base=Math.min(95,d.base+10);u.d={};for(const k in d.d)u.d[k]=d.d[k]<0?+(d.d[k]*1.25).toFixed(2):+(d.d[k]*0.75).toFixed(2);
+  u.txt=d.txt.replace(/−([\d.]+) s/,()=>`−${fmtD(u.d.s)} s`);u.miss=d.safe?d.miss:`miss +${fmtD(u.d.f)} s`;}
+ else if(d.setup)u.txt='Installs at Level II';
+ PIT_CARDS[id+'+']=u;}
+// Fix the Damage reads the Body men perk live
+for(const id of ['fix','fix+']){const d=PIT_CARDS[id],base={time:id==='fix'?PG.fixT:3,fix:id==='fix'?20:30};
+ Object.defineProperty(d,'time',{get:()=>base.time-(crewFx('bodymen')?2:0),enumerable:true});
+ Object.defineProperty(d,'fix',{get:()=>base.fix+(crewFx('bodymen')?10:0),enumerable:true});
+ Object.defineProperty(d,'txt',{get:()=>`+${d.time} s · fixes ${d.fix}, worst spot first`,enumerable:true});}
+function pitCardHTML(id,i,mode){const d=PIT_CARDS[id];let o='',sub='';
+ if(d.base){const p=pcOdds(id);o=`${Math.round((p.s+p.cs)*100)}%`;sub=`${d.txt} · ${d.miss}`;}
+ else if(d.setup){o=`+${PG.adjT} s`;sub=d.up?`${SETUPS[d.setup].txt(2)} (Level II)`:SETUPS[d.setup].txt(1);}
+ else{o=`+${d.time} s`;sub=d.txt;}
+ const lane=d.setup?'adj':d.lane,tag=d.setup?'Setup':d.lane==='any'?'Any lane':LANE_N[d.lane];
+ const act=mode==='pick'?'':mode==='shop'?`<button class="btn small" data-pbuy="${id}" ${G.money<PIT_BUY?'disabled':''}>Swap in · ${money(PIT_BUY)}</button>`
+  :d.up?'<span class="muted" style="font-size:11px">Upgraded</span>':`<button class="btn small" data-pup="${i}" ${G.money<PIT_UP?'disabled':''}>Upgrade · ${money(PIT_UP)}</button>`;
+ return `<${mode==='pick'?'button':'div'} class="pcard ${lane} ${d.up?'plus':''} ${mode==='pick'?'pick':''}" ${mode==='pick'?`data-pswap="${i}"`:''}><span class="eyebrow" style="font-size:10px">${tag}</span><b>${esc(d.n)}</b><span class="o">${o}</span><span class="muted">${esc(sub)}</span>${act}</${mode==='pick'?'button':'div'}>`;}
+/* ---- hiring ---- */
+function rollHire(){const roles=shuffle([...CREW_ROLES]).slice(0,3),used=new Set(CREW_ROLES.map(k=>G.crew[k].name));
+ return roles.map(role=>{const cur=G.stats[role],lvl=clamp(cur+randi(0,2),3,CREW_MAX);
+  const tr=pick(Object.keys(CTRAITS).filter(t=>role==='pitCrew'?!CTRAITS[t].calls:!CTRAITS[t].pit));
+  let fee=1200;for(let l=cur;l<lvl;l++)fee+=CREW_TRAIN(l)*0.8;
+  const name=pick(CREW_NAMES.filter(n=>!used.has(n)));used.add(name);
+  return {role,lvl,trait:tr,name,fee:Math.round(fee/100)*100,wage:250*(lvl-2)};});}
+function crewHire(){if(!G.hire||G.hire.ri!==G.raceIdx||G.hire.s!==(G.season||1))G.hire={ri:G.raceIdx,s:G.season||1,list:rollHire()};return G.hire.list;}
+/* ---- screens ---- */
+const crewUI={swap:null};
+function crewReady(){let n=0;for(const k of CREW_ROLES){const m=G.crew[k];PERKS[k].forEach((t,i)=>{if(G.stats[k]>=t.lvl&&!(m.perks&&m.perks[i]))n++;});}return n;}
+function crewGaragePanel(){ensureCrew();const n=crewReady();
+ return `<div class="grid" style="gap:6px"><span class="eyebrow">Crew</span><div class="row" style="justify-content:space-between"><div class="crewsum">${CREW_ROLES.map(k=>`<span>${ROLE[k].n} <b>${G.stats[k]}</b></span>`).join('')}</div><button class="btn small" id="g-crew">Crew HQ${n?` <span class="cbadge">${n}</span>`:''}</button></div><span class="muted" style="font-size:12px">Hire and train staff, pick perks, upgrade pit cards.${n?` ${n} perk choice${n>1?'s':''} waiting.`:''}</span></div>`;}
+function callChance(c){return clamp(c.base+G.stats[c.stat]*c.per+relicSum('radioBonus')+crewFx('chance',c.stat)+crewFx('chanceAll'),5,95);}
+function staffHTML(k){const m=G.crew[k],R=ROLE[k],lv=G.stats[k],need=CREW_XP(lv),tr=m.trait&&CTRAITS[m.trait];
+ let calls;
+ if(k==='pitCrew'){const w=0.55+0.07*lv+crewFx('relWin');calls=['quick_jack','fast_fill','lug_gamble'].map(id=>{const p=pcOdds(id);return `<div class="cl"><span>${esc(PIT_CARDS[id].n)}</span><b>${Math.round((p.s+p.cs)*100)}%</b></div>`;}).join('')+`<div class="cl"><span>Release window</span><b>${w.toFixed(2)} s</b></div>`;}
+ else calls=RADIO_CALLS.filter(c=>c.stat===k).map(c=>c.lvl&&lv<c.lvl?`<div class="cl lock"><span>🔒 ${esc(c.nm)}</span><span>level ${c.lvl}</span></div>`:`<div class="cl"><span>${c.lvl?'★ ':''}${esc(c.nm)}</span><b>${callChance(c)}%</b></div>`).join('');
+ const tiers=PERKS[k].map((t,i)=>{const ch=m.perks&&m.perks[i];return `<div class="ptier"><span>Lv ${t.lvl}</span>${['a','b'].map(x=>{const p=t[x],lock=lv<t.lvl,cls=lock?'lock':ch===x?'on':ch?'off':'ready';
+  return `<button class="perk ${cls}" ${lock||ch?'disabled':''} data-perk="${k}|${i}|${x}" title="${esc(p.t)}"><b>${ch===x?'✓ ':''}${esc(p.n)}</b><span class="muted">${esc(p.t)}</span></button>`;}).join('')}</div>`;}).join('');
+ const cost=CREW_TRAIN(lv);
+ return `<div class="panel cs" style="--rc:${R.c}" data-role="${k}">
+  <div class="row" style="justify-content:space-between"><span class="eyebrow">${R.n}</span>${tr?`<span class="trait" title="${esc(tr.t)}">${esc(tr.n)}</span>`:''}</div>
+  <div class="row" style="justify-content:space-between;align-items:flex-end"><div class="grid" style="gap:2px"><h3>${esc(m.name)}</h3><span class="muted" style="font-size:12px">${m.wage?`${money(m.wage)} a race${tr?' · '+esc(tr.t):''}`:'Volunteer · no wage'}</span></div><div class="lv">${lv}<small>/10</small></div></div>
+  ${lv<CREW_MAX?`<div class="xpb"><i style="width:${Math.min(100,(m.xp||0)/need*100).toFixed(0)}%"></i></div><span class="muted" style="font-size:12px">${m.xp||0} / ${need} XP to level ${lv+1} · ${k==='pitCrew'?'earned at every stop, more for a Perfect Stop':'earned on every call of theirs you take, more when it works'}</span>`:'<span class="muted" style="font-size:12px">Maxed out.</span>'}
+  <p class="muted" style="font-size:13px">${esc(R.d)}</p>
+  <div class="calls"><span class="eyebrow" style="font-size:10px">${k==='pitCrew'?'At your stops':'Their calls · chance to work'}</span>${calls}</div>
+  <div class="ptiers"><span class="eyebrow" style="font-size:10px">Perks · pick one per tier, for good</span>${tiers}</div>
+  <button class="btn small" data-train="${k}" ${lv>=CREW_MAX||G.money<cost?'disabled':''}>${lv>=CREW_MAX?'Level 10':`Train to level ${lv+1} · ${money(cost)}`}</button></div>`;}
+function showCrewHQ(){ensureCrew();const el=$('#crewhq');$('#garage').innerHTML='';
+ const hire=crewHire(),rate=crewRate(),gap=Math.round(28*rate);
+ const callAvg=(()=>{const cs=RADIO_CALLS.filter(c=>c.kind==='mech'&&(!c.lvl||G.stats[c.stat]>=c.lvl));return Math.round(cs.reduce((s,c)=>s+callChance(c),0)/cs.length);})();
+ const unlocked=RADIO_CALLS.filter(c=>c.lvl&&G.stats[c.stat]>=c.lvl).length,wages=CREW_ROLES.reduce((s,k)=>s+(G.crew[k].wage||0),0);
+ const sw=crewUI.swap;
+ el.innerHTML=`<div class="page-in">
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Crew HQ · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN}</span><h2>Your crew</h2></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn primary" id="c-back">Back to garage</button></div></div>
+  <div class="panel grid" style="gap:8px"><p>Crew calls are risky extra plays on the radio, separate from your cards and combos. A better crew offers them more often, lands them more and pays more, and levels 6 and 8 unlock bigger calls. Spending here instead of on driver coaching is a real way to race.</p>
+   <div class="crewsum"><span>A call about every <b>${gap} s</b></span><span>Average call <b>${callAvg}%</b> to work</span><span>Big calls unlocked <b>${unlocked} of 6</b></span><span>Wages <b>${money(wages)}</b> a race</span></div></div>
+  <div class="crew-staff">${CREW_ROLES.map(staffHTML).join('')}</div>
+  <div class="panel grid" style="gap:10px"><div class="grid" style="gap:2px"><h3>Hire</h3><span class="muted" style="font-size:13px">A hire replaces the person in that seat. They arrive at their level with a trait and a wage, and you pick their perks fresh. New faces every race.</span></div>
+   <div class="grid g4">${hire.map((h,i)=>{const tr=CTRAITS[h.trait],cur=G.stats[h.role];return `<div class="panel cand" style="background:var(--panel3)"><span class="eyebrow">${ROLE[h.role].n}</span><h3>${esc(h.name)}</h3><span><b class="mono">Level ${h.lvl}</b> <span class="muted">(yours: ${cur})</span></span><span><span class="trait">${esc(tr.n)}</span> <span class="muted" style="font-size:12px">${esc(tr.t)}</span></span><span class="muted" style="font-size:12px">${money(h.wage)} a race</span><button class="btn small" data-hire="${i}" ${G.money<h.fee?'disabled':''}>Hire · ${money(h.fee)}</button></div>`;}).join('')||'<p class="muted">Nobody else is looking right now.</p>'}</div></div>
+  <div class="panel grid" style="gap:10px"><div class="grid" style="gap:2px"><h3>Pit deck · ${G.pitDeck.length} cards</h3><span class="muted" style="font-size:13px">You draw 5 of these at every stop. An upgrade (+) adds 10% to the odds and makes the gain bigger, or installs a Setup straight at Level II.</span></div>
+   ${sw?`<div class="row" style="border:1px dashed var(--accent);border-radius:4px;padding:8px"><b>Pick the card ${esc(PIT_CARDS[sw].n)} replaces.</b><button class="btn small" id="c-swap-x">Cancel</button></div>`:''}
+   <div class="pitdeck">${G.pitDeck.map((id,i)=>pitCardHTML(id,i,sw?'pick':'deck')).join('')}</div>
+   <span class="eyebrow">Pit card dealer</span><div class="pitdeck">${PIT_SHOP.map(id=>pitCardHTML(id,0,'shop')).join('')}</div></div>
+ </div>`;
+ const save=()=>{if(typeof saveSeason==='function')saveSeason();showCrewHQ();};
+ $('#c-back').onclick=()=>{crewUI.swap=null;showGarage();};
+ el.querySelectorAll('[data-train]').forEach(b=>b.onclick=()=>{const k=b.dataset.train,c=CREW_TRAIN(G.stats[k]);if(G.money<c||G.stats[k]>=CREW_MAX)return;G.money-=c;G.stats[k]++;save();});
+ el.querySelectorAll('[data-perk]').forEach(b=>armTap(b,'<b>Tap again to lock it in</b><span class="muted">This choice is for good.</span>',()=>{const [k,i,x]=b.dataset.perk.split('|');const m=G.crew[k];m.perks=m.perks||{};if(m.perks[i]||G.stats[k]<PERKS[k][i].lvl)return;m.perks[i]=x;save();}));
+ el.querySelectorAll('[data-hire]').forEach(b=>armTap(b,`Tap again: replaces ${esc(G.crew[hire[+b.dataset.hire].role].name)}`,()=>{const h=hire[+b.dataset.hire];if(!h||G.money<h.fee)return;G.money-=h.fee;G.stats[h.role]=Math.max(G.stats[h.role],h.lvl);G.crew[h.role]={name:h.name,xp:0,trait:h.trait,wage:h.wage,perks:{},since:G.season||1};G.hire.list.splice(G.hire.list.indexOf(h),1);save();}));
+ el.querySelectorAll('[data-pup]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pup,id=G.pitDeck[i];if(!id||PIT_CARDS[id].up||G.money<PIT_UP)return;G.money-=PIT_UP;G.pitDeck[i]=id+'+';save();});
+ el.querySelectorAll('[data-pbuy]').forEach(b=>b.onclick=()=>{crewUI.swap=b.dataset.pbuy;showCrewHQ();});
+ el.querySelectorAll('[data-pswap]').forEach(b=>b.onclick=()=>{const i=+b.dataset.pswap,id=crewUI.swap;if(!id||G.money<PIT_BUY)return;G.money-=PIT_BUY;G.pitDeck[i]=id;crewUI.swap=null;save();});
+ {const x=$('#c-swap-x');if(x)x.onclick=()=>{crewUI.swap=null;showCrewHQ();};}
+ showScreen('crewhq');el.scrollTop=0;}
+/* ---- reward screen: crew XP, level-ups, wages ---- */
+const _showReward19=showReward;
+showReward=function(){_showReward19();const R=G.reward,res=R&&R.res;if(!res||!res.crewXp)return;const el=$('#reward .page-in');if(!el||el.querySelector('#w-crew'))return;
+ const xs=Object.entries(res.crewXp);if(!xs.length&&!res.wages)return;
+ const html=`<div class="panel row" id="w-crew" style="gap:10px;justify-content:space-between"><span class="row" style="gap:8px"><b>Crew</b>${res.calls?`<span class="muted" style="font-size:13px">${res.callsWon} of ${res.calls} calls worked</span>`:''}${xs.map(([k,n])=>`<span class="fxc up">${ROLE[k].n} +${n} XP</span>`).join('')}${(res.crewUp||[]).map(k=>`<span class="fxc up">▲ ${ROLE[k].n} level ${G.stats[k]}</span>`).join('')}${res.wages?`<span class="muted" style="font-size:13px">Wages −${money(res.wages)} (taken from the payout)</span>`:''}</span><button class="btn small" id="w-crewhq">Crew HQ</button></div>`;
+ const d=$('#w-drv');if(d)d.insertAdjacentHTML('afterend',html);else el.insertAdjacentHTML('beforeend',html);
+ const b=$('#w-crewhq');if(b)b.onclick=()=>{const go=$('#w-go');if(go&&!go.disabled)go.click();if(screen==='garage')showCrewHQ();};};
+/* ---- harness / tests: set up a crew build ---- */
+function crewSetup(o){ensureCrew();o=o||{};if(o.stats)for(const k in o.stats)G.stats[k]=o.stats[k];
+ if(o.perks)for(const k in o.perks)G.crew[k].perks={...o.perks[k]};if(o.traits)for(const k in o.traits)G.crew[k].trait=o.traits[k];
+ if(o.pitDeck)G.pitDeck=[...o.pitDeck];if(o.pitUp){let n=o.pitUp;G.pitDeck=G.pitDeck.map(id=>n>0&&!PIT_CARDS[id].up&&PIT_CARDS[id].base?(n--,id+'+'):id);}}
+if(G)ensureCrew();
+Object.assign(window.__gfd,{CREW_ROLES,PERKS,CTRAITS,CREW_TRAIN,CREW_XP,ROLE,RADIO_CALLS,PIT_CARDS,PIT_SHOP,newCrew,ensureCrew,crewFx,crewRate,crewChance,crewSetup,crewHire,showCrewHQ,callChance,crewEndRace,spawnRadio});
 </script>

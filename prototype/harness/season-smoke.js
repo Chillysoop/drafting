@@ -48,9 +48,9 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await click('#w-go');
   if(i===6){ // garage upgrade, reload, check your car still uses the bought stat
    await p.evaluate(()=>{window.__gfd.G.money+=5000;});await p.evaluate(()=>window.__gfd.showGarage());
-   const b4=await p.evaluate(()=>window.__gfd.G.stats.spotter);await click('[data-buy="spotter"]');
+   const b4=await p.evaluate(()=>window.__gfd.G.stats.racecraft);await click('[data-buy="racecraft"]');
    await load();await click('#t-cont');
-   const st=await p.evaluate(()=>{const G=window.__gfd.G;return {s:G.stats.spotter,linked:G.cars.find(c=>c.isMe).stats===G.stats};});
+   const st=await p.evaluate(()=>{const G=window.__gfd.G;return {s:G.stats.racecraft,linked:G.cars.find(c=>c.isMe).stats===G.stats};});
    if(st.s!==b4+1||!st.linked)fail('upgrade after reload '+JSON.stringify(st));
   }
   if(i===3){await p.evaluate(()=>{const e=document.getElementById('garage');e.scrollTop=e.scrollHeight;});await shot('garage-calendar');}

@@ -35,3 +35,5 @@ jobs:
         run: node prototype/harness/sponsor-smoke.js "$PWD/prototype/green-flag-deck.html"
       - name: Driver sheet and d20 checks
         run: node prototype/harness/driver-smoke.js "$PWD/prototype/green-flag-deck.html"
+      - name: Crew HQ check
+        run: node prototype/harness/crew-smoke.js "$PWD/prototype/green-flag-deck.html"
