@@ -4,7 +4,7 @@ The browser slice (`prototype/green-flag-deck.html`) is where the game's balance
 
 ## How it works
 
-- `prototype/harness/sim-harness-v10.js` runs races in the slice (engine preset, Normal, crew calls off) for each persona, track and play style and writes every race's numbers.
+- `prototype/harness/sim-harness-v10.js` runs races in the slice (engine preset, Normal, crew calls on since step 33) for each persona, track and play style and writes every race's numbers.
 - `prototype/harness/parity-summary.py` boils that down to averages per cell: `sim/parity/browser-baseline.json`.
 - `sim/GreenFlag.Harness/Bots.cs` is the same seven play styles in C#, move for move: what it looks at every 0.05 s tick, when it presses PIT, how it calls a caution, when it plays, tosses or waits, and how it plays the pit stop.
 - `dotnet run --project sim/GreenFlag.Harness -c Release -- parity` runs every baseline cell in C# (60 races each, fixed seeds, all cores, about 3 minutes) and fails if any play style's average finish, pooled over its 25 cells, is more than 0.5 places off. `sim.yml` runs it on every PR that touches the sim and puts the table in the run summary.
@@ -27,15 +27,19 @@ All but hands-off press PIT on the plan lap, call cautions by tires and damage (
 
 Baseline: 7,000 browser races (5 personas × 5 tracks × 7 styles × 40). C#: 60 races per cell.
 
-| Style | Slice finish | C# finish | Difference | Slice DNF | C# DNF |
-|---|---|---|---|---|---|
-| none | 18.71 | 18.76 | +0.05 | 0% | 0% |
-| smart | 10.78 | 11.22 | +0.44 | 0% | 0% |
-| spam | 18.66 | 18.60 | −0.06 | 63% | 61% |
-| human | 11.92 | 11.97 | +0.05 | 0% | 0% |
-| human2 | 11.56 | 11.87 | +0.31 | 0% | 0% |
-| bold | 11.47 | 11.62 | +0.15 | 0% | 0% |
-| hspam | 18.25 | 18.30 | +0.06 | 58% | 56% |
+With crew calls on (step 33; the bots take every risky call at 55% or better, as the browser harness does):
+
+| Style | Slice finish | C# finish | Difference | Slice DNF | C# DNF | Calls a race (slice / C#) | Calls that worked |
+|---|---|---|---|---|---|---|---|
+| none | 18.89 | 18.76 | −0.13 | 0% | 0% | 0 / 0 | |
+| smart | 10.81 | 11.12 | +0.31 | 0% | 0% | 7.75 / 7.63 | 60% / 60% |
+| spam | 18.68 | 18.36 | −0.31 | 65% | 58% | 4.10 / 4.33 | 59% / 61% |
+| human | 11.43 | 11.84 | +0.41 | 0% | 0% | 8.22 / 8.27 | 60% / 59% |
+| human2 | 11.61 | 11.86 | +0.25 | 0% | 0% | 8.24 / 8.17 | 60% / 59% |
+| bold | 11.56 | 11.56 | 0.00 | 0% | 0% | 8.12 / 8.11 | 60% / 60% |
+| hspam | 18.20 | 18.14 | −0.06 | 58% | 56% | 4.48 / 4.56 | 61% / 61% |
+
+Step 28's table (crew calls off on both sides) had every style within 0.44 as well; the calls move finishes by less than the noise.
 
 Plays per race, landed rates and caution counts line up per cell as well. A single cell (40 browser races) is noisy, about ±1.5 places, because a race's finish has a spread of 4 to 6 places; that is why the check pools each style over its 25 cells (about ±0.3).
 
@@ -48,7 +52,7 @@ Step 27's first comparison was 2 to 3 places off. Matching the harness numbers r
 3. **The human styles pause at draw beats.** The slice's `BAL.beatPause` is on, so the browser harness's human picks a card at every beat with no reaction delay. The C# styles do the same.
 4. **The smart bot plays Reel Them In at once**, like Evade (any special card).
 
-Crew radio calls are off on both sides (`noRadio`), because the C# sim has no radio until step 33 (board Q99). In the slice they moved the smart bot's finish by less than the noise (Drafter, 120 races per side), and step 33 is done when "the harness still matches" with them on.
+Step 28 ran with crew radio calls off on both sides (`noRadio`, board Q99). Step 33 ported them ([radio.md](radio.md)) and rebuilt the baseline with them on; `noRadio` is still in the browser harness for comparisons.
 
 ## Refreshing the baseline
 
@@ -57,7 +61,7 @@ When the slice's balance changes on purpose:
 ```
 cd prototype/harness
 for a in drafter bully whisperer restart gambler; do for t in 0 1 2 3 4; do
-  node sim-harness-v10.js 40 "$PWD/../green-flag-deck.html" "{\"_p\":\"engine\",\"archs\":[\"$a\"],\"trks\":[$t],\"seed\":$((${#a}*13+t*101)),\"noRadio\":1}" c_${a}_$t.json none,smart,spam,human,human2,bold,hspam
+  node sim-harness-v10.js 40 "$PWD/../green-flag-deck.html" "{\"_p\":\"engine\",\"archs\":[\"$a\"],\"trks\":[$t],\"seed\":$((${#a}*13+t*101))}" c_${a}_$t.json none,smart,spam,human,human2,bold,hspam
 done; done
 python3 parity-summary.py ../../sim/parity/browser-baseline.json c_*.json
 ```
