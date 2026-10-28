@@ -1166,7 +1166,7 @@ function saveSeason(){if(!G||(typeof window!=='undefined'&&window.__gfdHeadless)
 function readSave(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===1&&s.G&&s.G.cars?s:null;}catch(e){return null;}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
 // your car's stats object is G.stats itself; JSON restores break that link
-function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();ensureDrv();if(typeof ensureCrew==='function')ensureCrew();}
+function relinkG(){const m=G&&G.cars.find(c=>c.isMe);if(m)m.stats=G.stats;ensureColl();ensureDrv();if(typeof ensureCrew==='function')ensureCrew();if(typeof ensureRivals==='function')ensureRivals();}
 function continueSeason(){
  const s=readSave();if(!s)return false;G=s.G;relinkG();
  if(G.inRace){
@@ -1574,8 +1574,10 @@ function rollSponsorOffers(lastRank,exclude){
  const pool=shuffle(SPONSORS.filter(s=>(lastRank||99)<=s.need&&s.id!==exclude)).sort((a,b)=>a.need-b.need);
  return pool.slice(0,3).map(s=>({id:s.id,per:s.per,bonus:s.bonus}));}
 // two general objectives, plus the sponsor's ask when you have one
-function rollRaceObjectives(){const sp=G&&G.sponsor&&sponsorOf(G.sponsor.id);if(!sp)return rollObjectives();
- const ask=pick(sp.asks);return [...shuffle(OBJECTIVES.filter(o=>o.id!==ask)).slice(0,2).map(o=>({id:o.id})),{id:ask,ask:true}];}
+function rollRaceObjectives(){const sp=G&&G.sponsor&&sponsorOf(G.sponsor.id),rv=typeof rivalObjective==='function'?rivalObjective():null;
+ if(!sp)return rv?[...shuffle(OBJECTIVES.filter(o=>!o.v&&o.id!=='rival')).slice(0,2).map(o=>({id:o.id})),rv]:rollObjectives();
+ // step 20: plus one rival objective, which replaces the plain "finish ahead of your rival"
+ const ask=pick(sp.asks.filter(a=>!rv||a!=='rival').length?sp.asks.filter(a=>!rv||a!=='rival'):sp.asks);return [...shuffle(OBJECTIVES.filter(o=>o.id!==ask&&!o.rv&&!(rv&&o.id==='rival'))).slice(0,2).map(o=>({id:o.id})),{id:ask,ask:true},...(rv?[rv]:[])];}
 function sponsorCard(o,sign){const sp=sponsorOf(o.id),g=SGOALS[sp.goal],e=expFinish();
  return `<div class="panel grid spcard" style="gap:6px;border-left:4px solid ${sp.c}"><div class="row" style="justify-content:space-between"><b style="font-size:17px;color:${sp.c}">${esc(sp.n)}</b>${o.renew?'<span class="tier t-strong">Renewal +20%</span>':''}</div>
   <p class="muted" style="font-size:13px">${esc(sp.blurb)}</p>
@@ -1585,7 +1587,7 @@ function sponsorCard(o,sign){const sp=sponsorOf(o.id),g=SGOALS[sp.goal],e=expFin
   ${sign?`<button class="btn primary small" data-sign="${sp.id}">Sign ${esc(sp.n.split(' ')[0])}</button>`:''}</div>`;}
 function sponsorStrip(){const S=G.sponsor,sp=S&&sponsorOf(S.id);if(!sp)return '';const g=SGOALS[sp.goal],gs=goalState(sp.goal,G.results,myRank(),SEASON_LEN-G.results.length),b=GOAL_BADGE[gs.st];
  return `<div class="row spstrip" style="gap:10px;border-left:4px solid ${sp.c};padding-left:10px"><b style="color:${sp.c}">${esc(sp.n)}</b><span class="mono">${money(S.per)}/race</span><span>Season goal: <b>${esc(g.n)}</b> · ${esc(gs.prog)} <b style="color:${b[1]}">${b[0]}</b> · bonus ${money(S.bonus)}</span></div>`;}
-function objLines(list,e,mul){return normObjs(list).map(x=>{const o=objOf(x.id);return `<div class="row objl" style="justify-content:space-between"><span>${x.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${esc(objName(o,e))}</span><b class="mono">${money(r100(o.pay*(x.ask?ASK_MUL:1)*(mul||1)))}</b></div>`;}).join('');}
+function objLines(list,e,mul){return normObjs(list).map(x=>{const o=objOf(x.id);return `<div class="row objl" style="justify-content:space-between"><span>${x.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${x.rv?'<span class="tier t-rough" style="font-size:11px">Rival</span> ':''}${esc(objName(o,e))}</span><b class="mono">${money(r100(o.pay*(x.ask?ASK_MUL:1)*(mul||1)))}</b></div>`;}).join('');}
 // season end: pay the goal bonus, renew or walk, and set up the next season (career, collection, car and money carry over)
 function seasonWrap(rk){
  const season=G.season||1,S=G.sponsor,sp=S&&sponsorOf(S.id),out={season,rk};
@@ -1643,6 +1645,7 @@ function buildField(){
    stats:isMe?G.stats:{power:clamp(t.r+randi(-1,1),1,10),handling:clamp(t.r+randi(-1,1),1,10),aero:clamp(t.r+randi(-1,1),1,10),durability:clamp(5+randi(-1,1),1,10),racecraft:clamp(d+randi(-1,1),1,10),defense:clamp(d+randi(-1,1),1,10),consistency:clamp(d+randi(-1,1),1,10),tireMgmt:clamp(d+randi(-1,1),1,10)},
    gear:isMe?[]:shuffle(Object.keys(RELICS)).slice(0,t.r>=7?2:1),career:{starts:0,wins:0,top5:0,best:99}};
   G.cars.push(car);}});
+ if(typeof assignRivals==='function')assignRivals(); // step 20: six named rivals take seats in the field
 }
 const me=()=>G.cars.find(c=>c.isMe);
 const equippedRelics=()=>Object.values(G.equipped).filter(Boolean).map(id=>RELICS[id]);
@@ -1700,6 +1703,7 @@ function startRace(){
  // rival and objectives
  const rivalCands=exp.slice(Math.max(0,race.expected-5),race.expected-1).filter(c=>!c.isMe);
  race.rival=rivalCands.length?pick(rivalCands):exp[0];
+ if(typeof rivalWeek==='function')race.rival=rivalWeek(race,exp)||race.rival; // step 20: this week's rival is one of the six named ones
  race.mate=race.cars.find(c=>c.team===mine.team&&!c.isMe);
  race.objectives=normObjs(G.nextObjectives||rollObjectives());race.objE=expFinish();
  G.nextObjectives=null;
@@ -1800,6 +1804,7 @@ function wreck(car,other,why,big){
  for(const c of cars){const p=worldPos(race.track,uOf(visDist(c)),c.laneVis);for(let k=0;k<5;k++)race.smoke.push({x:p.x+rand(-0.04,0.04),z:p.z+rand(-0.04,0.04),t:0,life:rand(1.2,2.2),r:rand(0.015,0.03)});}
  if(race.phase==='green'&&Math.random()<0.85&&!race.pendingCaution)race.pendingCaution={at:race.t+0.9,reason:`Wreck: ${cars.map(c=>c.isMe?'you':c.ref.name.split(' ').pop()).join(', ')}`};
  if(BAL.hazard&&!car.isMe)maybeHazard(cars);
+ if(typeof rivalWreck==='function')rivalWreck(car,cars,big); // step 20: Grudge
 }
 
 /* ================= odds ================= */
@@ -1822,6 +1827,7 @@ function computeOdds(cardId,c){
  dzOdds(cd,c.car,R);shapeOdds(cd,c,R);
  if(race.heat&&(cd.fam==='pass'||cd.fam==='risk'))R.a(-race.heat*3,`Heat ×${race.heat}`,'heat');
  if((cd.fam==='pass'||cd.fam==='draft')&&c.ahead&&c.ahead.effects.some(e=>e.type==='block'))R.a(-22,'He is blocking','block');
+ if(typeof rivalOdds==='function')rivalOdds(cd,c,R); // step 20: a rival with a Grudge races you harder
  if(BAL.oddsAdj)R.b(BAL.oddsAdj);/*BAL_STEP10*/const read=R.v;const sd=Math.max(9,21-st.consistency*1.1);
  const F=x=>Phi((x-read)/sd);
  let p={cf:F(BAL.cfLine),f:F(35)-F(BAL.cfLine),n:F(58)-F(35),s:F(90)-F(58),cs:1-F(90)};
@@ -1886,6 +1892,7 @@ function resolveAttempt(){
  if(!gone){race.dzCard=cd;try{cd.fx[tier](c);}finally{race.dzCard=null;}}
  if(BAL.chainDraw){if((tier==='s'||tier==='cs')&&!gone){race.chain=a.combo?a.combo+1:1;if(!a.combo)race.chainRoot=cd.fam;race.chainFam=cd.fam;race.chainId=cd.id;race.chainAt=race.t;race.stats.bestChain=Math.max(race.stats.bestChain||0,race.chain);if(race.chain>1)race.stats.combos=(race.stats.combos||0)+1;if(race.chain>=BAL.followMin&&(race.followN||0)<BAL.followCap){race.followN=(race.followN||0)+1;race._favor=LINK[cd.fam];const before=race.hand.length;draw(BAL.chainDraw+(tier==='cs'?1:0),true);race._favor=null;for(const x of race.hand.slice(before))x.follow=true;race.stats.follow=(race.stats.follow||0)+race.hand.length-before;}if(race.chain>1){pop(car,`COMBO ×${race.chain}`,'#7fd4ff',2.2,18);comboCoach('hit',cd);}else comboCoach('start',cd);}else if(tier!=='n'||!gone){race.chain=0;race.chainFam=null;}}
  stageOutcome(tier,cd,c,gone);
+ if(!gone&&typeof rivalPlay==='function')rivalPlay(cd,tier,a.target);
  const col={cs:'#0e5a30',s:'#2fb36a',n:'#e9b52f',f:'#e5484d',cf:'#121722'}[tier];
  const moved=o.tags.slice(0,3).map(([v,l])=>`${v>0?'▲':'▼'} ${l}`).join('  ');
  race.log.push({n:cd.n,succ:o.succ,tier,tags:o.tags.slice(0,3),lap:Math.floor(race.order[0].dist)+1});
@@ -1932,6 +1939,8 @@ function autoMove(car){
   // defending makes a pass harder, but should not make the attacker more likely to crash
   let def=0;if(a.effects.some(e=>e.type==='block'))def+=35;if(a.effects.some(e=>e.type==='hold'))def+=30;
   if(a.isMe){read+=D.vsMe+(race.heat>=3?race.heat*4:0);read+=idlePressure();}
+  // step 20: a rival with a Grudge leans on you, and past Hot can pay you back instead of passing
+  if(a.isMe&&car.ref.rival&&typeof rivalAttack==='function'){const ra=rivalAttack(car,a);if(ra===true)return;read+=ra;}
   if(car.isMe)read+=D.auto;
   let sd=Math.max(8,16-car.stats.consistency*0.6)+(car.trait==='rookie'?4:0);
   const raw=read+gauss()*sd;const roll=raw-def;
@@ -1942,7 +1951,7 @@ function autoMove(car){
   else if(roll<55){if(Math.random()<0.6)V(car).sbs={tg:a,until:race.t+2.4};}
   else{overtake(car,1);if(roll>92)pace(car,1.01,6);
    if(notable){if(car.isMe)commentate(`Your driver makes a move on ${a.ref.name}... and gets by! (auto move)`);else if(a.isMe)commentate(`${car.ref.name} gets a run and goes after you.`);else commentate(`${car.ref.name} dives under ${a.ref.name} for P${idx(a)+1}.`,true);}}
- }else if(!car.isMe&&(()=>{const b=behindOf(car);return b&&b.isMe&&gapSec(car,b)<0.6&&Math.random()<D.aiBlock*3*(1+race.heat*0.5);})()){blockFor(car,8);commentate(`${car.ref.name} moves to block you.`,true);}
+ }else if(!car.isMe&&(()=>{const b=behindOf(car);return b&&b.isMe&&gapSec(car,b)<0.6&&Math.random()<D.aiBlock*3*(1+race.heat*0.5)*(car.ref.rival&&typeof rivalBlock==='function'?rivalBlock(car):1);})()){blockFor(car,8);commentate(`${car.ref.name} moves to block you.`,true);}
  else if(a&&g<race.track.draftRange){pace(car,1.012,6);car.tires=Math.max(5,car.tires-1.5);}
  else if(car.tires<55){wearFx(car,0.7,15);}
 }
@@ -2770,7 +2779,7 @@ function drawCar(c,p){
  const cx=(top[0][0]+top[2][0])/2,cy=(top[0][1]+top[2][1])/2;
  if(k>380&&!c.dnf){g.fillStyle='#fff';g.font=`700 ${Math.max(9,k*0.022)}px "Saira Condensed",sans-serif`;g.textAlign='center';g.fillText(c.ref.num,cx,cy-h-3);}
  if(c.isMe){const y=cy-h-(k>380?16:8);g.fillStyle='#e9b52f';g.beginPath();g.moveTo(cx-7,y-10);g.lineTo(cx+7,y-10);g.lineTo(cx,y-1);g.closePath();g.fill();g.font='800 12px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText('YOU',cx,y-13);}
- if(c===race.rival&&!c.dnf&&k>300){g.fillStyle='#ff7b7f';g.font='700 11px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText('RIVAL',cx,cy-h-6);}
+ {const tg=!c.dnf&&k>300&&(typeof rivalTag==='function'?rivalTag(c):c===race.rival?['RIVAL','#ff7b7f']:null);if(tg){g.fillStyle=tg[1];g.font='700 11px "Saira Condensed",sans-serif';g.textAlign='center';g.fillText(tg[0],cx,cy-h-6);}}
 }
 function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,gg=(n>>8)&255,b=n&255;const m=f<0?0:255,a=Math.abs(f);r=Math.round(r+(m-r)*a);gg=Math.round(gg+(m-gg)*a);b=Math.round(b+(m-b)*a);return `rgb(${r},${gg},${b})`;}
 
@@ -2854,7 +2863,7 @@ function renderPylon(){
  let rows=r.order.slice(0,n);const m=meCar();if(!rows.includes(m))rows=[...rows,'sep',m];
  const html=rows.map(c=>{if(c==='sep')return '<div class="sep"></div>';const i=idx(c)+1;const g=(lead.dist-c.dist);
   const gap=c.dnf?'OUT':c.pit?'PIT':i===1?'LEADER':g>=1?`−${Math.floor(g)} LAP`:'+'+(g*r.track.lapTime).toFixed(2);
-  return `<button class="pr${c.isMe?' me':''}" data-car="${c.id}"><span>${i}</span><span class="tc" style="background:${TEAMS[c.team].c}"></span><span class="nb">#${c.ref.num}</span><span>${esc(shortName(c.ref))}${c===r.rival?' <span class="ar" style="color:#ff7b7f" data-kw="rival">RIVAL</span>':''}</span><span class="gp">${gap}</span></button>`;}).join('');
+  return `<button class="pr${c.isMe?' me':''}" data-car="${c.id}"><span>${i}</span><span class="tc" style="background:${TEAMS[c.team].c}"></span><span class="nb">#${c.ref.num}</span><span>${esc(shortName(c.ref))}${typeof rivalPy==='function'?rivalPy(c,r):c===r.rival?' <span class="ar" style="color:#ff7b7f" data-kw="rival">RIVAL</span>':''}</span><span class="gp">${gap}</span></button>`;}).join('');
  $('#pylon').innerHTML=`<div class="ph ${head}"><span>${r.track.short.toUpperCase()}</span><span>${r.practice?'TEST TRACK':r.phase==='finished'?'FINAL':lapsLeft+' TO GO'}</span></div>${html}`;
 }
 $('#pylon').addEventListener('click',e=>{const b=e.target.closest('[data-car]');if(b){openSheet(+b.dataset.car);}});
@@ -3099,10 +3108,11 @@ function endRace(){
  const res={info:r.sawOdds?'full':G.info,track:r.track.name,start:r.stats.start,finish,expected:r.expected,dnf:m.dnf,crits:r.stats.crits,succ:r.stats.succ,plays:r.stats.plays,bestPos:r.stats.bestPos,bestChain:r.stats.bestChain||0,objE:r.objE||r.expected,
   beatMate:fo.indexOf(m)<fo.indexOf(r.mate),beatRival:fo.indexOf(m)<fo.indexOf(r.rival),rival:r.rival.ref.name,order:fo.map(c=>({id:c.id,dnf:c.dnf}))};
  const diff=r.expected-finish;
+ if(typeof rivalEndRace==='function')rivalEndRace(res,r,fo); // step 20: Grudge, head-to-head, inbox
  res.tier=m.dnf||finish>r.expected+3?'rough':finish===1||(finish<=3&&diff>=8)?'victory':diff>=4?'strong':'solid';
  const mul=DIFF[G.diff].purse*(1+INFO[res.info].bonus+STAKES[G.stakes].bonus);res.mul=mul;
  res.purse=Math.round((1500+(21-finish)*350)*mul);res.bonus=Math.round(Math.max(0,diff)*400*mul);
- res.objs=normObjs(r.objectives).map(x=>{const o=objOf(x.id);return {id:x.id,n:objName(o,res.objE),ask:!!x.ask,pay:r100(o.pay*(x.ask?ASK_MUL:1)*mul),ok:!!o.test(res)};});
+ res.objs=normObjs(r.objectives).map(x=>{const o=objOf(x.id);return {id:x.id,n:objName(o,res.objE),ask:!!x.ask,rv:!!x.rv,pay:r100(o.pay*(x.ask?ASK_MUL:1)*mul),ok:!!o.test(res)};});
  // step 17: meet every objective (and finish) and the rewards move up one tier
  res.objMet=res.objs.filter(o=>o.ok).length;
  if(res.objs.length>=2&&res.objMet===res.objs.length&&!m.dnf&&res.tier!=='victory'){res.tierFrom=res.tier;res.tier={rough:'solid',solid:'strong',strong:'victory'}[res.tier];}
@@ -3210,6 +3220,7 @@ function showGarage(){
    ${sponsorStrip()}
    <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish())}</div>
    <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor&&evClear()?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${evClear()?'':`<span style="color:var(--amber)">${esc(EVENTS[G.event.id].n)} first (above).</span>`}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
+  ${typeof rivalGaragePanel==='function'?rivalGaragePanel():''}
   <div class="grid g2">
    <div class="panel grid" style="gap:6px"><h3>Season calendar</h3>${calendarHTML()}</div>
    <div class="panel grid" style="gap:6px"><h3>Points standings</h3>${G.results.length?standingsTable(10):'<p class="muted">No races yet. 40 points for a win, 35 for 2nd, then one less per place.</p>'}</div>
@@ -3237,6 +3248,7 @@ function showGarage(){
  $('#g-go').onclick=()=>{if(!deckOk(t)||!G.sponsor||!evClear())return;G.notice=null;showQuali();};
  $('#g-dsheet').onclick=()=>{sheetTab='driver';openSheet(me().id);};wireEventPanel();
  {const ch=$('#g-crew');if(ch)ch.onclick=()=>showCrewHQ();}
+ if(typeof wireRivals==='function')wireRivals(el);
  showScreen('garage');el.scrollTop=0;saveSeason();
 }
 function markInRace(){if(!race)return;G.inRace={start:race.stats.start,expected:race.expected};saveSeason();}
@@ -3353,10 +3365,11 @@ function showReward(){
    <div class="panel"><h3>Top 10 this race</h3><div class="tw"><table><tbody>${rows.map(([i,o])=>{const c=G.cars[o.id];return `<tr style="${c.isMe?'background:rgba(47,179,106,.2)':''}"><td class="num">${i+1}</td><td><i class="famdot" style="background:${TEAMS[c.team].c}"></i>${esc(c.isMe?c.name+' (you)':c.name)}</td><td class="muted">${esc(TEAMS[c.team].name)}</td><td>${o.dnf?'DNF':''}</td></tr>`;}).join('')}</tbody></table></div></div>
   </div>
   <div class="panel grid" id="w-objs" style="gap:8px;border-color:${res.objs.length&&res.objMet===res.objs.length?'var(--green)':'var(--line)'}"><div class="row" style="justify-content:space-between"><h3>Race objectives</h3><b class="mono">${res.objMet??res.objs.filter(o=>o.ok).length} of ${res.objs.length} met</b></div>
-   ${res.objs.map(o=>`<div class="row objl" style="justify-content:space-between"><span><b style="color:${o.ok?'var(--green)':'var(--red)'}">${o.ok?'✓':'✗'}</b> ${o.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${esc(o.n)}</span><b class="mono" style="color:${o.ok?'var(--green)':'var(--muted)'}">${o.ok?money(o.pay):'—'}</b></div>`).join('')}
+   ${res.objs.map(o=>`<div class="row objl" style="justify-content:space-between"><span><b style="color:${o.ok?'var(--green)':'var(--red)'}">${o.ok?'✓':'✗'}</b> ${o.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${o.rv?'<span class="tier t-rough" style="font-size:11px">Rival</span> ':''}${esc(o.n)}</span><b class="mono" style="color:${o.ok?'var(--green)':'var(--muted)'}">${o.ok?money(o.pay):'—'}</b></div>`).join('')}
    <p class="muted" style="font-size:13px">${res.tierFrom?`Every objective met, so your rewards moved up from ${tierName[res.tierFrom]} to ${tierTxt}: ${res.tier==='victory'?'the best card odds and':'better card odds and'} ${res.tier==='strong'||res.tier==='victory'?'a part pick':'three cards to choose from'}.`:res.dnf?'A DNF never moves rewards up.':res.tier==='victory'?'Victory lane is the top reward tier.':'Meet every objective to move your rewards up one tier.'}</p>
    ${spR&&G.sponsor&&G.sponsor.id===spR.id?sponsorStrip():''}</div>
   ${G.drv&&res.xp?`<div class="panel row" id="w-drv" style="gap:10px;justify-content:space-between"><span class="row" style="gap:8px"><b>Driver</b><span class="fxc up">+${res.xp} XP</span>${res.hype?`<span class="fxc up">+${res.hype} Hype</span><span class="muted" style="font-size:13px">${esc(res.hypeWhy.join(', '))}</span>`:res.hypeWhy&&res.hypeWhy.length?'<span class="muted" style="font-size:13px">Hype is full (3)</span>':'<span class="muted" style="font-size:13px">Hype comes from a ×4 combo or a big finish.</span>'}${res.lvlUp&&res.lvlUp.length?`<b style="color:var(--amber)">Level ${res.lvlUp[res.lvlUp.length-1]}! Spend your point on the driver sheet.</b>`:''}</span><span class="muted" style="font-size:13px">${(()=>{const id=OFF_SCHED[G.results.length];return id&&!last&&res.penalty!=='dead'?`Off track next: ${EVENTS[id].n}`:'';})()}</span></div>`:''}
+  ${typeof rivalRewardPanel==='function'?rivalRewardPanel(res):''}
   <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Points standings</h3>${res.pts!=null?`<span class="mono">+${res.pts} pts · P${res.rank}${res.rankBefore&&G.results.length>1&&res.rankBefore!==res.rank?` <b style="color:${res.rank<res.rankBefore?'var(--green)':'var(--red)'}">${res.rank<res.rankBefore?'▲':'▼'}${Math.abs(res.rankBefore-res.rank)}</b>`:''}</span>`:''}</div>${standingsTable(10)}</div>
   ${res.penalty==='survive'?`<div class="panel" style="border-color:var(--amber)"><h3 style="color:var(--amber)">Survive token used</h3><p>The DNF would have ended your run. Your token saved it, but it still cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}. No tokens left.</p></div>`:res.penalty==='ironman'?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Ironman penalty</h3><p>The DNF cost ${money(3000)}${res.lostPart?' and your spare '+esc(RELICS[res.lostPart].n):''}.</p></div>`:''}
   ${res.log&&res.log.length?`<div class="panel grid" style="gap:8px"><h3>Your calls</h3><p class="muted" style="font-size:13px">Every card you played, the real odds at that moment, and what moved them. Use it to learn what a good moment looks like.</p><div class="tw"><table><thead><tr><th>Lap</th><th>Card</th><th>Odds</th><th>Result</th><th>What moved it</th></tr></thead><tbody>${res.log.map(l=>`<tr><td class="num">${l.lap}</td><td>${esc(l.n)}</td><td class="num">${Math.round(l.succ*100)}%</td><td><i class="famdot ${TIER_CLS[l.tier]}"></i>${TIER_NAME[l.tier]}</td><td style="font-size:12px">${l.tags.map(([v,t])=>`<span style="color:${v>0?'#58d68d':'#ff7b7f'}">${v>0?'▲':'▼'} ${esc(t)} ${v>0?'+':''}${v}</span>`).join(' · ')||'—'}</td></tr>`).join('')}</tbody></table></div></div>`:''}
@@ -3409,7 +3422,7 @@ function renderSheet(car){
  const career=`<span class="muted" style="font-size:13px">Starts ${car.career.starts} · wins ${car.career.wins} · top 5s ${car.career.top5}${live?` · this race: P${idx(live)+1}, tires ${Math.round(live.tires)}%, damage ${Math.round(live.damage)}, passes ${live.passes}`:''}</span>`;
  if(!car.isMe){
   box.innerHTML=`${head}${career}<div class="grid g2"><div class="panel grid" style="gap:10px"><h3>Driver</h3>${['racecraft','defense','consistency','tireMgmt'].map(k=>statRow(k,car.stats[k])).join('')}</div><div class="panel grid" style="gap:10px"><h3>Car</h3>${['power','handling','aero','durability'].map(k=>statRow(k,car.stats[k])).join('')}</div></div>
-  <div class="grid g2"><div class="panel grid" style="gap:6px"><h3>Ability</h3><b>${esc(TRAITS[car.trait].n)}</b><p class="muted">${esc(TRAITS[car.trait].txt)}</p></div><div class="panel grid" style="gap:6px"><h3>Equipment</h3>${car.gear.map(id=>`<div class="slot full"><span class="sn">${RELICS[id].slot}</span><b>${RELICS[id].n}</b></div>`).join('')}<p class="muted" style="font-size:12px">AI equipment is shown for flavor in this slice.</p></div></div>`;
+  <div class="grid g2"><div class="panel grid" style="gap:6px"><h3>Ability</h3><b>${esc(TRAITS[car.trait].n)}</b><p class="muted">${esc(TRAITS[car.trait].txt)}</p></div><div class="panel grid" style="gap:6px"><h3>Equipment</h3>${car.gear.map(id=>`<div class="slot full"><span class="sn">${RELICS[id].slot}</span><b>${RELICS[id].n}</b></div>`).join('')}<p class="muted" style="font-size:12px">AI equipment is shown for flavor in this slice.</p></div></div>${typeof rivalSheet==='function'?rivalSheet(car):''}`;
   $('#s-close').onclick=closeSheet;return;
  }
  const canEquip=!race;
@@ -3484,7 +3497,8 @@ const GLOSS={
  momentum:['Momentum','Up to 5 pips. Critical successes and some cards add it, and some strong cards spend it.'],
  heat:['Heat','Aggressive cards (Passing, High risk) build Heat. Heat makes passing harder and the AI blocks you more; at 3+ they come after you. Cools by 1 every 25 s.'],
  banked:['Banked buff','A bonus waiting for your next card (or next card of one family), usually from a radio call. Shows as +N on the cards it boosts.'],
- rival:['Rival','A driver near your expected finish. Finishing ahead of them is one of your race goals.'],
+ rival:['Rival','This week\'s rival: one of the six named drivers, the one with the biggest Grudge, or the one closest to your expected finish. Finishing ahead is a race objective.'],
+ grudge:['Grudge','How much a named rival wants to get you back, from −3 (Respect) to 10 (Feud). Wrecking them adds a lot, hard passes a little; it cools between races. At Warm they block and lean on you; at Hot they can pay you back with a hook.'],
  crewchief:['Crew chief','Your crew chief picks a pit call if you don’t. A green one always takes four tires; a better one (higher Crew chief stat) reads the race.'],
  odds:['Live odds','The chance the selected card succeeds right now. It moves with the race: gaps, corners, tires, Heat, buffs.'],
  monitor2:['Monitor 2','A second live gauge from a part. Selecting a new card moves the old one here.'],
@@ -5271,6 +5285,7 @@ function fxChips(fx,ev){const c=[],ch=(v,t)=>c.push(`<span class="fxc ${v>0?'up'
  if(fx.money)ch(fx.money,`${fx.money>0?'+':'−'}${money(Math.abs(fx.money))}`);if(fx.trust)ch(fx.trust,`Sponsor trust ${sgn(fx.trust)}`);
  if(fx.per)ch(fx.per,`${fx.per>0?'+':'−'}${money(Math.abs(fx.per))} per race (sponsor)`);if(fx.bonus)ch(fx.bonus,`${fx.bonus>0?'+':'−'}${money(Math.abs(fx.bonus))} goal bonus`);
  if(fx.sal!=null){const v=ev&&ev.revealed?`${money(r100(ev.ceil*fx.sal))}/race salary`:`salary ${Math.round(fx.sal*100)}% of their ceiling`;ch(fx.sal>=0.6?1:fx.sal>=0.35?0:-1,v);}
+ if(fx.rheat)ch(-fx.rheat,`Grudge ${sgn(fx.rheat)}`);
  if(fx.mom)ch(fx.mom,`+${fx.mom} Momentum next green flag`);if(fx.clause)ch(1,`Clause: ${CLAUSE_N[fx.clause]||fx.clause}`);if(fx.adv)ch(1,'Advantage on the next question');if(fx.reveal)ch(1,'Learn their budget');
  return c.join(' ')||'<span class="fxc">nothing changes</span>';}
 function applyFx(fx,ev){const d=G.drv,S=G.sponsor;
@@ -5279,7 +5294,8 @@ function applyFx(fx,ev){const d=G.drv,S=G.sponsor;
  if(fx.sal!=null){G.contract.per=r100(ev.ceil*fx.sal);G.contract.since={season:G.season||1,race:G.results.length};}
  if(fx.mom)d.next.mom=Math.min(3,(d.next.mom||0)+fx.mom);
  if(fx.clause){G.stats[fx.clause]=Math.min(10,G.stats[fx.clause]+1);G.contract.clauses.push(fx.clause);}
- if(fx.adv)ev.advFor=ev.ri+1;if(fx.reveal)ev.revealed=true;}
+ if(fx.adv)ev.advFor=ev.ri+1;if(fx.reveal)ev.revealed=true;
+ if(fx.rheat&&ev&&ev.rid!=null&&typeof addGrudge==='function')addGrudge(ev.rid,fx.rheat,'reply');}
 
 /* ---- the three events ---- */
 const lowCar=()=>G.stats.power<=G.stats.handling?'power':'handling';
@@ -5439,7 +5455,7 @@ function renderEvent(){const ev=G.event,el=$('#event');if(!ev)return;const E=EVE
 function eventPanel(){const ev=G.event;if(!ev)return '';const E=EVENTS[ev.id];
  if(ev.done)return `<div class="panel grid" id="g-ev" style="gap:6px"><span class="eyebrow">Off track · ${esc(E.n)}</span>${ev.walked?`<p>You skipped it: ${fxChips(E.walk.fx)}</p>`:ev.hist.map(h=>`<div class="row" style="gap:6px"><b>${esc(h.n)}</b>${h.auto?'<span class="muted">no roll</span>':`<b style="color:${TIER_D[h.tier][1]}">${TIER_D[h.tier][0]}</b> ${fxChips(h.fx,ev)}`}</div>`).join('')}</div>`;
  return `<div class="panel grid" id="g-ev" style="gap:8px;border-color:var(--accent)"><span class="eyebrow">Off track tonight · ${E.rounds.length} question${E.rounds.length>1?'s':''} · d20 checks</span><h3>${esc(E.n)}: ${esc(evWho(ev))}</h3>
-  <p class="muted" style="font-size:13px">${ev.id==='press'?'The reporters want a quote about your last race.':ev.id==='dinner'?'Your sponsor is buying. Their mood sets your money for the rest of the season.':'Your team wants to set your salary. Leverage from your results lowers every DC.'} Every answer shows its odds and where each bonus comes from.</p>
+  <p class="muted" style="font-size:13px">${E.blurb?E.blurb(ev):ev.id==='press'?'The reporters want a quote about your last race.':ev.id==='dinner'?'Your sponsor is buying. Their mood sets your money for the rest of the season.':'Your team wants to set your salary. Leverage from your results lowers every DC.'} Every answer shows its odds and where each bonus comes from.</p>
   <div class="row"><button class="btn primary" id="g-ev-go">${esc(E.go)}</button><button class="btn small" id="g-ev-walk">${esc(E.walk.n)}${Object.keys(E.walk.fx).length?' · '+fxChips(E.walk.fx).replace(/<[^>]+>/g,''):''}</button></div></div>`;}
 function wireEventPanel(){const g=$('#g-ev-go');if(g)g.onclick=showEvent;const w=$('#g-ev-walk');if(w)w.onclick=evWalk;}
 
@@ -5679,4 +5695,253 @@ function crewSetup(o){ensureCrew();o=o||{};if(o.stats)for(const k in o.stats)G.s
  if(o.pitDeck)G.pitDeck=[...o.pitDeck];if(o.pitUp){let n=o.pitUp;G.pitDeck=G.pitDeck.map(id=>n>0&&!PIT_CARDS[id].up&&PIT_CARDS[id].base?(n--,id+'+'):id);}}
 if(G)ensureCrew();
 Object.assign(window.__gfd,{CREW_ROLES,PERKS,CTRAITS,CREW_TRAIN,CREW_XP,ROLE,RADIO_CALLS,PIT_CARDS,PIT_SHOP,newCrew,ensureCrew,crewFx,crewRate,crewChance,crewSetup,crewHire,showCrewHQ,callChance,crewEndRace,spawnRadio});
+</script>
+<style id="rivals-css">
+/* step 20: rivals */
+.rvlist{display:grid;gap:6px}
+.rvrow{display:grid;grid-template-columns:5px minmax(0,1fr) minmax(84px,120px);gap:4px 10px;align-items:center;background:var(--panel3);border:1px solid var(--line);border-radius:4px;padding:6px 8px;text-align:left;cursor:pointer;color:inherit;font:inherit;width:100%}
+.rvrow:hover{border-color:var(--muted)}
+.rvrow .bar{align-self:stretch;border-radius:2px;grid-row:span 2}
+.rvrow .nm{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;min-width:0}
+.rvrow .nm b{font-size:14px}
+.rvrow .sub{font-size:12px;color:var(--muted);grid-column:2/4;min-width:0}
+.rvnick{font-family:var(--mono);font-size:11px;padding:1px 6px;border-radius:2px;background:rgba(0,0,0,.25)}
+.rvwk{font-family:var(--display);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:0 6px;border-radius:2px;background:var(--red);color:#fff}
+.gmeter{display:grid;gap:3px;justify-items:end;font-size:12px}
+.gmeter .gm{position:relative;width:100%;height:6px;background:rgba(0,0,0,.35);border-radius:3px;overflow:hidden}
+.gmeter .gm i{position:absolute;top:0;bottom:0;border-radius:3px}
+.gmeter .gm u{position:absolute;top:-1px;bottom:-1px;width:1px;background:var(--muted)}
+.gmeter b{font-family:var(--mono)}
+.rvmsgs{display:grid;gap:8px}
+.rvmsg{background:var(--panel3);border:1px solid var(--line);border-left:3px solid var(--rc,var(--accent));border-radius:4px;padding:8px 10px;display:grid;gap:4px;font-size:13px}
+.rvmsg .hd{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 8px}
+.rvmsg .hd b{font-size:14px}
+.rvmsg.new{box-shadow:inset 0 0 0 1px var(--rc,var(--accent))}
+.rvmsg .body{font-style:italic}
+.rvmsg.old{opacity:.7}
+.rvwhy{display:flex;flex-wrap:wrap;gap:4px}
+</style>
+<script id="rivals-js">
+/* ================= Rivals (roadmap step 20) =================
+   Six named AI drivers take fixed seats in the field. Each has a personality and a Grudge toward you, from -3 (Respect) to 10 (Feud).
+   Wrecking one adds +4 (+2 if they were only collected in a big one) and a landed hard pass on one adds +0.5, scaled by how touchy
+   they are; replies to their messages move it too. Between races it cools by their cool rate, and a clean race side by side
+   cools it a bit more (and can build Respect). On track, through small hooks in the sim:
+   Warm (3+) blocks you more, leans on you when attacking, and costs your passing cards odds against them;
+   Hot (6+) can turn an attack into payback, a hook that spins you, at most once a race, which settles some of the Grudge;
+   Respect (-2 or less) gives you room. Proud rivals (Hothead, Media Darling, Grudge) also heat up when you beat them by 1-3 places,
+   so a careful driver still makes enemies. This week's rival is the one with the biggest Grudge (3+), or the one closest to your
+   expected finish, and sets the rival objective. Messages land in the garage inbox after races; replies are d20 checks on the
+   driver sheet (event 'rival'). A fresh field has no Grudge and payback only rolls past Hot, so default harness runs only see new
+   names and traits on six seats. Calling it Grudge keeps it apart from the race Heat meter. */
+const RIVALS={
+ pro:{n:'Hank Doyle',nick:'The Old Pro',seat:1,trait:'veteran',mul:0.6,cool:2,pay:0.5,block:0.8,settle:4,c:'#2fb3a0',
+  txt:'Twenty years in the series. Races you the way you race him and forgets fast. Clean racing near him earns Respect twice as fast.'},
+ enforcer:{n:'Cole Mercer',nick:'The Enforcer',seat:4,trait:'restarter',mul:1,cool:1,pay:1.5,block:1.2,settle:5,c:'#e5484d',
+  txt:'Every hit gets paid back, and then it is even. Payback is likely once he is Hot, and it clears most of the Grudge.'},
+ talker:{n:'Skye Rennick',nick:'The Media Darling',seat:8,trait:'drafter',mul:1,cool:1,pay:0.7,block:1,settle:3,press:1,proud:1,c:'#f2c94c',
+  txt:'Fights on TV more than on track. Every message goes public, so the fan swings on your replies are doubled. Hates losing a close finish.'},
+ hothead:{n:'Jet Alvarez',nick:'The Hothead',seat:10,trait:'aggressive',mul:1.6,cool:1.5,pay:1.2,block:0.8,settle:3,proud:1,c:'#ff8a3d',
+  txt:'Second-year driver with a short fuse. Gets hot fast and cools fast. Hard to talk down while it is hot, and takes a close loss personally.'},
+ wall:{n:'Marty Krause',nick:'The Wall',seat:14,trait:'wall',mul:0.9,cool:1,pay:0.6,block:2,settle:2,c:'#a98bff',
+  txt:'Rarely wrecks anyone. Never lets you by: the hotter the Grudge, the harder Krause blocks and the worse your passing odds.'},
+ grudge:{n:'Vance Pruitt',nick:'The Grudge',seat:16,trait:'closer',mul:1.1,cool:0.25,pay:1,block:1,settle:1,proud:1,c:'#8b95a7',
+  txt:'Keeps a list. The Grudge barely cools between races, payback barely settles it, apologies are a hard check, and every close finish you win goes on the list.'}
+};
+const RV_KEYS=Object.keys(RIVALS),G_MIN=-3,G_MAX=10,RV_INBOX=12;
+function gTier(g){return g<=-2?['Respect','#2fb36a']:g<3?['Cool','#98a2b8']:g<6?['Warm','#e9b52f']:g<9?['Hot','#ff8a3d']:['Feud','#e5484d'];}
+const rvLast=car=>(car.ref||car).name.split(' ').pop();
+const lapNow=()=>race&&race.order[0]?Math.floor(race.order[0].dist)+1:0;
+const rvHeadless=()=>typeof document==='undefined'||!!window.__gfdHeadless;
+function assignRivals(){if(!G||!G.cars)return;G.riv={};
+ for(const k of RV_KEYS){const R=RIVALS[k],c=G.cars[R.seat];if(!c||c.isMe)continue;c.name=R.n;c.rival=k;c.trait=R.trait;G.riv[c.id]={g:0,ahead:0,behind:0,hist:[]};}
+ G.inbox=G.inbox||[];}
+// saves from before step 20 get the six rivals in the same seats
+function ensureRivals(){if(!G||!G.cars)return;if(!G.riv)assignRivals();G.inbox=G.inbox||[];}
+const grudge=id=>G&&G.riv&&G.riv[id]?G.riv[id].g:0;
+function addGrudge(id,v,why){const st=G&&G.riv&&G.riv[id];if(!st||!v||(race&&race.practice))return 0;const car=G.cars[id],R=RIVALS[car.rival],g0=st.g;
+ st.g=Math.round(clamp(st.g+(v>0?v*R.mul:v),G_MIN,G_MAX)*4)/4;
+ const live=race&&race.cars&&race.rv;
+ if(live){const L=race.rv[id]||(race.rv[id]={g0,why:[]});L.why.push([why,st.g-g0]);}
+ if(live&&st.g>=6&&g0<6){commentate(`${car.name} is ${st.g>=9?'livid':'hot'} with you. Watch the mirror.`);if(!rvHeadless())toast(`${car.name}: ${gTier(st.g)[0]}`,st.g>=9?'That one will not be forgotten. Payback is coming.':'Payback is on the table now.','#7a1d1d');}
+ return st.g-g0;}
+// this week's rival: biggest Grudge at 3+, otherwise the named driver closest to your expected finish (a little ahead beats behind)
+function rivalPickId(){ensureRivals();const ids=Object.keys(G.riv).map(Number);if(!ids.length)return null;
+ const hot=ids.filter(i=>G.riv[i].g>=3).sort((a,b)=>G.riv[b].g-G.riv[a].g||a-b);if(hot.length)return hot[0];
+ const ord=[...G.cars].sort((a,b)=>carRating(b)-carRating(a)||a.id-b.id),mi=ord.findIndex(c=>c.isMe),d=i=>{const k=ord.indexOf(G.cars[i])-mi;return k<0?-k:k+0.5;};
+ return ids.sort((a,b)=>d(a)-d(b)||a-b)[0];}
+function rivalObjective(){if(!G||!G.cars)return null;const id=rivalPickId();if(id==null)return null;G.rivWeek=id;G.rivWeekFor=G.raceIdx;const g=grudge(id);
+ return {id:g>=6?'rsurv':g>=3?'rclean':'rival',rv:true};}
+function rivalWeek(r,exp){r.rinc=[];r.rv={};r.rpaid={};r.rwarn={};if(!G.riv)return null;
+ const id=G.rivWeek!=null&&G.rivWeekFor===G.raceIdx?G.rivWeek:rivalPickId(),c=r.cars.find(x=>x.id===id);
+ for(const x of r.cars)if(x.ref.rival&&grudge(x.id)>=6)commentate(`Spotter: "${x.ref.name} hasn't forgotten. Grudge ${grudge(x.id)}: expect payback if that car gets to your bumper."`);
+ return c||null;}
+const rvName=()=>{const c=race&&race.rival?race.rival.ref:G&&G.rivWeek!=null?G.cars[G.rivWeek]:null;return c?c.name:'your rival';};
+objOf('rival').n=()=>`Finish ahead of ${rvName()}`;
+OBJECTIVES.push(
+ {id:'rclean',n:()=>`Beat ${rvName()} with no wreck between you`,pay:3000,rv:1,v:20,test:r=>!!r.beatRival&&!r.rvWreck},
+ {id:'rsurv',n:()=>`Finish ahead of ${rvName()} and dodge the payback`,pay:3500,rv:1,v:20,test:r=>!r.dnf&&!!r.beatRival&&!r.rvPaid});
+
+/* ---- on track ---- */
+function rivalWreck(car,cars,big){const r=race;if(!r||!r.rinc||!G.riv||!cars.some(c=>c.isMe))return;
+ if(car.isMe){cars.forEach((c,i)=>{if(i&&c.ref.rival){r.rinc.push({id:c.id,k:'wreck',lap:lapNow()});addGrudge(c.id,big&&i>1?2:4,'you wrecked them');}});}
+ else if(car.ref.rival)r.rinc.push({id:car.id,k:'hit',lap:lapNow()});}
+function rivalPlay(cd,tier,t){if(!t||!t.ref||!t.ref.rival||!race.rinc)return;
+ if((cd.fam==='pass'||cd.fam==='risk'||cd.id==='bump_draft')&&(tier==='s'||tier==='cs')){race.rinc.push({id:t.id,k:'pass',lap:lapNow()});addGrudge(t.id,0.5,'hard pass');}}
+const paybackChance=car=>{const g=grudge(car.id),R=RIVALS[(car.ref||car).rival];return !R||g<6?0:Math.min(0.6,0.12*(g-5)*R.pay);};
+const rivalLean=car=>{const g=grudge(car.id),R=RIVALS[(car.ref||car).rival];return !R?0:g>=3?Math.round(g*1.5*R.pay):g<=-2?-8:0;};
+// called from autoMove when a rival is within striking range of your bumper: true = payback happened, else a read bonus for the pass
+function rivalAttack(car,m){const r=race;if(r.practice)return 0;const g=grudge(car.id);
+ if(g>=6&&!r.rpaid[car.id]&&!m.pit&&r.phase==='green'){
+  if(!r.rwarn[car.id]){r.rwarn[car.id]=1;commentate(`${car.ref.name} is right on your bumper, and there's history there.`);if(!rvHeadless())toast(`${car.ref.name} on your bumper`,`Grudge ${g} (${gTier(g)[0]}): payback could come any second. Defend, or let them go.`,'#7a1d1d');}
+  if(Math.random()<paybackChance(car)){payback(car,m);return true;}}
+ return rivalLean(car);}
+function payback(car,m){const r=race,R=RIVALS[car.ref.rival],big=grudge(car.id)>=9;r.rpaid[car.id]=1;
+ m.spinning=big?2.2:1.4;spinOut(m,m.spinning,big?1:0.7);slow(m,rand(big?4:2.5,big?7:4.5));m.overtake=null;
+ dmg(m,rand(big?26:14,big?42:24)*r.track.contact*DIFF[G.diff].wreck*BAL.wreckDmg,big?DZW.wreckA:DZW.spin);
+ slow(car,rand(0.5,1.5));dmg(car,rand(4,9));contactFx(car,m,14);
+ r.rinc.push({id:car.id,k:'payback',lap:lapNow()});r.stats.paybacks=(r.stats.paybacks||0)+1;
+ addGrudge(car.id,-R.settle,'payback');
+ commentate(`${car.ref.name} hooks you${big?' hard':''}! That was payback${R.settle>=4?', and now they call it even':''}.`);
+ r.focus=m;r.focusUntil=r.t+4;
+ if(!rvHeadless()){pop(m,'PAYBACK!','#ff7b7f',2.4,0);flag(`PAYBACK: ${rvLast(car).toUpperCase()}`,'#7a1d1d','#fff',2.5);}
+ if(big&&r.phase==='green'&&!r.pendingCaution&&Math.random()<0.6)r.pendingCaution={at:r.t+0.9,reason:`Wreck: you, ${rvLast(car)}`};}
+function rivalBlock(car){const g=grudge(car.id),R=RIVALS[car.ref.rival];return !R?1:g<=-2?0.5:1+Math.max(0,g)*0.25*R.block;}
+function rivalOdds(cd,c,Rd){if(!G||!G.riv)return;const a=c.ahead,b=c.behind;
+ if(a&&a.ref&&a.ref.rival&&['pass','draft','risk'].includes(cd.fam)){const g=grudge(a.id),P=RIVALS[a.ref.rival];
+  if(g>=3)Rd.a(-Math.round((g-2)*1.5*P.block),`${rvLast(a)} won't give an inch`,'rival');else if(g<=-2)Rd.a(5,`${rvLast(a)} gives you room`,'rival');}
+ if(b&&b.ref&&b.ref.rival&&cd.fam==='defend'&&grudge(b.id)>=6)Rd.a(-4,`${rvLast(b)} wants payback`,'rival');}
+function rivalTag(c){if(!c.ref.rival)return c===race.rival?['RIVAL','#ff7b7f']:null;const g=grudge(c.id),t=gTier(g);
+ if(c===race.rival)return ['RIVAL',g>=3?t[1]:'#ff7b7f'];return g>=3?[t[0].toUpperCase(),t[1]]:null;}
+function rivalPy(c,r){const tg=c.ref.rival||c===r.rival?rivalTag(c):null;return tg?` <span class="ar" style="color:${tg[1]}" data-kw="${c===r.rival?'rival':'grudge'}">${tg[0]}</span>`:'';}
+
+/* ---- after the race: head to head, cooling, messages ---- */
+const MSG={
+ wrecked:{pro:['Lap {lap}','"Twenty years I\'ve done this. That was not racing. I\'ll be watching for you."'],
+  enforcer:['You owe me','"You know how this works. You put me in the fence at {track}, I put you in it. Then we\'re square."'],
+  talker:['Posted to 40k followers','"Watch the replay, everybody. {me} has no business in this series. #wrecked"'],
+  hothead:['YOU','"YOU DUMPED ME. Next week. Your bumper. Mine."'],
+  wall:['Noted','"Fine. You won\'t get by me again this year."'],
+  grudge:['I keep a list','"Your name is on it now. In pen."']},
+ payback:{pro:['That\'s the one','"That\'s the only tap you get from me. Clean from here, if you are."'],
+  enforcer:['Square','"Now we\'re even. Race me clean and I race you clean."'],
+  talker:['Karma clip','"Funny how karma works. Clip\'s already up."'],
+  hothead:['How\'d that feel','"How\'d that feel? Bet you think twice next time."'],
+  wall:['Didn\'t want to','"You left me no choice. Don\'t make me do it again."'],
+  grudge:['One down','"That\'s one. The list is long."']},
+ hit:{pro:['My fault','"Car got loose under me at {track}. That one\'s on me."'],_:['Rubbin\'s racing','"Rubbin\'s racing. Don\'t take it personal."']},
+ respect:{pro:['Good racing','"You gave me room when it counted at {track}. I won\'t forget it."'],_:['Good racing','"Hard and clean all day at {track}. I\'ll give you the same."']},
+ gloat:{talker:['P{them} and smiling','"P{them}, ahead of {me} again. Some of us just have it."'],hothead:['Mirror','"Saw you in my mirror all day. Get used to the view."'],_:['Good run','"Good run. Not good enough."']},
+ beat:{grudge:['Enjoy it','"Enjoy it while it lasts."'],hothead:['Lucky','"Lucky day. Won\'t happen twice."'],_:['Nice run','"Nice run. See you next week."']}
+};
+function rivalEndRace(res,r,fo){if(!G.riv||!r.rinc)return;ensureRivals();
+ const m=fo.find(c=>c.isMe),mi=fo.indexOf(m),wk=r.rival&&r.rival.ref.rival?r.rival.id:null,season=G.season||1,rn=G.results.length+1;
+ res.rvWreck=wk!=null&&r.rinc.some(x=>x.id===wk&&['wreck','hit','payback'].includes(x.k));
+ res.rvPaid=wk!=null&&r.rinc.some(x=>x.id===wk&&x.k==='payback');
+ res.rivals=[];res.inboxNew=0;const msgs=[];
+ for(const c of r.cars){if(!c.ref.rival)continue;const st=G.riv[c.id];if(!st)continue;const key=c.ref.rival,R=RIVALS[key],inc=r.rinc.filter(x=>x.id===c.id),ci=fo.indexOf(c);
+  const L=r.rv[c.id]||{g0:st.g,why:[]},why=[...L.why],g1=st.g,both=!m.dnf&&!c.dnf;
+  if(both){if(mi<ci)st.ahead++;else st.behind++;}
+  const wrecked=inc.some(x=>x.k==='wreck'),clean=!inc.some(x=>['wreck','hit','payback'].includes(x.k)),close=both&&Math.abs(mi-ci)<=3;
+  // between races: the Grudge cools unless you wrecked them today; racing clean side by side cools it more and can turn into Respect
+  if(st.g>0&&!wrecked){const d=-Math.min(st.g,R.cool);st.g+=d;why.push(['cooled off',d]);}
+  const stung=R.proud&&both&&mi<ci&&ci-mi<=3; // proud rivals hate losing a close one, even a clean one
+  if(clean&&close&&!stung){const d=Math.max(G_MIN-st.g,key==='pro'?-1:-0.5);if(d){st.g+=d;why.push(['clean race side by side',d]);}}
+  else if(st.g<0&&!close){st.g=Math.min(0,st.g+0.25);}
+  if(stung){const d=Math.min(G_MAX-st.g,R.mul);st.g+=d;why.push(['beaten in a close finish',d]);}
+  st.g=Math.round(st.g*4)/4;
+  const ev=inc.find(x=>x.k==='wreck')||inc.find(x=>x.k==='payback')||inc.find(x=>x.k==='hit');
+  if(ev){st.hist.unshift({s:season,r:rn,k:ev.k,lap:ev.lap,track:r.track.short});st.hist=st.hist.slice(0,6);}
+  if(L.g0!==st.g||c===r.rival||inc.length)res.rivals.push({id:c.id,n:c.ref.name,g0:L.g0,g1:st.g,wk:c===r.rival,why:sumWhy(why),fin:ci+1});
+  // one message per rival per race, picked by what happened
+  let kind=wrecked?'wrecked':inc.some(x=>x.k==='payback')?'payback':inc.some(x=>x.k==='hit')?'hit':st.g<=-2&&L.g0>-2?'respect':null;
+  if(!kind&&c===r.rival&&both){if(ci<mi&&ci<10)kind='gloat';else if(mi<ci&&mi<5)kind='beat';}
+  if(kind)msgs.push({kind,c,ev,g1,pri:['wrecked','payback','hit','respect','gloat','beat'].indexOf(kind)});}
+ msgs.sort((a,b)=>a.pri-b.pri||a.c.id-b.c.id);
+ for(const x of msgs.slice(0,2)){const T=MSG[x.kind][x.c.ref.rival]||MSG[x.kind]._;const fill=s=>s.replace('{lap}',x.ev?x.ev.lap:'').replace('{track}',r.track.short).replace('{me}',G.name).replace('{them}',fo.indexOf(x.c)+1);
+  G.inbox.unshift({id:'m'+(G.msgN=(G.msgN||0)+1),rid:x.c.id,kind:x.kind,s:season,r:rn,track:r.track.short,subj:fill(T[0]),body:fill(T[1]),g:x.g1,reply:null});res.inboxNew++;}
+ G.inbox=G.inbox.slice(0,RV_INBOX);}
+function sumWhy(w){const o={};for(const [k,v] of w)o[k]=(o[k]||0)+v;return Object.entries(o).filter(([,v])=>v);}
+
+/* ---- replies: d20 checks, reusing the driver sheet's event screen ---- */
+const RV_OPTS={
+ wrecked:[{id:'sorry',n:'Apologize',say:'"That one\'s on me. I got in too deep."',skill:'cool',dc:12,tone:{x:-1,y:-1},win:{rheat:-3,respect:2},lose:{rheat:1},hit:'They take the apology. The Grudge cools.',miss:'It sounds forced. They hang up on you.'},
+  {id:'racing',n:'Call it racing',say:'"Two cars, one groove. That\'s racing."',skill:'read',dc:13,tone:{x:1,y:-1},win:{rheat:-2,respect:1},lose:{rheat:1,respect:-1},hit:'They grumble, but they get it.',miss:'They hear an excuse.'},
+  {id:'fire',n:'Fire back',say:'"Maybe hold your line next time."',skill:'media',dc:11,tone:{x:1,y:1},win:{fans:5,rheat:2},lose:{fans:-2,respect:-2,rheat:2},hit:'The fans love it. So does the Grudge.',miss:'It comes off petty, and they still want you.'}],
+ payback:[{id:'even',n:'Call it even',say:'"Fine. We\'re square. Clean from here."',skill:'cool',dc:12,tone:{x:-1,y:-1},win:{rheat:-3,respect:2},lose:{rheat:1},hit:'A nod across the garage. It\'s over.',miss:'Your voice says otherwise.'},
+  {id:'warn',n:'Warn them off',say:'"Do that again and you\'ll see me in your mirror all year."',skill:'media',dc:12,tone:{x:1,y:1},win:{fans:5,rheat:1},lose:{fans:-2,rheat:2},hit:'The clip plays all week.',miss:'It sounds like a threat you can\'t back up.'},
+  {id:'report',n:'Report it to the series',say:'Take the in-car video to the series hauler.',skill:'contract',dc:14,tone:{y:-1},win:{money:2000,respect:2,rheat:1},lose:{respect:-3,rheat:1},hit:'The series fines them and sends you $2,000 for the repairs.',miss:'"Racing incident." Now the garage thinks you tattle.'}],
+ hit:[{id:'letgo',n:'Let it go',say:'"Happens. We\'re good."',skill:'cool',dc:10,tone:{x:-1,y:-1},win:{rheat:-1,respect:2},lose:{respect:-1},hit:'Class. The garage notices.',miss:'You meant it, but it came out sarcastic.'},
+  {id:'bill',n:'Send them the repair bill',say:'"$2,500 for the right side. I take checks."',skill:'negotiate',dc:14,tone:{x:1,y:-1},win:{money:2500,rheat:1},lose:{rheat:2,respect:-2},hit:'Their team pays it to keep things quiet.',miss:'They laugh, and now it\'s personal.'}],
+ respect:[{id:'thanks',n:'Return the respect',say:'"Same. I\'ll race you clean every lap."',skill:'read',dc:10,tone:{x:-1,y:-1},win:{rheat:-1,respect:3},lose:{},hit:'That\'s how it should work.',miss:'It reads stiff, but it\'s fine.'},
+  {id:'joke',n:'Joke about it on air',say:'"Tell them I let them have that corner."',skill:'media',dc:12,tone:{x:1,y:1},win:{fans:4},lose:{rheat:1,fans:-1},hit:'Big laugh in the booth.',miss:'Nobody laughs, least of all them.'}],
+ gloat:[{id:'laugh',n:'Laugh it off',say:'"See you next week."',skill:'deflect',dc:11,tone:{x:-1,y:1},win:{fans:3,rheat:-1},lose:{fans:-1},hit:'Hard to fight someone who won\'t take the bait.',miss:'You sound rattled.'},
+  {id:'trash',n:'Talk trash back',say:'"Check your mirror. I\'m in it."',skill:'media',dc:13,tone:{x:1,y:1},win:{fans:6,hype:1,rheat:1},lose:{fans:-3,rheat:2},hit:'Now it\'s a storyline.',miss:'It lands flat after the result.'}]
+};
+RV_OPTS.beat=RV_OPTS.gloat;
+const rvDown=o=>(o.win&&o.win.rheat<0);
+function rivalRound(ev){const m=(G.inbox||[]).find(x=>x.id===ev.mid),c=G.cars[ev.rid],R=RIVALS[c.rival];
+ const dbl=fx=>{if(!fx||!R.press||!fx.fans)return fx;return Object.assign({},fx,{fans:fx.fans*2});};
+ const opts=(RV_OPTS[ev.kind]||RV_OPTS.gloat).map(o=>Object.assign({},o,{win:dbl(o.win),lose:dbl(o.lose)}));
+ return {q:`${m?m.body:''}`,opts:[...opts,{id:'leave',n:'Leave it on read',say:'No reply. Let the racing do the talking.',auto:true}]};}
+EVENTS.rival={n:'Rival message',who:ev=>{const c=G.cars[ev.rid];return `${c.name} · ${RIVALS[c.rival].nick} · #${c.num} ${TEAMS[c.team].name}`;},go:'Reply',
+ walk:{n:'Leave it on read',fx:{}},cost:{respect:-1},fumble:{rheat:2,respect:-2},fumbleTxt:'It gets around the garage. Grudge +2, Respect −2.',
+ blurb:ev=>`${G.cars[ev.rid].name} sent you a message. Reply, or leave it on read.`,
+ sit:(o,ev)=>{const c=G.cars[ev.rid],k=c.rival,g=grudge(c.id),s={adv:[],dis:[],dcl:[],L:[]};
+  if(k==='hothead'&&rvDown(o)&&g>=3)s.dis.push('Hothead: not listening yet');
+  if(k==='grudge'&&rvDown(o))s.dcl.push({v:3,src:'The Grudge keeps a list'});
+  if(k==='pro'&&['cool','read'].includes(o.skill))s.adv.push('Old Pro: respects a straight answer');
+  if(k==='talker'&&o.skill==='media')s.L.push({v:1,src:'Media Darling: the cameras are already rolling'});
+  if(g>=9&&rvDown(o))s.dcl.push({v:2,src:`Feud: Grudge ${g}`});
+  if(G.drv.respect>=60&&rvDown(o))s.L.push({v:1,src:`Garage respect ${G.drv.respect}`});
+  return s;},
+ rounds:[ev=>rivalRound(ev)]};
+const rvOpen=m=>m.s===(G.season||1)&&G.results.length-m.r<2;
+function rvReply(mid){const m=G.inbox.find(x=>x.id===mid);if(!m||m.reply||!rvOpen(m)||!evClear())return;
+ const ev=makeEvent('rival');Object.assign(ev,{rid:m.rid,mid:m.id,kind:m.kind});G.event=ev;showEvent();}
+function rvSync(){const ev=G.event;if(!ev||ev.id!=='rival'||!ev.done)return;const m=G.inbox.find(x=>x.id===ev.mid);if(!m||m.reply)return;
+ const h=ev.hist[0];m.reply=ev.walked||!h||h.auto?{n:'Left on read'}:{n:h.n,tier:h.tier,fx:h.fx};}
+
+/* ---- screens ---- */
+function gMeter(g){const t=gTier(g),z=(-G_MIN)/(G_MAX-G_MIN)*100,w=Math.abs(g)/(G_MAX-G_MIN)*100;
+ return `<div class="gmeter" title="Grudge ${g} of ${G_MAX}" data-kw="grudge"><span><b style="color:${t[1]}">${t[0]}</b> <b>${g>0?'+':''}${g}</b></span><div class="gm"><i style="left:${g<0?z-w:z}%;width:${w}%;background:${t[1]}"></i><u style="left:${z}%"></u></div></div>`;}
+const H2H=st=>`you ahead ${st.ahead}, behind ${st.behind}`;
+const KN={wreck:'you wrecked them',payback:'they paid you back',hit:'they wrecked you'};
+function gFx(g,R){if(g<=-2)return ['Gives you room: +5 on your passing cards against them, and they hold back when attacking you.','Blocks you half as often.'];
+ if(g<3)return ['Races you like anyone else.'];
+ const o=[`Blocks you ${(1+g*0.25*R.block).toFixed(1)}× as often, and your passing cards are ${Math.round((g-2)*1.5*R.block)} worse against them.`,`Leans on you when attacking: +${Math.round(g*1.5*R.pay)} to their passes on you.`];
+ if(g>=6)o.push(`Payback: ${Math.round(Math.min(0.6,0.12*(g-5)*R.pay)*100)}% each time they get to your bumper, at most once a race. Your defending cards are 4 worse with them behind you.`);
+ return o;}
+function rivalGaragePanel(){if(!G.riv)return '';rvSync();const ids=Object.keys(G.riv).map(Number).sort((a,b)=>grudge(b)-grudge(a)||a-b);
+ const unread=G.inbox.filter(m=>!m.reply&&rvOpen(m)).length,wk=G.rivWeekFor===G.raceIdx?G.rivWeek:null;
+ const row=id=>{const c=G.cars[id],R=RIVALS[c.rival],st=G.riv[id],h=st.hist[0];
+  return `<button class="rvrow" data-rv="${id}" style="--rc:${R.c}"><span class="bar" style="background:${TEAMS[c.team].c}"></span><span class="nm"><b>${esc(c.name)}</b><span class="rvnick" style="color:${R.c}">${esc(R.nick)}</span>${id===wk?'<span class="rvwk">This week</span>':''}</span>${gMeter(st.g)}
+   <span class="sub">#${c.num} ${esc(TEAMS[c.team].name)} · ${H2H(st)}${h?` · S${h.s} R${h.r} ${esc(h.track)}: ${KN[h.k]}`:''}</span></button>`;};
+ const msg=m=>{const c=G.cars[m.rid],R=RIVALS[c.rival],open=!m.reply&&rvOpen(m);
+  return `<div class="rvmsg${open?' new':''}${!open&&!m.reply?' old':''}" style="--rc:${R.c}"><div class="hd"><b>${esc(m.subj)}</b><span class="muted">${esc(c.name)} · S${m.s} R${m.r} ${esc(m.track)}</span></div><p class="body">${esc(m.body)}</p>
+   ${m.reply?`<div class="row" style="gap:6px"><span class="muted">You:</span><b>${esc(m.reply.n)}</b>${m.reply.tier?`<b style="color:${TIER_D[m.reply.tier][1]}">${TIER_D[m.reply.tier][0]}</b> ${fxChips(m.reply.fx)}`:''}</div>`
+   :open?`<div class="row" style="gap:6px"><button class="btn small primary" data-rvreply="${m.id}" ${evClear()?'':'disabled title="Finish tonight\'s event first"'}>Reply · d20</button><button class="btn small" data-rvignore="${m.id}">Leave it on read</button>${evClear()?'':'<span class="muted" style="font-size:12px">Finish tonight\'s event first.</span>'}</div>`:'<span class="muted" style="font-size:12px">Too late to reply.</span>'}</div>`;};
+ const shown=G.inbox.slice(0,5);
+ return `<div class="grid g2" id="g-riv">
+  <div class="panel grid" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Rivals</h3><span class="muted" style="font-size:12px">${K('Grudge','grudge')}: −3 Respect · 3 Warm · 6 Hot · 9 Feud</span></div>
+   <p class="muted" style="font-size:13px">Six named drivers who remember you. Wreck one and their Grudge jumps; it cools between races. Warm rivals block you and fight harder; Hot ones can pay you back on track. Click a rival for what their Grudge does right now.</p>
+   <div class="rvlist">${ids.map(row).join('')}</div></div>
+  <div class="panel grid" style="gap:8px;align-content:start"><div class="row" style="justify-content:space-between"><h3>Inbox ${unread?`<span class="cbadge">${unread}</span>`:''}</h3><span class="muted" style="font-size:12px">${G.inbox.length?`${G.inbox.length} message${G.inbox.length>1?'s':''}`:''}</span></div>
+   ${shown.length?`<div class="rvmsgs">${shown.map(msg).join('')}</div>`:'<p class="muted">Nothing yet. Rivals write after races when something happened between you: a wreck, payback, a hard-fought finish.</p>'}
+   ${shown.length?'<p class="muted" style="font-size:12px">Replies are d20 checks on your driver sheet. Answer within two races.</p>':''}</div></div>`;}
+function wireRivals(el){el.querySelectorAll('[data-rv]').forEach(b=>b.onclick=()=>openSheet(+b.dataset.rv));
+ el.querySelectorAll('[data-rvreply]').forEach(b=>b.onclick=()=>rvReply(b.dataset.rvreply));
+ el.querySelectorAll('[data-rvignore]').forEach(b=>b.onclick=()=>{const m=G.inbox.find(x=>x.id===b.dataset.rvignore);if(m){m.reply={n:'Left on read'};showGarage();}});}
+function rivalSheet(car){if(!car.rival||!G.riv||!G.riv[car.id])return '';const R=RIVALS[car.rival],st=G.riv[car.id],g=st.g;
+ return `<div class="panel grid" style="gap:8px;border-left:4px solid ${R.c}"><div class="row" style="justify-content:space-between"><h3>Rival · <span style="color:${R.c}">${esc(R.nick)}</span></h3><div style="min-width:140px">${gMeter(g)}</div></div>
+  <p class="muted" style="font-size:13px">${esc(R.txt)}</p>
+  <div class="grid" style="gap:4px;font-size:13px"><span class="eyebrow">What their Grudge does right now</span>${gFx(g,R).map(t=>`<div>${esc(t)}</div>`).join('')}</div>
+  <div style="font-size:13px">Head to head: ${H2H(st)}.${st.hist.length?` History: ${st.hist.map(h=>`S${h.s} R${h.r} ${esc(h.track)}, lap ${h.lap}: ${KN[h.k]}`).join(' · ')}.`:''}</div></div>`;}
+function rivalRewardPanel(res){if(!res.rivals||(!res.rivals.length&&!res.inboxNew))return '';
+ const ch=v=>`<span class="fxc ${v>0?'dn':'up'}">${v>0?'+':'−'}${Math.abs(v)}</span>`;
+ return `<div class="panel grid" id="w-riv" style="gap:8px"><div class="row" style="justify-content:space-between"><h3>Rivals</h3>${res.inboxNew?`<span class="row" style="gap:6px"><span class="cbadge">${res.inboxNew}</span> new in your garage inbox</span>`:''}</div>
+  ${res.rivals.map(x=>{const t0=gTier(x.g0),t1=gTier(x.g1);return `<div class="row" style="justify-content:space-between;gap:8px"><span class="row" style="gap:6px"><b>${esc(x.n)}</b>${x.wk?'<span class="rvwk">This week</span>':''}<span class="muted">P${x.fin}</span></span>
+   <span class="row" style="gap:6px"><span class="rvwhy">${x.why.map(([k,v])=>`<span class="muted" style="font-size:12px">${esc(k)}</span>${ch(Math.round(v*4)/4)}`).join(' ')}</span><span class="mono" style="font-size:13px"><b style="color:${t0[1]}">${x.g0}</b> → <b style="color:${t1[1]}">${x.g1}</b> ${esc(t1[0])}</span></span></div>`;}).join('')}</div>`;}
+if(G)ensureRivals();
+Object.assign(window.__gfd,{RIVALS,gTier,assignRivals,ensureRivals,grudge,addGrudge,rivalPickId,rivalObjective,rivalWeek,rivalAttack,paybackChance,rivalLean,rivalBlock,rivalOdds,rivalEndRace,rvReply,rvSync,rivalRound,autoMove:typeof autoMove==='function'?autoMove:undefined});
 </script>
