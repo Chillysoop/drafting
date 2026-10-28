@@ -1,6 +1,6 @@
 {
   "name": "com.greenflag.sim",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "displayName": "Green Flag Sim",
   "description": "The Green Flag Deck race sim: plain C#, seeded and deterministic, no UnityEngine reference. The same files build the sim/ .NET library for CI tests.",
   "unity": "6000.3",

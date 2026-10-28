@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GreenFlag.Sim", "GreenFlag.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GreenFlag.Sim.Tests", "GreenFlag.Sim.Tests\GreenFlag.Sim.Tests.csproj", "{9A5901AF-808F-4125-BFDF-1226278627BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GreenFlag.Harness", "GreenFlag.Harness\GreenFlag.Harness.csproj", "{5B462D6C-6980-4CC9-B7ED-B370236A34A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{9A5901AF-808F-4125-BFDF-1226278627BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A5901AF-808F-4125-BFDF-1226278627BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A5901AF-808F-4125-BFDF-1226278627BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B462D6C-6980-4CC9-B7ED-B370236A34A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B462D6C-6980-4CC9-B7ED-B370236A34A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B462D6C-6980-4CC9-B7ED-B370236A34A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B462D6C-6980-4CC9-B7ED-B370236A34A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
