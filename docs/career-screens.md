@@ -34,7 +34,7 @@ The reward screen offers 3 cards (2 after a rough day; persona cards 1.8× as li
 
 ## Not here yet
 
-Race objectives, sponsors, team salary, points, standings and the season wrap (step 37), the driver sheet, XP and Hype (38), Crew HQ, crew wages and pit card upgrades (39). Until step 37 each race draws its field from the race's seed, so the cars around you change from race to race, and after the last race of the calendar the next season simply starts. The deck builder shows your own success rate on a card once you've played it 3 times; the slice's "base chance" number isn't shown yet. Save files are step 35.
+Race objectives, sponsors, salary, points, standings, qualifying and the season wrap came in step 37 ([season.md](season.md)). Still to come: the driver sheet, XP and Hype (38), Crew HQ, crew wages and pit card upgrades (39). The deck builder shows your own success rate on a card once you've played it 3 times; the slice's "base chance" number isn't shown yet.
 
 ## What is not verified
 

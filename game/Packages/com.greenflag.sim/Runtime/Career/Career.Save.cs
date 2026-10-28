@@ -14,7 +14,8 @@ namespace GreenFlag.Sim
         /// </summary>
         public static readonly IReadOnlyDictionary<Type, string[]> SaveCoverage = new Dictionary<Type, string[]>
         {
-            [typeof(Career)] = new[] { "Name", "Persona", "Series", "Diff", "Info", "Stakes", "Survive", "Money", "Season", "RaceIdx", "Over", "Base", "Collection", "Deck", "PartsOwned", "Equipped", "Tune", "Hist", "TrackDecks", "Results", "ShopPart", "ShopRerolls", "shopRolled", "Reward", "DeckNote", "deckFor", "Seed", "Rng" },
+            [typeof(Career)] = new[] { "Name", "Persona", "Series", "Diff", "Info", "Stakes", "Survive", "Money", "Season", "RaceIdx", "Over", "Base", "Collection", "Deck", "PartsOwned", "Equipped", "Tune", "Hist", "TrackDecks", "Results", "ShopPart", "ShopRerolls", "shopRolled", "Reward", "DeckNote", "deckFor", "Seed", "Rng",
+                "Field", "Pts", "Contract", "Sponsor", "SponsorOffers", "Objectives", "RivalId", "Past", "Review", "Offers", "Ladder", "Qual", "QualRunning", "-ContractNote" },
             // Deck, Parts and Tune on the career's base loadout are always empty or unused: Loadout() fills them from the career
             [typeof(PlayerLoadout)] = new[] { "Car", "CrewChief", "Spotter", "Engineer", "PitCrew", "PitDeck", "Grit", "Wits", "Radio", "Crew", "-Deck", "-Parts", "-Tune" },
             [typeof(CarStats)] = new[] { "Power", "Handling", "Aero", "Durability", "Racecraft", "Defense", "Consistency", "TireMgmt" },
@@ -23,9 +24,21 @@ namespace GreenFlag.Sim
             [typeof(CallFx)] = new[] { "Chance", "Late", "Pay", "Soft", "Weight", "Again", "Net", "FixOnS" },
             [typeof(CardHistory)] = new[] { "Plays", "Succ" },
             // a finished race's top 10 and play log are only shown on its reward screen, so older results keep the summary
-            [typeof(RaceReport)] = new[] { "Season", "RaceNo", "TrackId", "TrackName", "Start", "Finish", "Expected", "Dnf", "Tier", "Mul", "Purse", "Bonus", "Total", "Plays", "Succ", "Crits", "BestChain", "Calls", "CallsWon", "Order", "Log", "Penalty", "LostPart" },
+            [typeof(RaceReport)] = new[] { "Season", "RaceNo", "TrackId", "TrackName", "Start", "Finish", "Expected", "Dnf", "Tier", "Mul", "Purse", "Bonus", "Total", "Plays", "Succ", "Crits", "BestChain", "Calls", "CallsWon", "Order", "Log", "Penalty", "LostPart",
+                "ObjE", "BestPos", "BeatMate", "BeatRival", "Rival", "Objectives", "ObjMet", "TierFrom", "Sponsor", "Retainer", "Salary", "Pts", "PtsTotal", "Rank", "RankBefore" },
             [typeof(FinishLine)] = new[] { "Pos", "Id", "Name", "Team", "IsMe", "Dnf" },
             [typeof(RewardOffer)] = new[] { "Res", "Cards", "CardRerolls", "Picked", "InDeck", "Parts", "PartRerolls", "PartPicked" },
+            // step 37: the season. Your own entrant's Stats are your car (Base.Car) and aren't written twice.
+            [typeof(Entrant)] = new[] { "Id", "Team", "TeamRating", "Number", "IsMe", "Name", "Trait", "Stats", "Starts", "Wins", "SeasonWins", "Top5", "Best" },
+            [typeof(ObjectiveResult)] = new[] { "Id", "Name", "Ask", "Ok", "Pay" },
+            [typeof(RaceObjective)] = new[] { "Id", "Ask" },
+            [typeof(SponsorDeal)] = new[] { "Id", "Per", "Bonus", "Renew", "Since" },
+            [typeof(Contract)] = new[] { "Per", "Team", "Since", "Series" },
+            [typeof(ContractOffer)] = new[] { "Kind", "Series", "Team", "Rating", "Per", "Sign", "Name" },
+            [typeof(StandRow)] = new[] { "Pos", "Id", "Pts", "Wins", "Best", "Name", "Team", "IsMe" },
+            [typeof(PastSeason)] = new[] { "Season", "Rank", "Pts", "Series", "Sponsor", "Met" },
+            [typeof(SeasonReview)] = new[] { "Season", "Rank", "Pts", "Series", "Table", "Sponsor", "Goal", "Prog", "Met", "Bonus", "RenewPer", "RenewBonus" },
+            [typeof(QualiResult)] = new[] { "Season", "RaceIdx", "Pos", "Best", "TrackId", "Card", "Grid", "Times", "Time", "Avg", "Skip", "Counts" },
         };
 
         public JsonValue ToJson()
@@ -52,6 +65,7 @@ namespace GreenFlag.Sim
                 .Set("shop", JsonValue.Obj().Set("rolled", shopRolled).Set("part", ShopPart).Set("rerolls", ShopRerolls))
                 .Set("deckFor", deckFor).Set("deckNote", DeckNote)
                 .Set("reward", Reward == null ? JsonValue.Null : RewardJson(Reward));
+            SeasonToJson(j);
             return j;
         }
 
@@ -90,6 +104,7 @@ namespace GreenFlag.Sim
                     if (c.Results.Count > 0) c.Results[c.Results.Count - 1] = c.Reward.Res;
                     else c.Results.Add(c.Reward.Res);
                 }
+                c.SeasonFromJson(j);
                 c.Check();
                 return c;
             }
@@ -110,6 +125,14 @@ namespace GreenFlag.Sim
             }
             if (Season < 1 || RaceIdx < 0 || RaceIdx >= SeasonLength) throw new FormatException($"Save file: race {RaceIdx + 1} of season {Season} isn't on the {Series} calendar");
             if (Money < 0) throw new FormatException("Save file: negative money");
+            if (Field.Count(e => e.IsMe) != 1) throw new FormatException("Save file: the field needs exactly one car that is you");
+            if (Field.Select(e => e.Id).Distinct().Count() != Field.Count) throw new FormatException("Save file: two cars in the field share an id");
+            foreach (var id in Pts.Keys) if (!Field.Any(e => e.Id == id)) throw new FormatException($"Save file: points for car {id}, which isn't in the field");
+            if (Contract.Team < 0 || Contract.Team >= Teams.For(Series).Length) throw new FormatException($"Save file: no team {Contract.Team}");
+            if (Sponsor != null) SeasonRules.Sponsor(Sponsor.Id);
+            if (SponsorOffers != null) foreach (var o in SponsorOffers) SeasonRules.Sponsor(o.Id);
+            if (Objectives != null) foreach (var o in Objectives) SeasonRules.Objective(o.Id);
+            if (Qual != null && Qual.Card != null) CardBook.Get(Qual.Card);
         }
 
         static JsonValue TuneJson(Tune u) => JsonValue.Obj().Set("hand", u.Hand).Set("aero", u.Aero).Set("focus", u.Focus.ToString());
@@ -162,7 +185,13 @@ namespace GreenFlag.Sim
                 .Set("start", r.Start).Set("finish", r.Finish).Set("expected", r.Expected).Set("dnf", r.Dnf).Set("tier", r.Tier.ToString())
                 .Set("mul", r.Mul).Set("purse", r.Purse).Set("bonus", r.Bonus).Set("total", r.Total)
                 .Set("plays", r.Plays).Set("succ", r.Succ).Set("crits", r.Crits).Set("bestChain", r.BestChain).Set("calls", r.Calls).Set("callsWon", r.CallsWon)
-                .Set("penalty", r.Penalty).Set("lostPart", r.LostPart);
+                .Set("penalty", r.Penalty).Set("lostPart", r.LostPart)
+                .Set("objE", r.ObjE).Set("bestPos", r.BestPos).Set("beatMate", r.BeatMate).Set("beatRival", r.BeatRival).Set("rival", r.Rival)
+                .Set("objMet", r.ObjMet).Set("tierFrom", r.TierFrom?.ToString()).Set("sponsor", r.Sponsor).Set("retainer", r.Retainer).Set("salary", r.Salary)
+                .Set("pts", r.Pts).Set("ptsTotal", r.PtsTotal).Set("rank", r.Rank).Set("rankBefore", r.RankBefore);
+            var objs = JsonValue.Arr();
+            foreach (var o in r.Objectives) objs.Add(JsonValue.Obj().Set("id", o.Id).Set("name", o.Name).Set("ask", o.Ask).Set("ok", o.Ok).Set("pay", o.Pay));
+            j.Set("objectives", objs);
             if (!full) return j;
             var order = JsonValue.Arr();
             foreach (var o in r.Order) order.Add(JsonValue.Obj().Set("pos", o.Pos).Set("id", o.Id).Set("name", o.Name).Set("team", o.Team).Set("me", o.IsMe).Set("dnf", o.Dnf));
@@ -185,7 +214,12 @@ namespace GreenFlag.Sim
                 Mul = j["mul"].Double(), Purse = j["purse"].Int(), Bonus = j["bonus"].Int(), Total = j["total"].Int(),
                 Plays = j["plays"].Int(), Succ = j["succ"].Int(), Crits = j["crits"].Int(), BestChain = j["bestChain"].Int(), Calls = j["calls"].Int(), CallsWon = j["callsWon"].Int(),
                 Penalty = j["penalty"].Str(), LostPart = j["lostPart"].Str(),
+                ObjE = j["objE"].Int(), BestPos = j["bestPos"].Int(99), BeatMate = j["beatMate"].Bool(), BeatRival = j["beatRival"].Bool(), Rival = j["rival"].Str(),
+                ObjMet = j["objMet"].Int(), TierFrom = j["tierFrom"].IsNull ? (RewardTier?)null : j["tierFrom"].Enum(RewardTier.Solid), Sponsor = j["sponsor"].Str(),
+                Retainer = j["retainer"].Int(), Salary = j["salary"].Int(), Pts = j["pts"].Int(), PtsTotal = j["ptsTotal"].Int(), Rank = j["rank"].Int(), RankBefore = j["rankBefore"].Int(),
             };
+            foreach (var o in j["objectives"].Items)
+                r.Objectives.Add(new ObjectiveResult { Id = o["id"].Str(), Name = o["name"].Str(""), Ask = o["ask"].Bool(), Ok = o["ok"].Bool(), Pay = o["pay"].Int() });
             foreach (var o in j["order"].Items)
                 r.Order.Add(new FinishLine { Pos = o["pos"].Int(), Id = o["id"].Int(), Name = o["name"].Str(), Team = o["team"].Str(""), IsMe = o["me"].Bool(), Dnf = o["dnf"].Bool() });
             foreach (var l in j["log"].Items)

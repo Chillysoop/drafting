@@ -48,11 +48,16 @@ namespace GreenFlag.Sim
     {
         public const string Format = "green-flag-deck-career";
         /// <summary>The format this build writes. Bump it whenever the JSON layout changes, and add a migration.</summary>
-        public const int Version = 1;
+        public const int Version = 2;
 
-        /// <summary>Version n to n + 1, in order. Version 1 is the first format, so there are none yet.</summary>
+        /// <summary>Version n to n + 1, in order.</summary>
         public static readonly IReadOnlyList<SaveMigration> Migrations = new SaveMigration[]
         {
+            new SaveMigration
+            {
+                From = 1, What = "Step 37: the season (field, points, sponsor, contract, qualifying)",
+                Up = root => { foreach (var c in Careers(root)) Career.MigrateV1(c); return root; },
+            },
         };
 
         static readonly CultureInfo inv = CultureInfo.InvariantCulture;

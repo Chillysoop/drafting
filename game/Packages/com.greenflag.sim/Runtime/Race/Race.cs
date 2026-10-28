@@ -50,6 +50,7 @@ namespace GreenFlag.Sim
         public List<RaceEvent> Log;
 
         readonly double minGap, baseV;
+        readonly string qualiCard;
         double pendingCautionAt = -1;
         string pendingCautionReason;
         static readonly string[] DebrisReasons = { "Debris on the track", "A car spun in turn 2", "Fluid on the track" };
@@ -67,6 +68,7 @@ namespace GreenFlag.Sim
             Mods = s.Loadout != null ? new PlayerMods() : s.Mods;
             Loadout = s.Loadout;
             PitPolicy = s.PitPolicy;
+            qualiCard = s.QualiCard;
             if (Loadout != null) { CardRng = new SimRng(s.Seed ^ 0xC4A2D5EBu); RadioRng = new SimRng(s.Seed ^ 0x7AD10CA1u); }
             minGap = Shape.MinGap;
             baseV = 1 / Track.LapTime;

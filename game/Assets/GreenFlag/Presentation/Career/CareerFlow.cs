@@ -14,6 +14,8 @@ namespace GreenFlag.Presentation
     /// Saves (step 35): three slots under persistentDataPath/saves. The menu writes a checkpoint when you go racing, at the
     /// results, on every reward-screen press and when you leave the deck builder; anything else is flushed when the game is
     /// paused, loses focus or quits. Quitting mid-race resumes in the garage before that race.
+    /// The race weekend (step 37): Go racing opens qualifying; during the timed run this ticks the run every frame with brake
+    /// held from Space or Enter, the controller's A or the BRAKE button (QualiHud draws it), and its grid screen starts the race.
     /// </summary>
     public sealed class CareerFlow : MonoBehaviour
     {
@@ -28,6 +30,8 @@ namespace GreenFlag.Presentation
 
         RaceView view;
         MenuHud hud;
+        QualiHud quali;
+        bool padBrake;
         readonly PadReader padReader = new PadReader();
         System.Action<PadStyle, PadButton, bool> onPad;
         Camera cam;
@@ -59,6 +63,7 @@ namespace GreenFlag.Presentation
         {
             Menu.NewSeed = seed != 0 ? (uint)seed : (uint)Random.Range(1, int.MaxValue);
             hud = new MenuHud(this);
+            quali = new QualiHud(this);
             onPad = OnPad;
             cam = Camera.main;
             if (cam == null) cam = new GameObject("Main Camera", typeof(Camera)) { tag = "MainCamera" }.GetComponent<Camera>();
@@ -78,6 +83,8 @@ namespace GreenFlag.Presentation
             var setup = Menu.TakeRace();
             if (setup != null) { StartRace(setup); return; }
             padReader.Read(onPad, Time.unscaledDeltaTime);
+            if (Menu.Screen == CareerScreen.QualiRun) Menu.QualiTick(Time.unscaledDeltaTime, quali.MouseHeld || quali.KeyHeld || padBrake);
+            else { padBrake = false; quali.MouseHeld = quali.KeyHeld = false; }
         }
 
         void StartRace(RaceSetup setup)
@@ -103,7 +110,16 @@ namespace GreenFlag.Presentation
         /// <summary>A controller button or a menu key.</summary>
         public void OnPad(PadStyle style, PadButton b, bool down)
         {
-            if (!down || view != null) return;
+            if (view != null) return;
+            // qualifying: A is the brake, held and let go; B gives up
+            if (Menu.Screen == CareerScreen.QualiRun)
+            {
+                PadStyle = style;
+                if (b == PadButton.Confirm) { padBrake = down; PadActive = true; }
+                else if (b == PadButton.Back && down) Click("quali.giveup");
+                return;
+            }
+            if (!down) return;
             PadStyle = style;
             PadActive = true;
             var page = Menu.Page();
@@ -125,7 +141,9 @@ namespace GreenFlag.Presentation
 
         void OnGUI()
         {
-            if (view == null) hud?.Draw();
+            if (view != null) return;
+            if (Menu.Screen == CareerScreen.QualiRun) quali?.Draw();
+            else hud?.Draw();
         }
     }
 }

@@ -67,14 +67,58 @@ namespace GreenFlag.Harness
                 foreach (var a in p.Actions) sb.Append($"<span class=\"btn{(a.Primary && a.Enabled ? " prim" : "")}{(a.Enabled ? "" : " off")}\">{H(a.Label)}</span>{(!a.Enabled && a.Note != null ? $"<span class=n> {H(a.Note)}</span>" : "")}");
                 sb.Append("</div></div>");
             }
+            // step 37: the qualifying run as the Unity QualiHud lays it out (map, brake bar with zones, needle)
+            void RunShot(string caption)
+            {
+                var q = m.Quali;
+                var pn = new QualiPanel(q.Plan.Track);
+                string P((double x, double y) p) => string.Format(CultureInfo.InvariantCulture, "{0:0.0},{1:0.0}", 400 + p.x * 500, 20 + p.y * 500);
+                sb.Append($"<h2>{H(caption)}</h2><div class=pg style=\"text-align:center\"><div class=eb>Qualifying · {H(q.Plan.Track.Name)}</div><svg width=1300 height=700 viewBox=\"0 0 1300 700\">");
+                sb.Append($"<rect x=400 y=20 width=500 height=500 fill=#ffffff0d /><polyline fill=none stroke=#8c94a6 stroke-width=4 points=\"{string.Join(" ", pn.Outline().Select(P))} {P(pn.At(0))}\"/>");
+                var cur = q.Current;
+                foreach (var c in q.Plan.Checks.Where(c => c.Lap == (cur?.Lap ?? 0)))
+                {
+                    var xy = pn.At(c.U).ToTuple();
+                    string col = c.Res is QualiMark mk ? Css(QualiPanel.MarkColor(mk)) : c == cur ? "#e9b52f" : "#edf2fa";
+                    sb.Append(string.Format(CultureInfo.InvariantCulture, "<circle cx={0:0.0} cy={1:0.0} r=7 fill={2} />", 400 + xy.Item1 * 500, 20 + xy.Item2 * 500, col));
+                }
+                var car = pn.At(q.CarU);
+                sb.Append(string.Format(CultureInfo.InvariantCulture, "<circle cx={0:0.0} cy={1:0.0} r=9 fill=#2fb36a />", 400 + car.x * 500, 20 + car.y * 500));
+                double bx = 200, bw = 900, by = 560;
+                sb.Append($"<rect x={bx} y={by} width={bw} height=46 fill=#ffffff14 />");
+                if (cur != null)
+                {
+                    string[] zc = { "#9fd0ff59", "#2fb36a99", "#e9b52fe6" };
+                    var z = QualiPanel.Zones(cur);
+                    for (int i = 0; i < 3; i++) sb.Append(string.Format(CultureInfo.InvariantCulture, "<rect x={0:0.0} y={1} width={2:0.0} height=46 fill={3} />", bx + z[i].a * bw, by, (z[i].b - z[i].a) * bw, zc[i]));
+                    if (q.InSweep) sb.Append(string.Format(CultureInfo.InvariantCulture, "<rect x={0:0.0} y={1} width=4 height=62 fill=#edf2fa />", bx + q.Needle * bw - 2, by - 8));
+                }
+                sb.Append($"<text x=650 y=650 fill=#edf2fa font-size=32 font-weight=700 text-anchor=middle>{H(QualiPanel.Prompt(q))}</text>");
+                var pop = QualiPanel.Pop(q);
+                if (pop != null) sb.Append($"<text x=650 y=545 fill=#e9b52f font-size=26 font-weight=700 text-anchor=middle>{H(pop)}</text>");
+                sb.Append($"<text x=200 y=690 fill=#8c94a6 font-size=15>Chain ×{q.Score.Chain} · Focus {Math.Round(q.Focus * 100)}% · {string.Join("  ", q.LapTimes.Select((t, i) => $"L{i + 1} {t.ToString("0.000", CultureInfo.InvariantCulture)}"))}</text>");
+                sb.Append("<rect x=520 y=660 width=0 height=0 /></svg><div><span class=btn style=\"background:#e5484d;font-weight:800;padding:14px 60px\">BRAKE</span></div></div>");
+            }
+
             Shot("New career (title screen with save slots)");
             m.Press("title.start");
-            Shot("Garage before race 1");
+            Shot("Garage before race 1: sign a sponsor first (step 37)");
+            m.Press("sponsor:" + m.Career.SponsorOffers[0].Id);
+            Shot("Garage with the sponsor, race objectives and standings");
             m.Press("deck");
             m.Career.Collection.AddRange(new[] { "slingshot", "bump_run", "high_line" });
             Shot("Race deck builder");
             m.Press("deck.done");
             m.Press("go");
+            m.Press("quali.card:" + m.Career.QualiOffer()[0]);
+            Shot("Qualifying: pick a card (or none), start the run or skip");
+            m.Press("quali.start");
+            var qbot = new QualiBot("good", seed);
+            while (m.Quali.Time < m.Quali.Plan.Checks[2].S0 + 0.6 * m.Quali.Plan.Sweep) m.QualiTick(1 / 60.0, qbot.Held(m.Quali));
+            RunShot("Qualifying run: third corner, needle sweeping (the Unity screen draws this)");
+            while (m.QualiTick(1 / 60.0, qbot.Held(m.Quali))) { }
+            Shot("Qualifying results: the grid");
+            m.Press("quali.race");
             var (desk, _) = MousePlayer.Play(new Race(m.TakeRace()));
             m.RaceFinished(desk.Race);
             Shot("Reward screen after race 1 (played by the mouse bot)");
@@ -88,6 +132,12 @@ namespace GreenFlag.Harness
             Shot("Title after Save and quit (two careers saved, Continue picks the newest)");
             m.Press("title.delete:2");
             Shot("Delete takes a second press");
+            // the season wrap: a kart season of 6 races, then the season-end screen and a promotion
+            m = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = seed + 2 }, 6, null, new MenuBot { QualiSkill = "great", SignContracts = false });
+            Shot("Season end: final standings, sponsor review and contract offers");
+            int up = m.Career.Offers.FindIndex(o => o.Kind == OfferKind.Promote);
+            m.Press("offer:" + Math.Max(0, up));
+            Shot("Garage after signing (a promotion when one was offered): next season's sponsor offers");
             File.WriteAllText(outPath, sb.ToString());
             Console.WriteLine($"wrote {outPath}");
             return 0;
