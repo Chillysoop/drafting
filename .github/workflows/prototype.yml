@@ -41,3 +41,5 @@ jobs:
         run: node prototype/harness/rival-smoke.js "$PWD/prototype/green-flag-deck.html"
       - name: Kart rung check
         run: node prototype/harness/kart-smoke.js "$PWD/prototype/green-flag-deck.html"
+      - name: Late models and promotion check
+        run: node prototype/harness/promo-smoke.js "$PWD/prototype/green-flag-deck.html"

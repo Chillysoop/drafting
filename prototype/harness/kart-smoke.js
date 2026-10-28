@@ -26,7 +26,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await load();await p.evaluate(()=>localStorage.clear());await load();
   // title: Start in Karts
   const t0=await p.evaluate(()=>[...document.querySelectorAll('#title .personas [data-arch]')].map(b=>b.dataset.arch).join());
-  if(t0!=='drafter,bully,whisperer,restart,gambler')fail('stock personas on the title '+t0);
+  if(t0!=='brawler,linepainter,packrat,latebraker')fail('kart personas by default on the title (Q77) '+t0);
   await click('[data-series="kart"]');
   const t1=await p.evaluate(()=>({arch:[...document.querySelectorAll('#title .personas [data-arch]')].map(b=>b.dataset.arch).join(),intro:!!document.querySelector('#title .kart-intro'),
    sched:window.__gfd.titleSel.sched,cal:[...document.querySelectorAll('#title .g2 .row')].map(r=>r.innerText).join('|')}));
@@ -93,7 +93,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(sv.series!=='kart'||sv.ct!=='kart'||sv.next!=='hollow')fail('kart save '+JSON.stringify(sv));
   // a stock career never sees kart cards or kart tracks
   await p.evaluate(()=>localStorage.clear());await load();
-  await click('#t-go');
+  await click('[data-series="mixed"]');await click('#t-go');
   const st=await p.evaluate(()=>{const g=window.__gfd,G=g.G;const offers=[];for(let i=0;i<40;i++)offers.push(...g.CARDS&&rollCards('victory'));
    return {series:G.series,kartCards:offers.filter(id=>g.CARDS[id].kart).length,kartRelics:rollRelics(30).filter(k=>g.ARCH&&RELICS[k].kart).length,tracks:G.cars.length&&[...Array(10).keys()].map(i=>g.TRACKS[g.arcTi(i)].kart?1:0).reduce((a,b)=>a+b,0)};});
   if(st.series!=='stock'||st.kartCards||st.kartRelics||st.tracks)fail('stock career '+JSON.stringify(st));

@@ -16,7 +16,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  const goRace=async()=>{if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');};
  await load();await p.evaluate(()=>localStorage.clear());await load();
  if(await p.$('#t-cont'))fail('continue shown with no save');
- await click('#t-go');
+ await click('[data-series="mixed"]');await click('#t-go');
  // step 17: Go racing waits for a sponsor contract
  if(!(await p.$eval('#g-go',e=>e.disabled)))fail('go racing allowed before signing a sponsor');
  await click('#g-spons [data-sign]');
@@ -68,7 +68,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  // every race hands out the same points total (40+35+34+...+17)
  const per=40+Array.from({length:19},(_,i)=>35-i).reduce((a,b)=>a+b,0);if(pre.pts!==per*10)fail('points total '+pre.pts+' != '+per*10);
  console.log('season ok:',end.txt.split('\n').slice(0,4).join(' | '),'| sponsor',met?'renews':'walks');
- await click('#e-next');
+ await click('#e-next');await click('#o-sign');
  const s2=await p.evaluate(()=>({g:!document.getElementById('garage').hidden,lbl:/season 2/i.test(document.getElementById('garage').innerText),offers:document.querySelectorAll('#g-spons [data-sign]').length,go:document.getElementById('g-go').disabled}));
  if(!s2.g||!s2.lbl||s2.offers<2||!s2.go)fail('season 2 garage '+JSON.stringify(s2));
  await shot('season2-offers');
@@ -76,7 +76,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  await load();if(!(await p.$('#t-cont')))fail('no continue for season 2');
  // Ironman: closing mid-race starts the race over too (board Q48: no), with no DNF and no penalty
  await p.evaluate(()=>{window.__gfd.titleSel.stakes='ironman';window.__gfd.titleSel.diff='normal';});
- await click('#t-go');await click('#t-go');await click('#g-spons [data-sign]');const m0=await p.evaluate(()=>window.__gfd.G.money);
+ await click('[data-series="mixed"]');await click('#t-go');await click('#t-go');await click('#g-spons [data-sign]');const m0=await p.evaluate(()=>window.__gfd.G.money);
  await goRace();await p.evaluate(()=>{const g=window.__gfd;for(let k=0;k<200;k++)g.update(0.05);});
  await load();await click('#t-cont');
  const ab=await p.evaluate(()=>{const G=window.__gfd.G;return {n:G.results.length,idx:G.raceIdx,money:G.money,inRace:G.inRace,garage:!document.getElementById('garage').hidden,notice:!!G.notice};});

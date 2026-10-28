@@ -22,7 +22,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const goRace=async()=>{if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.isVisible('#q-skip'))await click('#q-skip');await click('#q-race');};
 
   await load();await p.evaluate(()=>localStorage.clear());await load();
-  await click('#t-go');
+  await click('[data-series="mixed"]');await click('#t-go');
   const r0=await p.evaluate(()=>{const g=window.__gfd,G=g.G;const rv=G.cars.filter(c=>c.rival);
    return {n:rv.length,names:rv.map(c=>c.name),seats:rv.map(c=>c.id),traits:rv.map(c=>c.trait===g.RIVALS[c.rival].trait),gr:Object.values(G.riv).map(s=>s.g),
     rows:document.querySelectorAll('#g-riv .rvrow').length,inbox:G.inbox.length,objs:G.nextObjectives,wk:G.rivWeek,wkName:G.rivWeek!=null&&G.cars[G.rivWeek].name,
