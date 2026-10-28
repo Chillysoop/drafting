@@ -1,0 +1,30 @@
+name: sim
+
+on:
+  pull_request:
+    paths: ['sim/**', 'game/Packages/com.greenflag.sim/**', '.github/workflows/sim.yml']
+  push:
+    branches: [main]
+    paths: ['sim/**', 'game/Packages/com.greenflag.sim/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Sim has no engine references
+        run: |
+          if grep -rnE '^\s*using\s+Unity(Engine|Editor)' game/Packages/com.greenflag.sim/Runtime; then
+            echo "::error::The sim must not reference UnityEngine or UnityEditor"; exit 1
+          fi
+      - name: dotnet test
+        run: dotnet test sim/GreenFlag.Sim.sln --logger "trx;LogFileName=sim.trx" --results-directory "$RUNNER_TEMP/sim-tests"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sim-test-results
+          path: ${{ runner.temp }}/sim-tests
