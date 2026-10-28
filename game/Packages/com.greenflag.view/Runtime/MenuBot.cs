@@ -20,6 +20,8 @@ namespace GreenFlag.View
         /// <summary>How well it qualifies: poor, avg, good, great; null skips qualifying.</summary>
         public string QualiSkill = "avg";
         public uint QualiSeed = 1;
+        /// <summary>False stops it on the season-end screen instead of signing an offer (for screenshots of that screen).</summary>
+        public bool SignContracts = true;
         int builtFor = -1;
 
         /// <summary>Presses one button. Returns false when it has nothing to press (a race is waiting to be run).</summary>
@@ -57,6 +59,7 @@ namespace GreenFlag.View
                 case CareerScreen.QualiDone: return "quali.race";
                 case CareerScreen.Season:
                 {
+                    if (!SignContracts) return null;
                     var o = c.Offers;
                     int i = o.FindIndex(x => x.Kind == OfferKind.Promote);
                     if (i < 0) i = o.FindIndex(x => x.Kind == OfferKind.Move);

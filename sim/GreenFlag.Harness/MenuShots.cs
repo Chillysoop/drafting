@@ -133,7 +133,7 @@ namespace GreenFlag.Harness
             m.Press("title.delete:2");
             Shot("Delete takes a second press");
             // the season wrap: a kart season of 6 races, then the season-end screen and a promotion
-            m = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = seed + 2 }, 6, null, new MenuBot { QualiSkill = "great" });
+            m = MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = seed + 2 }, 6, null, new MenuBot { QualiSkill = "great", SignContracts = false });
             Shot("Season end: final standings, sponsor review and contract offers");
             int up = m.Career.Offers.FindIndex(o => o.Kind == OfferKind.Promote);
             m.Press("offer:" + Math.Max(0, up));
