@@ -34,9 +34,9 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(k0.len!==6||!/of 6/i.test(k0.eb)||k0.series!=='kart'||k0.team!==9||k0.tn!=='Garage 77 Karting'||!/Rung 1/i.test(k0.ride))fail('kart career '+JSON.stringify(k0));
   // a grudge to carry up
   await p.evaluate(()=>{const G=window.__gfd.G;const id=Object.keys(G.riv)[0];G.riv[id].g=6;G.money=20000;});
-  // kart season ends P2: stay, a better kart team, and three late model teams
+  // kart season ends P2: stay, a better kart team, and two late model teams (step 23: the next series' smaller teams, rated 5 and 3)
   const e1=await endSeason(2);
-  if(e1.rk!==2||e1.offers.filter(o=>o.startsWith('promote:late')).length!==3||!e1.offers[0].startsWith('stay:kart')||!e1.offers.some(o=>o.startsWith('move:kart')))fail('kart offers '+JSON.stringify(e1));
+  if(e1.rk!==2||e1.offers.filter(o=>o.startsWith('promote:late')).length!==2||!e1.offers[0].startsWith('stay:kart')||!e1.offers.some(o=>o.startsWith('move:kart')))fail('kart offers '+JSON.stringify(e1));
   const nx=await p.evaluate(()=>document.getElementById('e-next').innerText);if(!/contract offers/i.test(nx))fail('season review button '+nx);
   await click('#e-next');
   if(await noScroll('reward'))fail(W+': offers scroll');
