@@ -42,8 +42,8 @@ const html=process.argv[2],shots=process.argv[3]||null;
    if(await p.evaluate(()=>document.getElementById('reward').hidden))fail('continue did not reopen the reward screen');
    if(await p.evaluate(()=>window.__gfd.me&&0))0;
   }
-  if(i===0){const o=await p.evaluate(()=>{const G=window.__gfd.G,res=G.results[0];return {box:!!document.getElementById('w-objs'),n:res.objs.length,ask:res.objs.filter(o=>o.ask).length,ret:res.retainer,tot:res.total===res.purse+res.bonus+res.retainer+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0)};});
-   if(!o.box||o.n!==3||o.ask!==1||!o.ret||!o.tot)fail('reward objectives/sponsor '+JSON.stringify(o));}
+  if(i===0){const o=await p.evaluate(()=>{const G=window.__gfd.G,res=G.results[0];return {box:!!document.getElementById('w-objs'),n:res.objs.length,ask:res.objs.filter(o=>o.ask).length,rv:res.objs.filter(o=>o.rv).length,ret:res.retainer,tot:res.total===res.purse+res.bonus+res.retainer+res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0)};});
+   if(!o.box||o.n!==4||o.ask!==1||o.rv!==1||!o.ret||!o.tot)fail('reward objectives/sponsor '+JSON.stringify(o));}
   if(i===9)pre=await p.evaluate(()=>({pts:window.__gfd.standings().reduce((s,x)=>s+x.pts,0),money:window.__gfd.G.money,sp:window.__gfd.G.sponsor.id}));
   await click('#w-go');
   if(i===6){ // garage upgrade, reload, check your car still uses the bought stat

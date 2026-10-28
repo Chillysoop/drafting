@@ -14,7 +14,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   await load();await p.evaluate(()=>localStorage.clear());await load();
   await click('#t-go');
   const g0=await p.evaluate(()=>({go:document.getElementById('g-go').disabled,offers:document.querySelectorAll('#g-spons [data-sign]').length,objs:window.__gfd.G.nextObjectives.length,ov:document.documentElement.scrollWidth>innerWidth+1||document.getElementById('garage').scrollWidth>document.getElementById('garage').clientWidth+1}));
-  if(!g0.go||g0.offers!==3||g0.objs!==2)fail(W+': garage before signing '+JSON.stringify(g0));
+  if(!g0.go||g0.offers!==3||g0.objs!==3)fail(W+': garage before signing '+JSON.stringify(g0));
   if(g0.ov)fail(W+': horizontal scroll in garage');
   await p.evaluate(()=>{const e=document.getElementById('g-spons');e.scrollIntoView();});await shot('offers');
   if(W!==1280){await p.close();continue;}
@@ -23,7 +23,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(gated)fail('gated sponsor offered in season 1 x'+gated);
   await click('#g-spons [data-sign]');
   const g1=await p.evaluate(()=>{const G=window.__gfd.G;return {sp:G.sponsor&&G.sponsor.id,objs:G.nextObjectives,go:document.getElementById('g-go').disabled,strip:!!document.querySelector('#garage .spstrip')};});
-  if(!g1.sp||g1.objs.length!==3||!g1.objs[2].ask||g1.go||!g1.strip)fail('after signing '+JSON.stringify(g1));
+  if(!g1.sp||g1.objs.length!==4||!g1.objs[2].ask||!g1.objs[3].rv||g1.go||!g1.strip)fail('after signing '+JSON.stringify(g1));
   await p.evaluate(()=>document.querySelector('#garage .spstrip').scrollIntoView());await shot('signed');
   // play race 1 with every objective forced to pass: rewards move up a tier
   if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
@@ -33,7 +33,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
    for(const o of g.OBJECTIVES)if(o._t){o.test=o._t;delete o._t;}
    window.__gfdHeadless=false;g.saveSeason();const res=g.G.results[g.G.results.length-1];return {tier:res.tier,from:res.tierFrom||null,met:res.objMet,n:res.objs.length,dnf:res.dnf,box:document.getElementById('w-objs').innerText};},force);
   const a=await fin('pass');
-  if(a.met!==3||a.n!==3)fail('forced objectives '+JSON.stringify(a));
+  if(a.met!==4||a.n!==4)fail('forced objectives '+JSON.stringify(a));
   if(a.tier!=='victory'&&!a.from)fail('no tier bump with every objective met '+JSON.stringify(a));
   if(a.from&&!/moved up/i.test(a.box))fail('bump not explained');
   await p.evaluate(()=>document.getElementById('w-objs').scrollIntoView());await shot('reward-objectives');
@@ -61,13 +61,14 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const dn=await fin('dnf');
   if(!dn.dnf||dn.from)fail('dnf bumped '+JSON.stringify(dn));
+  // step 20 adds one rival objective to every rolled set (3 before signing, 4 after)
   // old save: objective ids as strings, no sponsor, no season
   await load();await p.evaluate(()=>{const g=window.__gfd,s=g.readSave();const G=s.G;G.reward=null;G.inRace=null;G.snap=null;delete G.sponsor;delete G.sponsorOffers;delete G.season;delete G.past;G.nextObjectives=['top15','rival'];for(const c of G.cars)delete c.career.swins;localStorage.setItem('gfd-season-v1',JSON.stringify(s));});
   await click('#t-cont'); // the title reads the save when Continue is pressed
   const old=await p.evaluate(()=>({g:!document.getElementById('garage').hidden,offers:document.querySelectorAll('#g-spons [data-sign]').length,lines:document.querySelectorAll('#garage .objl').length}));
   if(!old.g||old.offers!==3||old.lines!==2)fail('old save '+JSON.stringify(old));
   await click('#g-spons [data-sign]');if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
-  const o2=await fin('');if(o2.n!==3)fail('old save race '+JSON.stringify(o2));
+  const o2=await fin('');if(o2.n!==4)fail('old save race '+JSON.stringify(o2));
   await p.close();
  }
  console.log(process.exitCode?'sponsor smoke FAILED':'sponsor smoke ok');console.log('pageerrors',errs.length,errs.slice(0,3));if(errs.length)process.exitCode=1;
