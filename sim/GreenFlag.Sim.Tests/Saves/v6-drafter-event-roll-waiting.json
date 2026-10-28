@@ -1,0 +1,638 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 6,
+  "build": "sample save (format 6)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "event",
+  "summary": {
+    "name": "Rookie",
+    "persona": "drafter",
+    "series": "Stock",
+    "season": 1,
+    "race": 2,
+    "of": 10,
+    "track": "Pinewood Kart Park",
+    "money": 11680,
+    "races": 1,
+    "diff": "Normal",
+    "stakes": "Standard",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "drafter",
+    "series": "Stock",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Standard",
+    "survive": 0,
+    "money": 11680,
+    "season": 1,
+    "raceIdx": 1,
+    "over": false,
+    "seed": 18,
+    "rng": 662967511,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 4,
+        "durability": 4,
+        "racecraft": 4,
+        "defense": 4,
+        "consistency": 5,
+        "tireMgmt": 4
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 3,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 12,
+      "wits": 15,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["tuck_in", "side_draft", "dive_bomb", "block", "save_tires", "spotter_focus", "bump_draft", "slingshot", "tuck_in", "side_draft", "push_limit", "dive_bomb", "slingshot"],
+    "deck": ["block", "slingshot", "push_limit", "dive_bomb", "dive_bomb", "bump_draft", "side_draft", "side_draft", "tuck_in", "tuck_in", "save_tires", "spotter_focus", "slingshot"],
+    "partsOwned": ["slick_nose", "long_run_tires"],
+    "equipped": {
+      "Aero": "slick_nose",
+      "Tires": "long_run_tires"
+    },
+    "tune": {
+      "hand": 0,
+      "aero": 1,
+      "focus": "Draft"
+    },
+    "hist": {
+      "block": [1, 0],
+      "dive_bomb": [12, 9],
+      "evade": [1, 0],
+      "push_limit": [2, 1],
+      "save_tires": [2, 1],
+      "side_draft": [3, 1],
+      "tuck_in": [2, 0]
+    },
+    "trackDecks": {
+      "mill": ["block", "slingshot", "push_limit", "dive_bomb", "dive_bomb", "bump_draft", "side_draft", "side_draft", "tuck_in", "tuck_in", "save_tires", "spotter_focus"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "mill",
+        "trackName": "Millbrook Speedway",
+        "start": 19,
+        "finish": 7,
+        "expected": 19,
+        "dnf": false,
+        "tier": "Victory",
+        "mul": 0.4,
+        "purse": 2560,
+        "bonus": 1920,
+        "total": 8680,
+        "plays": 23,
+        "succ": 12,
+        "crits": 0,
+        "bestChain": 2,
+        "calls": 5,
+        "callsWon": 2,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 19,
+        "bestPos": 5,
+        "beatMate": true,
+        "beatRival": true,
+        "rival": "Wade Haskins",
+        "objMet": 3,
+        "tierFrom": "Strong",
+        "sponsor": "hitide",
+        "retainer": 900,
+        "salary": 0,
+        "pts": 30,
+        "ptsTotal": 30,
+        "rank": 7,
+        "rankBefore": 19,
+        "dmg": 6,
+        "drvMom": 0,
+        "hype": 1,
+        "hypeWhy": ["12 spots over expected"],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 6,
+          "Spotter": 9,
+          "Engineer": 6,
+          "PitCrew": 16
+        },
+        "crewUp": [],
+        "objectives": [
+          {
+            "id": "land4",
+            "name": "Land 12 successful cards",
+            "ask": false,
+            "ok": true,
+            "pay": 800
+          },
+          {
+            "id": "gain5",
+            "name": "Finish 5+ spots ahead of where you started",
+            "ask": false,
+            "ok": true,
+            "pay": 1000
+          },
+          {
+            "id": "rival",
+            "name": "Finish ahead of your rival (Wade Haskins)",
+            "ask": true,
+            "ok": true,
+            "pay": 1500
+          }
+        ]
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "lucky_lugnut",
+      "rerolls": 0
+    },
+    "deckFor": 1001,
+    "deckNote": null,
+    "reward": null,
+    "field": [
+      {
+        "id": 0,
+        "team": 0,
+        "rating": 9,
+        "num": 39,
+        "me": false,
+        "name": "Erik Lindqvist",
+        "trait": "Drafter",
+        "stats": [10, 10, 10, 5, 7, 9, 9, 8],
+        "rec": [1, 0, 0, 0, 12]
+      },
+      {
+        "id": 1,
+        "team": 0,
+        "rating": 9,
+        "num": 76,
+        "me": false,
+        "name": "Diego Reyes",
+        "trait": "Restarter",
+        "stats": [8, 10, 10, 5, 7, 7, 7, 8],
+        "rec": [1, 1, 1, 1, 1]
+      },
+      {
+        "id": 2,
+        "team": 1,
+        "rating": 8,
+        "num": 66,
+        "me": false,
+        "name": "Rory McAllister",
+        "trait": "Closer",
+        "stats": [9, 9, 7, 4, 7, 7, 7, 8],
+        "rec": [1, 0, 0, 0, 15]
+      },
+      {
+        "id": 3,
+        "team": 1,
+        "rating": 8,
+        "num": 2,
+        "me": false,
+        "name": "Marco Castellano",
+        "trait": "Wall",
+        "stats": [8, 9, 9, 4, 7, 6, 7, 6],
+        "rec": [1, 0, 0, 0, 9]
+      },
+      {
+        "id": 4,
+        "team": 2,
+        "rating": 8,
+        "num": 78,
+        "me": false,
+        "name": "Ren Nakamura",
+        "trait": "Restarter",
+        "stats": [9, 8, 8, 4, 8, 8, 7, 7],
+        "rec": [1, 0, 0, 1, 2]
+      },
+      {
+        "id": 5,
+        "team": 2,
+        "rating": 8,
+        "num": 98,
+        "me": false,
+        "name": "Bruno Ferreira",
+        "trait": "Wall",
+        "stats": [8, 9, 8, 6, 10, 10, 9, 8],
+        "rec": [1, 0, 0, 0, 11]
+      },
+      {
+        "id": 6,
+        "team": 3,
+        "rating": 7,
+        "num": 60,
+        "me": false,
+        "name": "Ivan Petrov",
+        "trait": "Closer",
+        "stats": [6, 8, 6, 4, 6, 6, 5, 5],
+        "rec": [1, 0, 0, 0, 8]
+      },
+      {
+        "id": 7,
+        "team": 3,
+        "rating": 7,
+        "num": 22,
+        "me": false,
+        "name": "Shane Sullivan",
+        "trait": "Wall",
+        "stats": [7, 6, 6, 5, 5, 5, 5, 6],
+        "rec": [1, 0, 0, 0, 17]
+      },
+      {
+        "id": 8,
+        "team": 4,
+        "rating": 6,
+        "num": 65,
+        "me": false,
+        "name": "Femi Adeyemi",
+        "trait": "Aggressive",
+        "stats": [6, 5, 5, 5, 7, 7, 6, 8],
+        "rec": [1, 0, 0, 1, 4]
+      },
+      {
+        "id": 9,
+        "team": 4,
+        "rating": 6,
+        "num": 49,
+        "me": false,
+        "name": "Luc Dubois",
+        "trait": "Rookie",
+        "stats": [6, 6, 7, 4, 6, 6, 6, 5],
+        "rec": [1, 0, 0, 1, 5]
+      },
+      {
+        "id": 10,
+        "team": 5,
+        "rating": 6,
+        "num": 84,
+        "me": false,
+        "name": "Kasey Kowalski",
+        "trait": "Aggressive",
+        "stats": [7, 6, 5, 6, 7, 6, 6, 8],
+        "rec": [1, 0, 0, 1, 3]
+      },
+      {
+        "id": 11,
+        "team": 5,
+        "rating": 6,
+        "num": 69,
+        "me": false,
+        "name": "Cal Bram",
+        "trait": "Restarter",
+        "stats": [6, 7, 6, 6, 5, 4, 4, 6],
+        "rec": [1, 0, 0, 0, 13]
+      },
+      {
+        "id": 12,
+        "team": 6,
+        "rating": 5,
+        "num": 16,
+        "me": false,
+        "name": "Ana Ruiz",
+        "trait": "Closer",
+        "stats": [6, 5, 5, 5, 6, 7, 7, 7],
+        "rec": [1, 0, 0, 0, 14]
+      },
+      {
+        "id": 13,
+        "team": 6,
+        "rating": 5,
+        "num": 10,
+        "me": false,
+        "name": "Kenta Tanaka",
+        "trait": "Wall",
+        "stats": [5, 5, 5, 5, 4, 6, 5, 6],
+        "rec": [1, 0, 0, 0, 18]
+      },
+      {
+        "id": 14,
+        "team": 7,
+        "rating": 4,
+        "num": 80,
+        "me": false,
+        "name": "Tobi Okafor",
+        "trait": "Rookie",
+        "stats": [4, 4, 5, 4, 5, 4, 6, 6],
+        "rec": [1, 0, 0, 0, 20]
+      },
+      {
+        "id": 15,
+        "team": 7,
+        "rating": 4,
+        "num": 59,
+        "me": false,
+        "name": "Remy Moreau",
+        "trait": "Wall",
+        "stats": [4, 4, 5, 4, 3, 4, 3, 4],
+        "rec": [1, 0, 0, 0, 19]
+      },
+      {
+        "id": 16,
+        "team": 8,
+        "rating": 3,
+        "num": 53,
+        "me": false,
+        "name": "Jace Whitaker",
+        "trait": "Wall",
+        "stats": [2, 3, 4, 4, 2, 2, 2, 3],
+        "rec": [1, 0, 0, 0, 6]
+      },
+      {
+        "id": 17,
+        "team": 8,
+        "rating": 3,
+        "num": 92,
+        "me": false,
+        "name": "Liam Brennan",
+        "trait": "Closer",
+        "stats": [3, 5, 2, 5, 6, 7, 5, 5],
+        "rec": [1, 0, 0, 0, 10]
+      },
+      {
+        "id": 18,
+        "team": 9,
+        "rating": 3,
+        "num": 77,
+        "me": true,
+        "name": null,
+        "trait": "None",
+        "stats": null,
+        "rec": [1, 0, 0, 0, 7]
+      },
+      {
+        "id": 19,
+        "team": 9,
+        "rating": 3,
+        "num": 73,
+        "me": false,
+        "name": "Wade Haskins",
+        "trait": "Rookie",
+        "stats": [4, 4, 4, 6, 7, 4, 4, 6],
+        "rec": [1, 0, 0, 0, 16]
+      }
+    ],
+    "pts": {
+      "0": 25,
+      "1": 40,
+      "2": 22,
+      "3": 28,
+      "4": 35,
+      "5": 26,
+      "6": 29,
+      "7": 20,
+      "8": 33,
+      "9": 32,
+      "10": 34,
+      "11": 24,
+      "12": 23,
+      "13": 19,
+      "14": 17,
+      "15": 18,
+      "16": 31,
+      "17": 27,
+      "18": 30,
+      "19": 21
+    },
+    "contract": {
+      "per": 0,
+      "team": 9,
+      "series": "Stock",
+      "since": 1,
+      "clauses": []
+    },
+    "sponsor": {
+      "id": "hitide",
+      "per": 900,
+      "bonus": 4800,
+      "renew": false,
+      "since": 1,
+      "trust": 0
+    },
+    "sponsorOffers": null,
+    "objectives": [
+      {
+        "id": "rival",
+        "ask": false
+      },
+      {
+        "id": "top15",
+        "ask": false
+      },
+      {
+        "id": "top10",
+        "ask": true
+      }
+    ],
+    "rival": 19,
+    "past": [],
+    "review": null,
+    "offers": null,
+    "ladder": ["Stock"],
+    "calendar": ["mill", "pine", "carver", "ridge", "talon", "mill", "pine", "carver", "ridge", "mill"],
+    "qual": null,
+    "qualRunning": false,
+    "driver": {
+      "bg": "sim",
+      "attr": {
+        "Presence": 9,
+        "Wits": 15,
+        "Composure": 13,
+        "Savvy": 14,
+        "Rapport": 10,
+        "Grit": 12
+      },
+      "prof": ["Read", "Deflect"],
+      "lvl": 1,
+      "xp": 25,
+      "pts": 0,
+      "hype": 1,
+      "fans": 35,
+      "respect": 35,
+      "img": [-1, 1],
+      "trail": [
+        [-1, 1]
+      ],
+      "log": [],
+      "nextMom": 0
+    },
+    "event": {
+      "id": "press",
+      "ri": 0,
+      "season": 1,
+      "after": 1,
+      "ctx": {
+        "ev": "press",
+        "track": "Millbrook Speedway",
+        "trackId": "mill",
+        "rival": "Wade Haskins",
+        "fin": 7,
+        "start": 19,
+        "exp": 19,
+        "dmg": 6,
+        "dnf": false,
+        "top3": false,
+        "big": true,
+        "beatRival": true
+      },
+      "ceil": 2400,
+      "revealed": false,
+      "advFor": -1,
+      "hist": [],
+      "done": false,
+      "walked": false,
+      "cur": {
+        "opt": "thank",
+        "n": "Thank the fans",
+        "say": "\"Y'all were loud in turn 3. I heard you.\"",
+        "hit": "The stands go nuts on the replay.",
+        "miss": "Nobody heard it over the generator.",
+        "tone": [-1, 1],
+        "hype": false,
+        "rerolled": false,
+        "b": {
+          "skill": "Fans",
+          "l": [
+            [1, "Grit 12", "attr"]
+          ],
+          "dcl": [],
+          "adv": [],
+          "dis": [],
+          "dc": 12
+        },
+        "r": [16, 3],
+        "r0": null,
+        "tiers": [
+          {
+            "fans": 12,
+            "hype": 1
+          },
+          {
+            "fans": 6
+          },
+          {
+            "fans": 6,
+            "respect": -2
+          },
+          {
+            "fans": -1
+          },
+          {
+            "fans": -1,
+            "respect": -2,
+            "money": -1500
+          }
+        ],
+        "info": "Full"
+      }
+    },
+    "eventsHeld": ["press"],
+    "staff": [
+      {
+        "role": "CrewChief",
+        "name": "Hank Lowery",
+        "lvl": 3,
+        "xp": 6,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Spotter",
+        "name": "Nia Foster",
+        "lvl": 3,
+        "xp": 9,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Engineer",
+        "name": "Wes Calloway",
+        "lvl": 3,
+        "xp": 6,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "PitCrew",
+        "name": "Rita Okafor",
+        "lvl": 3,
+        "xp": 16,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      }
+    ],
+    "hire": [],
+    "hireFor": -1,
+    "poach": null,
+    "poached": 0
+  },
+  "retry": null
+}

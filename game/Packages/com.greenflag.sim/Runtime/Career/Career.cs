@@ -135,14 +135,16 @@ namespace GreenFlag.Sim
         public int RerollCost(int rerolls) => CareerRules.RerollCost(Diff, rerolls);
 
         /// <summary>A new career for a persona: its deck (which is also the whole collection), its part fitted, its stat bonus,
-        /// tune and driver, and $6,000. A kart persona starts in karts. The driver's background defaults to the persona's.</summary>
-        public static Career New(string persona, DifficultyLevel diff = DifficultyLevel.Normal, Stakes stakes = Stakes.Standard, uint seed = 1, string name = "Rookie", InfoLevel info = InfoLevel.Full, string background = null)
+        /// tune and driver, and $6,000. A kart persona starts in karts. A stock persona starts in stock cars, or one rung lower in
+        /// late models (step 41, the slice's "Start in"). The driver's background defaults to the persona's.</summary>
+        public static Career New(string persona, DifficultyLevel diff = DifficultyLevel.Normal, Stakes stakes = Stakes.Standard, uint seed = 1, string name = "Rookie", InfoLevel info = InfoLevel.Full, string background = null, Series? start = null)
         {
             var p = Personas.Get(persona);
+            if (start != null && (start == Series.Kart) != p.Kart) throw new ArgumentException(p.Kart ? "A kart persona starts in karts" : "Only a kart persona starts in karts");
             var l = PlayerLoadout.ForPersona(persona);
             var c = new Career
             {
-                Name = name, Persona = persona, Series = p.Kart ? Series.Kart : Series.Stock, Diff = diff, Info = info, Stakes = stakes,
+                Name = name, Persona = persona, Series = start ?? (p.Kart ? Series.Kart : Series.Stock), Diff = diff, Info = info, Stakes = stakes,
                 Survive = stakes == Stakes.Permadeath ? 1 : 0, Seed = seed, Rng = new SimRng(seed ^ 0xC0FFEEu), Base = l, Tune = l.Tune.Clone(),
             };
             c.Deck.AddRange(l.Deck);

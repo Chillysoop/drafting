@@ -123,6 +123,23 @@ namespace GreenFlag.Sim
             QualRunning = j["qualRunning"].Bool();
         }
 
+        /// <summary>The late model calendar before step 41: Cedar Bowl, Millbrook and the figure-8.</summary>
+        public static readonly IReadOnlyList<string> LateCalendarV5 = new[] { "cedar", "milll", "cross", "cedar", "milll", "cross", "cedar", "milll" };
+
+        /// <summary>
+        /// Save format 5 to 6 (step 41): the late model calendar gains Granite Falls and the Ridgeback road course. A late model
+        /// season that already ran a race keeps the calendar it saved; one that hasn't started gets the new one. Nothing else in
+        /// the file changes (the late model field's tire strategies come from the traits it already has).
+        /// </summary>
+        public static JsonValue MigrateV5(JsonValue c)
+        {
+            var series = c["series"].Enum(Series.Stock);
+            int season = c["season"].Int(1);
+            bool started = c["raceIdx"].Int() > 0 || c["results"].Items.Any(r => r["season"].Int() == season);
+            if (series == Series.Late && !started) c.Set("calendar", JsonValue.Of(CareerRules.Calendar(series)));
+            return c;
+        }
+
         /// <summary>
         /// Save format 1 to 2 (step 37): a version 1 career had no season around it. It gets a field for its series (built
         /// from its seed with its own generator, so the career's rolls don't move), no points yet this season, the smallest
@@ -141,7 +158,7 @@ namespace GreenFlag.Sim
             var series = c["series"].Enum(Series.Stock);
             int season = c["season"].Int(1);
             bool started = c["raceIdx"].Int() > 0 || c["results"].Items.Any(r => r["season"].Int() == season);
-            c.Set("calendar", JsonValue.Of(series == Series.Kart && started ? KartCalendarV4 : CareerRules.Calendar(series)));
+            c.Set("calendar", JsonValue.Of(series == Series.Kart && started ? KartCalendarV4 : series == Series.Late ? LateCalendarV5 : CareerRules.Calendar(series)));
             if (series == Series.Kart)
                 foreach (var e in c["field"].Items)
                     if (e["trait"].Str() == nameof(Trait.Restarter)) e.Set("trait", nameof(Trait.Rookie));

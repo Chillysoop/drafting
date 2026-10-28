@@ -39,6 +39,11 @@ namespace GreenFlag.Sim
         /// fairing in, blockers cover the inside). Off = the browser slice's kart field, for comparing with it.</summary>
         public bool KartField = true;
         public double KartBump = 0.35, KartCover = 6;
+        /// <summary>Step 41: the late model field runs its own tire strategies (tire savers stay out under caution, chargers take four
+        /// and charge), and on any late model track a car on much fresher tires gets a read on the car it is passing
+        /// (LateFresh per point of tire past LateFreshGap, up to LateFreshCap). Off = the browser slice's late model field.</summary>
+        public bool LateField = true;
+        public double LateFresh = 0.4, LateFreshGap = 15, LateFreshCap = 12;
         public double LateCrossMe = 0.45, LateCrossAi = 0.004, LateCrossCd = 14, LateCrossWin = 0.6;
 
         // BAL: cards, beats, combos and Focus (only used when the race has a card layer, RaceSetup.Loadout)

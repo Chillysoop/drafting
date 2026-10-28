@@ -29,6 +29,8 @@ namespace GreenFlag.Sim
     public sealed partial class Race
     {
         public Caution Caution;
+        /// <summary>The AI's caution calls this race, by PitService (Stay, Fuel, Two, Four): how mixed the field's tires are at restarts.</summary>
+        public readonly int[] AiCalls = new int[4];
         Dictionary<RaceCar, RaceCar> physAhead;
 
         /// <summary>Choose your call while the caution's pit window is open.</summary>
@@ -87,6 +89,13 @@ namespace GreenFlag.Sim
             double toGo = Track.Laps - c.Dist;
             bool needFuel = c.Fuel / c.Burn < toGo + 0.15 && (CheapStop(c) || c.Tires < 60), down = LapsDown(c) > 0;
             if (down) return Caution.Dog == c || !needFuel ? PitService.Stay : PitService.Four;
+            if (LateFieldOn)
+            {
+                var st = LateStyleOf(c);
+                // tire savers keep track position on tires a charger would change; chargers take four whenever there is a race left to charge
+                if (st == LateStyle.Saver && !needFuel && c.Damage <= 25 && c.Tires >= 50) return PitService.Stay;
+                if (st == LateStyle.Charger && toGo > 3 && (needFuel || c.Tires < 85)) return PitService.Four;
+            }
             if (needFuel)
             {
                 if (toGo < FuelRange * 0.35 && c.Tires > 55) return Rng.NextDouble() < 0.5 ? PitService.Fuel : PitService.Two;
@@ -105,7 +114,7 @@ namespace GreenFlag.Sim
             foreach (var c in Cars)
             {
                 c.Overtake = null;
-                if (!c.Dnf && !c.IsMe) k.Plans[c] = AiCautionCall(c);
+                if (!c.Dnf && !c.IsMe) { k.Plans[c] = AiCautionCall(c); AiCalls[(int)k.Plans[c]]++; }
             }
             k.Mine = k.Chief = MyCautionCall();
             PaceCar = new RaceCar { IsPace = true, Id = -1, Dist = lead.Dist + 0.03 };

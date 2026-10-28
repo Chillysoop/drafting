@@ -47,6 +47,10 @@ namespace GreenFlag.Harness
         /// <summary>The lowest call chance the bots take (the browser harness's bal.callMin, default 55).</summary>
         public static int CallMin = 55;
 
+        /// <summary>Step 41's tire strategy check: how every style but none calls a caution. "bot" = the browser harness's tire rule
+        /// (stay on 60%+ tires, two on 40%+, else four), "chief" = take the crew chief's call, or a fixed "stay", "two" or "four".</summary>
+        public static string CautionPolicy = "bot";
+
         sealed class Pending { public int Uid; public double At; public bool Hazard; }
 
         public static (Race race, RaceRow row) Run(TrackDef track, uint seed, string style, string persona, Action<Race> setup = null)
@@ -109,7 +113,9 @@ namespace GreenFlag.Harness
                 if (style != "none" && r.Phase == RacePhase.Caution && k != null && !k.Done && cautionSet != k.Id)
                 {
                     cautionSet = k.Id;
-                    r.SetCautionCall(me.Tires >= 60 && me.Damage < 25 ? PitService.Stay : me.Tires >= 40 ? PitService.Two : PitService.Four);
+                    var call = CautionPolicy == "stay" ? PitService.Stay : CautionPolicy == "two" ? PitService.Two : CautionPolicy == "four" ? PitService.Four
+                        : me.Tires >= 60 && me.Damage < 25 ? PitService.Stay : me.Tires >= 40 ? PitService.Two : PitService.Four;
+                    if (CautionPolicy != "chief") r.SetCautionCall(call);
                 }
                 if (style == "none" || r.Attempt != null) continue;
 

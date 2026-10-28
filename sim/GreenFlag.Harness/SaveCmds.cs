@@ -18,14 +18,14 @@ namespace GreenFlag.Harness
 
         static string Text(CareerMenu m) => CareerSave.Write(new SaveGame { Career = m.Career, Screen = m.Snapshot().Screen, SavedAt = Pinned, Build = "harness" });
 
-        public static int Saves(int races, string persona, uint seed, string stakes)
+        public static int Saves(int races, string persona, uint seed, string stakes, string start = "auto")
         {
             var st = (Stakes)Enum.Parse(typeof(Stakes), stakes, true);
-            var a = MenuBot.Run(new CareerMenu { PickPersona = persona, NewSeed = seed, PickStakes = st }, races);
+            var a = MenuBot.Run(new CareerMenu { PickPersona = persona, NewSeed = seed, PickStakes = st, PickSeries = start == "late" ? Series.Late : Series.Stock }, races);
             var store = new MemorySaveStore();
             var slots = new SaveSlots(store) { Now = () => Pinned, Build = "harness" };
             int reloads = 0; long biggest = 0;
-            var b = MenuBot.RunReloading(new CareerMenu(slots) { PickPersona = persona, NewSeed = seed, PickStakes = st }, races, null, null, n =>
+            var b = MenuBot.RunReloading(new CareerMenu(slots) { PickPersona = persona, NewSeed = seed, PickStakes = st, PickSeries = start == "late" ? Series.Late : Series.Stock }, races, null, null, n =>
             {
                 reloads++;
                 biggest = Math.Max(biggest, store.Files[SaveSlots.FileName(n.Slot)].Length);
@@ -121,6 +121,8 @@ namespace GreenFlag.Harness
             Write("gambler-crew-offer-waiting", w);
             var x = MenuBot.Run(new CareerMenu { PickPersona = "drafter", NewSeed = 22 }, 6);
             Write("drafter-crew-xp", x);
+            // step 41 (format 6): a career started in late models, three races into the new calendar
+            Write("whisperer-late-models-race-4", MenuBot.Run(new CareerMenu { PickPersona = "whisperer", PickSeries = Series.Late, NewSeed = 23 }, 3));
             return 0;
         }
     }

@@ -72,6 +72,11 @@ namespace GreenFlag.Sim
             t == Trait.Aggressive ? "Bumper" : t == Trait.Smooth ? "Tidy" : t == Trait.Wall ? "Blocker" : t == Trait.Drafter ? "Train rat"
             : t == Trait.Closer ? "Late braker" : t == Trait.Rookie ? "Rookie" : t == Trait.Veteran ? "Old hand" : "";
 
+        /// <summary>What each AI style is called in a late model field (step 41): the tire strategy it runs.</summary>
+        public static string LateStyleName(Trait t) =>
+            t == Trait.Smooth ? "Tire saver" : t == Trait.Veteran ? "Old hand (saver)" : t == Trait.Aggressive ? "Charger" : t == Trait.Closer ? "Closer (charger)"
+            : t == Trait.Wall ? "Blocker" : t == Trait.Drafter ? "Pusher" : t == Trait.Rookie ? "Rookie" : t == Trait.Restarter ? "Restarter" : "";
+
         public static List<Entrant> Build(SimRng rng, Series series, CarStats myStats, string myName = "Rookie")
         {
             var names = new List<string>(Names);

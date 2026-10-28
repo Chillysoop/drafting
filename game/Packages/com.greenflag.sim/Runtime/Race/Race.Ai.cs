@@ -36,6 +36,7 @@ namespace GreenFlag.Sim
                 if (car.Trait == Trait.Restarter && T - LastGreenAt < 12) read += 15;
                 if (a.Trait == Trait.Wall) read -= 10;
                 read += KartAi(car, a);
+                read += LateRead(car, a);
                 // defending makes a pass harder, but should not make the attacker more likely to crash
                 double def = 0;
                 if (a.HasEffect(EffectKind.Block)) def += 35;
@@ -115,6 +116,28 @@ namespace GreenFlag.Sim
             KartCovers++;
             Emit(RaceEventKind.KartCover, car, b);
         }
+
+        bool LateFieldOn => Track.Late && Bal.LateField;
+
+        /// <summary>
+        /// Step 41, tire strategy in the late model field: a car on much fresher tires reads better on the car it is passing (it
+        /// works for and against you), and chargers (Aggressive, Closer) lean on their fresh tires twice as hard.
+        /// </summary>
+        public double LateRead(RaceCar car, RaceCar a)
+        {
+            if (!LateFieldOn) return 0;
+            double r = SimMath.Clamp((car.Tires - a.Tires - Bal.LateFreshGap) * Bal.LateFresh, 0, Bal.LateFreshCap);
+            if (LateStyleOf(car) == LateStyle.Charger) r *= 2;
+            return r;
+        }
+
+        /// <summary>The late model field's tire strategies (step 41), by the AI's trait.</summary>
+        public enum LateStyle { None, Saver, Charger }
+
+        public static LateStyle LateStyleOf(Trait t) =>
+            t == Trait.Smooth || t == Trait.Veteran ? LateStyle.Saver : t == Trait.Aggressive || t == Trait.Closer ? LateStyle.Charger : LateStyle.None;
+
+        LateStyle LateStyleOf(RaceCar c) => c.IsMe ? LateStyle.None : LateStyleOf(c.Trait);
 
         /// <summary>AI cars feel the shape of a road course: they pass in the hairpins and get stuck in the esses.</summary>
         double ShapeAi(RaceCar car)
