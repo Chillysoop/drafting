@@ -83,9 +83,9 @@ namespace GreenFlag.Sim
         {
             switch (t.Id)
             {
-                case "carver": return 1.4;
+                case "carver": case "harbor": return 1.4;
                 case "talon": return 1.2;
-                case "pine": case "ridge": case "ridgel": case "pinek": case "cedar": case "bramble": return 1.5;
+                case "pine": case "ridge": case "ridgel": case "pinek": case "cedar": case "bramble": case "iron": case "copper": return 1.5;
                 case "gran": return 1.4;
                 case "lake": return 1.35;
                 default: return 1.45;

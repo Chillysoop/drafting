@@ -111,6 +111,9 @@ namespace GreenFlag.Sim
             ["cross"] = new[] { (CardFamily.Car, 1) },
             ["gran"] = new[] { (CardFamily.Car, 2) },
             ["ridgel"] = new[] { (CardFamily.Car, 2) },
+            ["harbor"] = new[] { (CardFamily.Car, 2) },
+            ["iron"] = new[] { (CardFamily.Defend, 2) },
+            ["copper"] = new[] { (CardFamily.Pass, 2) },
         };
 
         public static IReadOnlyList<(CardFamily f, int n)> TrackMin(TrackDef t) => trackMin.TryGetValue(t.Id, out var m) ? m : Array.Empty<(CardFamily, int)>();
@@ -124,11 +127,14 @@ namespace GreenFlag.Sim
         /// <summary>The season calendar for a series: karts 6 races, late models 8, stock cars 10 on mixed shapes (board Q35, Q82).
         /// Karts (step 40) visit all four kart circuits: Pinewood opens, the two new ones run twice, the finale is at Lakeshore.
         /// Late models (step 41) are mostly short ovals (Cedar Bowl, Millbrook, Granite Falls twice each) plus the figure-8 and the
-        /// Ridgeback road course; the finale is the tire race at Granite Falls.</summary>
+        /// Ridgeback road course; the finale is the tire race at Granite Falls. The premier stock season (step 42) has every kind
+        /// of stock car track: two superspeedway races at Talon Ridge, three intermediates (Carver, Harbor Point twice), three short
+        /// tracks (Millbrook twice, Ironside) and two road courses (Ridgeback, Copper Canyon). Pinewood, a kart park, is off the stock
+        /// calendar (board Q90); it stays a stock car track for the test track. It opens at Talon and ends at Harbor Point.</summary>
         public static IReadOnlyList<string> Calendar(Series s) =>
             s == Series.Kart ? new[] { "pinek", "bramble", "hollow", "lake", "bramble", "lake" }
             : s == Series.Late ? new[] { "cedar", "gran", "milll", "cross", "cedar", "ridgel", "milll", "gran" }
-            : new[] { "mill", "pine", "carver", "ridge", "talon", "mill", "pine", "carver", "ridge", "mill" };
+            : new[] { "talon", "carver", "mill", "ridge", "harbor", "iron", "talon", "copper", "mill", "harbor" };
 
         public static readonly IReadOnlyList<ShopStat> Shop = new[]
         {

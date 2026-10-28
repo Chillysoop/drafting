@@ -83,7 +83,7 @@ namespace GreenFlag.Sim
             return null;
         }
 
-        /// <summary>How good a card is for this track and tune: rarity, the track's minimum, the track's shape, the tune's draw
+        /// <summary>How good a card is for this track and tune: rarity, the track's minimum, the track's shape and rules (step 42), the tune's draw
         /// weight, your persona, and your own success with it once you've played it 3 times.</summary>
         public static double Score(Career c, string id, TrackDef t, Tune u = null)
         {
@@ -97,6 +97,7 @@ namespace GreenFlag.Sim
             if (f == CardFamily.Car) s += 0.8 * (t.Wear - 0.9);
             if (f == CardFamily.Pass) s += 0.5 * (t.HandlingW - 1) * 0.5;
             s += 0.6 * (u.DrawMul(f) - 1);
+            s += TrackRules.CardFit(t.Kind, cd);
             if (Array.IndexOf(Personas.Get(c.Persona).Add, id) >= 0) s += 0.3;
             if (c.Hist.TryGetValue(id, out var h) && h.Plays >= 3) s += (double)h.Succ / h.Plays - 0.5;
             return s;

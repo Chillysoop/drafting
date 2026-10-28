@@ -235,6 +235,7 @@ namespace GreenFlag.Sim
             double sp = (s.Power - 5) * 0.0032 + (s.Handling - 5) * 0.0024 * Track.HandlingW + (s.Racecraft - 5) * 0.0012;
             double m = 1 + sp * spec;
             m *= 1 - (1 - car.Tires / 100) * Bal.TireGrip;
+            m *= RulesPace(car);
             var z = car.Zones;
             m *= 1 - (z.Nose * Bal.DzPaceNose + z.Side * Bal.DzPaceSide + z.Tail * Bal.DzPaceTail) / 100;
             foreach (var e in car.Effects) if (e.Kind == EffectKind.Pace) m *= e.Mult;

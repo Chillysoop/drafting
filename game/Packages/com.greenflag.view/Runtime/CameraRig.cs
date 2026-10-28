@@ -94,9 +94,10 @@ namespace GreenFlag.View
             double w = layout.MaxX - layout.MinX + pad * 2, h = layout.MaxZ - layout.MinZ + pad * 2;
             double cx = (layout.MaxX + layout.MinX) / 2, cz = (layout.MaxZ + layout.MinZ) / 2;
             double el = WideElevation * Math.PI / 180, half = FovY * Math.PI / 360;
-            // the box's depth shrinks by sin(elevation) on screen; fit whichever of width or depth is tighter
+            // the box's depth shrinks by sin(elevation) on screen; fit whichever of width or depth is tighter (10% spare: a tall road
+            // course like Copper Canyon has its near corner swell in perspective)
             double needV = h * Math.Sin(el) / 2, needH = w / 2 / Math.Max(0.1, aspect);
-            double dist = Math.Max(needV, needH) / Math.Tan(half) * 1.05 + h * Math.Cos(el) * 0.15;
+            double dist = Math.Max(needV, needH) / Math.Tan(half) * 1.1 + h * Math.Cos(el) * 0.15;
             look = new Vec3(cx, 0, cz);
             eye = new Vec3(cx, dist * Math.Sin(el), cz - dist * Math.Cos(el));
         }

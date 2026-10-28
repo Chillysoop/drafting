@@ -210,7 +210,8 @@ namespace GreenFlag.Sim.Tests
         public void AStockSaveGetsItsSeriesCalendar()
         {
             var g = CareerSave.Read(File.ReadAllText(Path.Combine(SavesDir, "v4-drafter-garage.json")));
-            Assert.Equal(CareerRules.Calendar(Series.Stock), g.Career.Calendar);
+            // four races into its season, so it keeps the stock calendar it was racing (step 42 changed the calendar)
+            Assert.Equal(Career.StockCalendarV6, g.Career.Calendar);
         }
 
         [Fact]

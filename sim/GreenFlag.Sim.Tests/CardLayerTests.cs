@@ -33,6 +33,7 @@ namespace GreenFlag.Sim.Tests
         public void OddsFollowTheSliceFormula()
         {
             var r = Scenario.Green("carver");
+            r.Bal.StockRules = false;   // the slice's formula; step 42's intermediate rules (dirty air) are tested in StockSeriesTests
             var cd = CardBook.Get("tuck_in");
             var o = r.ComputeOdds(cd, r.Ctx());
             // the five bands of a normal around the read: crit fail < 14 (folded into fail: Tuck In can't wreck), fail < 35, neutral < 58, success < 90

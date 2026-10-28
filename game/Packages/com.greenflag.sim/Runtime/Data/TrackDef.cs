@@ -4,6 +4,9 @@ namespace GreenFlag.Sim
 {
     public enum Series { Kart, Late, Stock }
 
+    /// <summary>Step 42: the four kinds of premier stock car track, each with its own rules (Race.Rules.cs). None off the stock series.</summary>
+    public enum TrackKind { None, ShortTrack, Intermediate, Superspeedway, RoadCourse }
+
     /// <summary>One piece of a non-oval layout: a straight of length S, or a turn of A degrees (positive = left) at radius R.</summary>
     public readonly struct PathPiece
     {
@@ -41,6 +44,18 @@ namespace GreenFlag.Sim
         public bool IsPath => Path != null;
         public Series Series => Kart ? Series.Kart : Late ? Series.Late : Series.Stock;
 
+        /// <summary>Step 42: which stock car rules this track runs. Any non-oval is a road course; an oval with a big draft is a
+        /// superspeedway, a tight one with lots of contact a short track, and the rest are intermediates.</summary>
+        public TrackKind Kind =>
+            Series != Series.Stock ? TrackKind.None
+            : IsPath ? TrackKind.RoadCourse
+            : DraftBias >= 0.8 ? TrackKind.Superspeedway
+            : Contact >= 1.2 ? TrackKind.ShortTrack
+            : TrackKind.Intermediate;
+
+        public static string KindName(TrackKind k) =>
+            k == TrackKind.ShortTrack ? "Short track" : k == TrackKind.Intermediate ? "Intermediate" : k == TrackKind.Superspeedway ? "Superspeedway" : k == TrackKind.RoadCourse ? "Road course" : "";
+
         public TrackDef With(string id, System.Action<TrackDef> change)
         {
             var t = (TrackDef)MemberwiseClone();
@@ -51,7 +66,7 @@ namespace GreenFlag.Sim
     }
 
     /// <summary>Every track in slice v47 (three stock ovals, two stock non-ovals, two kart circuits and three late model tracks), plus
-    /// the two kart circuits from step 40 and the two late model tracks from step 41. New tracks go on the end so the browser harness's track indexes still match.</summary>
+    /// the two kart circuits from step 40, the two late model tracks from step 41 and the two ovals and the road course from step 42. New tracks go on the end so the browser harness's track indexes still match.</summary>
     public static class Tracks
     {
         static PathPiece St(double s) => PathPiece.Straight(s);
@@ -111,7 +126,23 @@ namespace GreenFlag.Sim
         /// <summary>Step 41: Ridgeback at late model length, so the late model calendar has a road course too (board Q35).</summary>
         public static readonly TrackDef RidgebackLate = Ridgeback.With("ridgel", t => { t.Late = true; t.Laps = 9; t.FuelRange = 6; });
 
-        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads, BrambleHill, Lakeshore, GraniteFalls, RidgebackLate };
+        /// <summary>Step 42: a worn 1.5-mile intermediate. Abrasive asphalt, so tires fall off over a run and the long-run deck
+        /// shines; less draft than Carver.</summary>
+        public static readonly TrackDef HarborPoint = new TrackDef { Id = "harbor", DraftBias = 0.2, BeatPoints = 2, Name = "Harbor Point Speedway", Type = "Intermediate", Laps = 16, LapTime = 27, S = 2.0, R = 1.05, Draft = 0.01, DraftRange = 0.55, Wear = 1.3, Contact = 1.0, PassDiff = 1.0, HandlingW = 1.1, FuelRange = 10 };
+
+        /// <summary>Step 42: a flat paperclip half-mile. Long straights into tight, flat corners: hard braking, no draft, lots of
+        /// beating and banging.</summary>
+        public static readonly TrackDef Ironside = new TrackDef { Id = "iron", DraftBias = -0.7, Name = "Ironside Speedway", Type = "Short track", Laps = 26, LapTime = 17, S = 1.3, R = 0.55, Draft = 0.004, DraftRange = 0.3, Wear = 1.15, Contact = 1.45, PassDiff = 1.08, HandlingW = 1.6, FuelRange = 14 };
+
+        /// <summary>Step 42: the premier series' second road course. A long back straight into the Copper Hairpin, a chicane and
+        /// a fast sweeper: three heavy braking zones a lap, and the tow only on the back straight.</summary>
+        public static readonly TrackDef CopperCanyon = new TrackDef
+        {
+            Id = "copper", DraftBias = 0.1, BeatPoints = 3, BeatAt = new[] { 1, 5, 8 }, Name = "Copper Canyon Raceway", Type = "Road course", Laps = 10, LapTime = 44, R = 0.5, Draft = 0.012, DraftRange = 0.6, Wear = 1.15, Contact = 1.1, PassDiff = 1.05, HandlingW = 1.5, FuelRange = 6,
+            Path = new[] { St(2.019239), Tn(90, 0.5), St(0.8), Tn(45, 1.2, "Mesa Sweeper"), St(0.6), Tn(-45, 0.4), Tn(45, 0.4), St(4.034315), Tn(180, 0.45, "Copper Hairpin"), St(1.4), Tn(-90, 0.55), St(1.5), Tn(90, 0.6), St(2), Tn(45, 0.9, "Canyon Kink") },
+        };
+
+        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads, BrambleHill, Lakeshore, GraniteFalls, RidgebackLate, HarborPoint, Ironside, CopperCanyon };
 
         public static TrackDef ById(string id)
         {

@@ -44,7 +44,8 @@ namespace GreenFlag.Harness
                 uint seed0 = 5000u + (uint)c.Track * 1000u + (uint)c.Persona.Sum(ch => ch) * 10000u;
                 for (int i = 0; i < n; i++)
                 {
-                    var (_, r) = Bots.Run(Tracks.All[c.Track], seed0 + (uint)i, c.Style, c.Persona);
+                    // step 42: the premier stock track rules are the engine's own, so parity races the slice's rules
+                    var (_, r) = Bots.Run(Tracks.All[c.Track], seed0 + (uint)i, c.Style, c.Persona, x => x.Bal.StockRules = false);
                     fin += r.f; start += r.s; dnf += r.dnf; pl += r.pl; su += r.su; stops += r.stops; pf += r.perfect; ca += r.calls; cw += r.cwon;
                 }
                 c.Cn = n; c.CFin = fin / n; c.CStart = start / n; c.CDnf = dnf / n; c.CPlays = pl / n; c.CLanded = pl > 0 ? su / pl : 0; c.CPerfect = stops > 0 ? pf / stops : 0; c.CCalls = ca / n; c.CWon = ca > 0 ? cw / ca : 0;

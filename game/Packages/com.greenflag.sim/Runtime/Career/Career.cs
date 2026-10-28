@@ -296,6 +296,7 @@ namespace GreenFlag.Sim
             if (u.Focus == ComboFocus.Draft) fit += 0.4 * t.DraftBias;
             if (u.Focus == ComboFocus.Bumper) fit += 0.3 * (t.Contact - 1.1) * 2;
             if (u.Focus == ComboFocus.LongRun) fit += 0.4 * (t.Wear - 0.8);
+            fit += TrackRules.SetupFit(t.Kind, u);
             return fit > 0.15 ? (1, "Good fit here") : fit < -0.15 ? (-1, "Poor fit here") : (0, "Fine here");
         }
 
