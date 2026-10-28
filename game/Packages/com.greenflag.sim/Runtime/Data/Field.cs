@@ -27,6 +27,10 @@ namespace GreenFlag.Sim
         public string Name;
         public Trait Trait;
         public CarStats Stats;
+        /// <summary>Career record (step 37): starts, wins, wins this season, top 5s and best finish (99 = none yet).</summary>
+        public int Starts, Wins, SeasonWins, Top5, Best = 99;
+
+        public Entrant Clone() { var e = (Entrant)MemberwiseClone(); e.Stats = Stats?.Clone(); return e; }
     }
 
     public readonly struct TeamDef

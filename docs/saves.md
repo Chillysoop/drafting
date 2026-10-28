@@ -30,7 +30,7 @@ The game saves on its own. There is no save button, only **Save and quit** in th
 ```json
 {
   "format": "green-flag-deck-career",
-  "v": 1,
+  "v": 2,
   "build": "0.1.0",
   "savedAt": "2026-10-28T12:00:00Z",
   "screen": "garage | reward | over",
@@ -40,9 +40,9 @@ The game saves on its own. There is no save button, only **Save and quit** in th
 }
 ```
 
-The JSON is written by hand (`JsonValue` in the sim package, no engine or NuGet references), with keys in a fixed order and doubles written so they read back bit for bit. The same career always writes the same bytes. Past races keep only their summary; the top 10 and the play log are kept for the race on the reward screen. A 10-race career is about 10 KB, and up to about 35 KB on a reward screen with a retry.
+The JSON is written by hand (`JsonValue` in the sim package, no engine or NuGet references), with keys in a fixed order and doubles written so they read back bit for bit. The same career always writes the same bytes. Past races keep only their summary; the top 10 and the play log are kept for the race on the reward screen. A 10-race career is about 13 KB with the season's field and standings, and up to about 48 KB on a reward screen with a retry.
 
-What is saved is listed in `Career.SaveCoverage`. `SaveTests.EveryCareerFieldIsCovered` fails when a saved class gains a field that isn't on that list, so new career state (objectives, the driver sheet, Crew HQ in steps 37 to 39) can't silently miss the save.
+What is saved is listed in `Career.SaveCoverage`. `SaveTests.EveryCareerFieldIsCovered` fails when a saved class gains a field that isn't on that list, so new career state (the season in step 37, the driver sheet and Crew HQ in steps 38 and 39) can't silently miss the save.
 
 ## Changing the format
 
@@ -51,7 +51,7 @@ What is saved is listed in `Career.SaveCoverage`. `SaveTests.EveryCareerFieldIsC
 3. Run `dotnet run --project sim/GreenFlag.Harness -- savefixtures` to add this version's sample saves (`v<N>-*.json`) to `sim/GreenFlag.Sim.Tests/Saves`.
 4. **Never delete or regenerate older samples.** They are the saves real players have.
 
-`SaveTests.OldSavesLoadAndPlayOn` loads every sample in CI, migrates it, checks it loads into the menus and plays two more races, then saves it in the current format. Samples in the current format must also write back byte for byte, so a layout change without a version bump fails. `EveryFormatVersionHasSampleSaves` checks that each version has samples and a migration. Version 1 is the first format, so the real chain is still empty. `MigrationsRunInOrder` tests the machinery with a made-up chain.
+`SaveTests.OldSavesLoadAndPlayOn` loads every sample in CI, migrates it, checks it loads into the menus and plays two more races, then saves it in the current format. Samples in the current format must also write back byte for byte, so a layout change without a version bump fails. `EveryFormatVersionHasSampleSaves` checks that each version has samples and a migration. The real chain has one step: format 1 to 2 (step 37) adds the season (`Career.MigrateV1`, see [season.md](season.md)); the `v1-*` samples load through it. `MigrationsRunInOrder` also tests the machinery with a made-up chain.
 
 ## Determinism
 

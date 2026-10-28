@@ -30,6 +30,8 @@ namespace GreenFlag.Sim
         public List<int> Grid;
         /// <summary>Your deck, parts, tune and crew. Null = no cards: the step 26 hands-off race core.</summary>
         public PlayerLoadout Loadout;
+        /// <summary>The card you used in qualifying: it starts the race in your discard pile.</summary>
+        public string QualiCard;
         /// <summary>Who plays your pit stops when the race has cards.</summary>
         public PitPolicy PitPolicy = PitPolicy.Bot;
 

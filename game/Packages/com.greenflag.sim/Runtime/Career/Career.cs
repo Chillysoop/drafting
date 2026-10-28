@@ -34,6 +34,20 @@ namespace GreenFlag.Sim
         public string Penalty;
         public string LostPart;
         public int BeatBy => Math.Max(0, Expected - Finish);
+
+        // the season (step 37)
+        /// <summary>Expected finish the objectives were scaled by, and your best running position during the race.</summary>
+        public int ObjE, BestPos = 99;
+        public bool BeatMate, BeatRival;
+        public string Rival;
+        public List<ObjectiveResult> Objectives = new List<ObjectiveResult>();
+        public int ObjMet;
+        /// <summary>The tier before meeting every objective moved it up one, or null.</summary>
+        public RewardTier? TierFrom;
+        public string Sponsor;
+        public int Retainer, Salary;
+        /// <summary>Points this race, your season total after it, and your points position before and after.</summary>
+        public int Pts, PtsTotal, Rank, RankBefore;
     }
 
     /// <summary>The reward screen's choices: a card for the collection (or $1,000), and a part after a strong run. Both reroll for money.</summary>
@@ -58,7 +72,8 @@ namespace GreenFlag.Sim
     /// the shop and the reward screen, as in slice v47. It makes the next race's RaceSetup and takes the finished race back to
     /// pay out and roll rewards, so race, rewards, shop and the next race loop. Every roll comes from the career's own
     /// generator, so a career replays the same from its seed.
-    /// Not here yet: race objectives, sponsors, salary, points and standings (step 37), the driver sheet (38) and Crew HQ (39).
+    /// The season around it (field, points, sponsors, objectives, qualifying, the season wrap) is in Career.Season.cs (step 37).
+    /// Not here yet: the driver sheet (38) and Crew HQ (39).
     /// </summary>
     public sealed partial class Career
     {
@@ -119,6 +134,9 @@ namespace GreenFlag.Sim
             c.Collection.AddRange(l.Deck);
             c.AddPart(p.Part);
             l.Deck = new List<string>(); l.Parts = new List<string>();
+            c.Contract.Series = c.Series;
+            c.Ladder.Add(c.Series);
+            c.BuildField();
             return c;
         }
 
@@ -128,6 +146,12 @@ namespace GreenFlag.Sim
         /// that breaks the new track's rules (DeckNote says what changed).</summary>
         public void EnterGarage()
         {
+            if (Offers == null && Sponsor == null && SponsorOffers == null)
+                SponsorOffers = SeasonRules.RollSponsorOffers(Rng, Past.Count > 0 ? Past[Past.Count - 1].Rank : 99, null, CareerRules.Econ(Series));
+            if (Sponsor != null && Objectives == null) RollObjectives();
+            // the game closed in the middle of a qualifying run: that counts as giving up (an average lap)
+            if (QualRunning && !QualiDone) FinishQuali(null);
+            QualRunning = false;
             if (!shopRolled) { shopRolled = true; ShopPart = RollParts(1).FirstOrDefault(); }
             if (deckFor != RaceIdx + Season * 1000)
             {
@@ -140,7 +164,8 @@ namespace GreenFlag.Sim
 
         public bool DeckOk(TrackDef t = null) => DeckRules.Ok(this, t ?? NextTrack);
         /// <summary>Why "Go racing" is off, or null.</summary>
-        public string CantRace => Over ? "The run is over" : Reward != null ? "Finish the reward screen first" : !DeckOk() ? $"Your race deck breaks a rule for {DeckRules.ShortName(NextTrack)}" : null;
+        public string CantRace => Over ? "The run is over" : Reward != null ? "Finish the reward screen first" : Offers != null ? "Sign a contract for next season first"
+            : Sponsor == null ? "Sign a sponsor for the season first" : !DeckOk() ? $"Your race deck breaks a rule for {DeckRules.ShortName(NextTrack)}" : null;
 
         /// <summary>The loadout the next race uses: your car and crew with the race deck, the fitted parts and the tune.</summary>
         public PlayerLoadout Loadout()
@@ -155,11 +180,14 @@ namespace GreenFlag.Sim
         /// <summary>This race's seed: the career's seed and the race's place in the career.</summary>
         public uint RaceSeed => Seed * 2654435761u + (uint)(Season * 100 + RaceIdx) * 40503u + 1;
 
-        /// <summary>The next race, ready to run, with you playing your own pit stops. Remembers this deck for the track.</summary>
+        /// <summary>The next race, ready to run, with you playing your own pit stops: the season's field, on the grid qualifying
+        /// set (the old roll-off when there was none). Remembers this deck for the track.</summary>
         public RaceSetup NextRace(uint? seed = null)
         {
             var t = NextTrack;
-            var s = RaceSetup.Quick(t, seed ?? RaceSeed, Loadout());
+            var l = Loadout();
+            var s = new RaceSetup { Track = t, Seed = seed ?? RaceSeed, Loadout = l, Field = RaceField(l.Car) };
+            if (QualiDone) { s.Grid = new List<int>(Qual.Grid); s.QualiCard = Qual.Card; }
             s.Difficulty = Difficulty;
             s.PitPolicy = PitPolicy.Player;
             TrackDecks[t.Id] = new List<string>(Deck);
@@ -265,6 +293,8 @@ namespace GreenFlag.Sim
             res.Purse = CareerRules.Purse(res.Finish, res.Mul);
             res.Bonus = CareerRules.Bonus(res.Finish, res.Expected, res.Mul);
             res.Total = res.Purse + res.Bonus;
+            res.ObjE = rr.MyExpected;
+            res.BestPos = race.CardStats.BestPos;
             res.Log.AddRange(race.PlayLog);
             var teams = Teams.For(race.Track.Series);
             var byId = race.Cars.ToDictionary(c => c.Id);
@@ -280,6 +310,7 @@ namespace GreenFlag.Sim
                 h.Plays += kv.Value[5];
                 h.Succ += kv.Value[(int)Tier.Success] + kv.Value[(int)Tier.CritSuccess];
             }
+            ScoreSeason(race, res);
             Money += res.Total;
             Results.Add(res);
             ApplyStakes(res);
@@ -354,14 +385,15 @@ namespace GreenFlag.Sim
         }
 
         /// <summary>Leaves the reward screen for the next race's garage (a fresh parts dealer). An unpicked card or part is
-        /// forfeited, as in the slice. After the last race of the calendar the next season starts (points and the season wrap
-        /// come with step 37).</summary>
+        /// forfeited, as in the slice. After the last race of the calendar the season wraps (WrapSeason): the season-end
+        /// screen and contract offers come before the next garage.</summary>
         public void Continue()
         {
             if (Reward == null || Over) return;
             Reward = null;
+            Qual = null;
             RaceIdx++;
-            if (RaceIdx >= SeasonLength) { RaceIdx = 0; Season++; }
+            if (RaceIdx >= SeasonLength) WrapSeason();
             shopRolled = false; ShopPart = null; ShopRerolls = 0;
             EnterGarage();
         }
@@ -417,7 +449,24 @@ namespace GreenFlag.Sim
             c.Rng = new SimRng(Rng.State);
             c.Reward = null;
             c.Equipped = new Dictionary<PartSlot, string>(Equipped);
+            c.Field = Field.Select(e => e.Clone()).ToList();
+            c.Relink();
+            c.Pts = new Dictionary<int, int>(Pts);
+            c.Contract = Contract.Clone();
+            c.Sponsor = Sponsor?.Clone();
+            c.SponsorOffers = SponsorOffers?.Select(o => o.Clone()).ToList();
+            c.Objectives = Objectives?.ToList();
+            c.Past = new List<PastSeason>(Past);
+            c.Offers = Offers?.ToList();
+            c.Ladder = new List<Series>(Ladder);
             return c;
+        }
+
+        /// <summary>Your entrant in the field is your car: same stats object and name.</summary>
+        void Relink()
+        {
+            var me = Field.FirstOrDefault(e => e.IsMe);
+            if (me != null) { me.Stats = Base.Car; me.Name = Name; }
         }
     }
 }

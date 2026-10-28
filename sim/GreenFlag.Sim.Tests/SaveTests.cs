@@ -189,9 +189,16 @@ namespace GreenFlag.Sim.Tests
             Assert.False(m.Dirty);
             Assert.Equal(2, slots.Load(1).Career.Tune.Aero);
             Assert.False(m.Flush());
-            // Go racing always writes, and the save is the garage before the race: quitting mid-race restarts it
+            // Go racing always writes, and so does every qualifying press; the save is the garage before the race (with the
+            // grid from qualifying): quitting mid-race restarts it
+            Assert.True(m.Press("sponsor:" + m.Career.SponsorOffers[0].Id));
             Assert.True(m.Press("go"));
+            Assert.False(m.Dirty);
+            Assert.True(m.Press("quali.skip"));
+            Assert.True(m.Press("quali.race"));
             var g = slots.Load(1);
+            Assert.True(g.Career.QualiDone);
+            Assert.Equal(m.RaceWanted.Grid, g.Career.NextRace().Grid);
             Assert.Equal(SaveGame.Garage, g.Screen);
             Assert.Equal(0, g.Career.Results.Count);
             Assert.Equal(m.RaceWanted.Seed, g.Career.NextRace().Seed);
@@ -281,7 +288,7 @@ namespace GreenFlag.Sim.Tests
             var slots = Slots(store);
             var m = new CareerMenu(slots) { PickPersona = "drafter" };
             m.Press("title.start");
-            var newer = store.Files["career-1.json"].Replace("\"v\": 1,", $"\"v\": {CareerSave.Version + 1},");
+            var newer = store.Files["career-1.json"].Replace($"\"v\": {CareerSave.Version},", $"\"v\": {CareerSave.Version + 1},");
             store.Files["career-1.json"] = newer;
             Assert.Equal(SlotState.TooNew, slots.Info(1).State);
             Assert.Throws<SaveTooNewException>(() => CareerSave.Read(newer));
@@ -303,7 +310,8 @@ namespace GreenFlag.Sim.Tests
             Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace("\"persona\": \"drafter\"", "\"persona\": \"ghost\"")));
             Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace("\"stakes\": \"Standard\"", "\"stakes\": \"7\"")));
             Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace("green-flag-deck-career", "something-else")));
-            Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace("\"v\": 1,", "\"v\": 0,")));
+            Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace($"\"v\": {CareerSave.Version},", "\"v\": 0,")));
+            Assert.Throws<FormatException>(() => CareerSave.Read(text.Replace($"\"{m.Career.Sponsor.Id}\"", "\"no-such-sponsor\"")));
         }
 
         [Fact]
@@ -353,14 +361,15 @@ namespace GreenFlag.Sim.Tests
 
         // ================================================================== migrations and old saves
 
-        /// <summary>The migration machinery with a made-up chain (version 1 is the first real format, so the real chain is
-        /// empty): each step runs once, in order, on the career and the retry career, and the version follows.</summary>
+        /// <summary>The migration machinery with a made-up chain: each step runs once, in order, on the career and the retry career, and the version follows.</summary>
         [Fact]
         public void MigrationsRunInOrder()
         {
             var m = MenuBot.Run(new CareerMenu { PickPersona = "drafter", NewSeed = 2 }, 1, Quick);
             var text = CareerSave.Write(new SaveGame { Career = m.Career, Retry = m.Career.Clone(), SavedAt = Pinned });
             var root = JsonValue.Parse(text);
+            root.Set("v", 1);
+            text = root.Write();
             var ran = new List<int>();
             var steps = new[]
             {

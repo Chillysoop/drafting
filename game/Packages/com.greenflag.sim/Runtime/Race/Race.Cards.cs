@@ -66,6 +66,8 @@ namespace GreenFlag.Sim
         public int PitStops, Perfect, Setups, Packages, Loose, Repassed, PushBack;
         /// <summary>Crew calls taken and calls that worked (step 33).</summary>
         public int Calls, CallsWon;
+        /// <summary>Your best running position at any point of the race (the "run in the top N" objective).</summary>
+        public int BestPos = 99;
         /// <summary>Crew XP earned this race per seat (calls; pit stops for the pit crew), before Mentor and Rapport.</summary>
         public readonly Dictionary<CrewRole, int> CrewXp = new Dictionary<CrewRole, int>();
         public double FocusGain;
@@ -140,6 +142,8 @@ namespace GreenFlag.Sim
             Loadout.Apply(Mods, Track, Tune);
             Pile.AddRange(Loadout.Deck);
             CardRng.Shuffle(Pile);
+            if (qualiCard != null) { int k = Pile.LastIndexOf(qualiCard); if (k >= 0) { Pile.RemoveAt(k); Discard.Add(qualiCard); } }
+            CardStats.BestPos = Me.Start;
             Momentum = (int)Loadout.PartSum(p => p.StartMom);
             NextDraw = 99999;
             if (Track.Kart) Tow = (int)Loadout.PartSum(p => p.StartTow);
@@ -748,6 +752,7 @@ namespace GreenFlag.Sim
                 if (na != null && T - LostAt > 0.5) { LostAt = T; LostTo = na; }
             }
             lastPos = mp;
+            CardStats.BestPos = Math.Min(CardStats.BestPos, mp);
         }
 
         /// <summary>After the AI moves: timed draws and draw beats.</summary>

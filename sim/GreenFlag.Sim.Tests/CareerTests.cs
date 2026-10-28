@@ -29,6 +29,16 @@ namespace GreenFlag.Sim.Tests
             return r;
         }
 
+        /// <summary>The race weekend through the menus (step 37): sign a sponsor if there is none, Go racing, skip qualifying,
+        /// and start the race.</summary>
+        internal static void GoRacing(CareerMenu m)
+        {
+            if (m.Career.Sponsor == null) Assert.True(m.Press("sponsor:" + m.Career.SponsorOffers[0].Id));
+            Assert.True(m.Press("go"));
+            if (m.Screen == CareerScreen.Quali) Assert.True(m.Press("quali.skip"));
+            Assert.True(m.Press("quali.race"));
+        }
+
         [Theory]
         [InlineData(1, 10, false, RewardTier.Victory)]
         [InlineData(3, 11, false, RewardTier.Victory)]
@@ -314,6 +324,7 @@ namespace GreenFlag.Sim.Tests
         public void Go_racing_is_off_while_the_deck_breaks_a_rule()
         {
             var m = new CareerMenu(Career.New("drafter"));
+            m.Press("sponsor:" + m.Career.SponsorOffers[0].Id);
             m.Career.ClearDeck();
             Assert.False(m.Page().CanPress("go"));
             Assert.False(m.Press("go"));
@@ -323,7 +334,7 @@ namespace GreenFlag.Sim.Tests
             Assert.False(m.Page().CanPress("deck.done"));
             Assert.True(m.Press("deck.auto"));
             Assert.True(m.Press("deck.done"));
-            Assert.True(m.Press("go"));
+            GoRacing(m);
             Assert.NotNull(m.TakeRace());
         }
 
@@ -351,8 +362,9 @@ namespace GreenFlag.Sim.Tests
         public void Retry_puts_the_career_back_as_it_was_before_the_race()
         {
             var m = new CareerMenu(Career.New("drafter", seed: 8));
+            m.Press("sponsor:" + m.Career.SponsorOffers[0].Id);
             int money = m.Career.Money;
-            m.Press("go");
+            GoRacing(m);
             m.RaceFinished(RunRace(m.TakeRace()));
             Assert.NotEqual(money, m.Career.Money);
             Assert.True(m.Press("reward.retry"));
@@ -361,7 +373,7 @@ namespace GreenFlag.Sim.Tests
             Assert.NotNull(m.TakeRace());
 
             var iron = new CareerMenu(Career.New("drafter", stakes: Stakes.Ironman));
-            iron.Press("go");
+            GoRacing(iron);
             iron.RaceFinished(RunRace(iron.TakeRace()));
             Assert.False(iron.Page().CanPress("reward.retry"));
         }
@@ -370,7 +382,7 @@ namespace GreenFlag.Sim.Tests
         public void Reward_page_shows_payout_top10_and_your_calls()
         {
             var m = new CareerMenu(Career.New("drafter", seed: 21));
-            m.Press("go");
+            GoRacing(m);
             var res = m.RaceFinished(RunRace(m.TakeRace()));
             var p = m.Page();
             Assert.Equal($"P{res.Finish}" + (res.Dnf ? " · DNF" : ""), p.Title);

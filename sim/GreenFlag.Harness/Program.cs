@@ -45,7 +45,7 @@ namespace GreenFlag.Harness
                     case "wrecks": return ViewFrames.Wrecks(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "wrecks.html"), Arg(args, 4, "spam"), int.Parse(Arg(args, 5, "3")));
                     case "mouse": return HudShots.Mouse(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")));
                     case "pad": return HudShots.Pad(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")), Arg(args, 5, "xbox"));
-                    case "career": return CareerCmd(int.Parse(Arg(args, 1, "10")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")));
+                    case "career": return CareerCmd(int.Parse(Arg(args, 1, "10")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")), Arg(args, 4, "avg"));
                     case "saves": return SaveCmds.Saves(int.Parse(Arg(args, 1, "6")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")), Arg(args, 4, "standard"));
                     case "savefixtures": return SaveCmds.Fixtures(Arg(args, 1, "sim/GreenFlag.Sim.Tests/Saves"));
                     case "menus": return MenuShots.Run(Arg(args, 1, "drafter"), uint.Parse(Arg(args, 2, "1")), Arg(args, 3, "menus.html"));
@@ -62,12 +62,13 @@ namespace GreenFlag.Harness
         static IEnumerable<TrackDef> TracksFor(string spec) => spec == "all" ? Tracks.All : spec.Split(',').Select(Tracks.ById);
 
         /// <summary>Step 34: race, rewards, shop and the next race, through the career menus' buttons, with every race played by
-        /// the mouse bot on the HUD. Fails if a race doesn't finish or the loop stalls.</summary>
-        static int CareerCmd(int races, string persona, uint seed)
+        /// the mouse bot on the HUD. Step 37 adds the season: the sponsor, qualifying (the bot's timing), objectives, points,
+        /// the season wrap and the contract it signs. Fails if a race doesn't finish or the loop stalls.</summary>
+        static int CareerCmd(int races, string persona, uint seed, string quali = "avg")
         {
             var m = new GreenFlag.View.CareerMenu { PickPersona = persona, NewSeed = seed };
-            var bot = new GreenFlag.View.MenuBot();
-            Console.WriteLine("race track    fin exp start tier          purse bonus total    bank  plays  then: card pick, part pick, cards owned");
+            var bot = new GreenFlag.View.MenuBot { QualiSkill = quali == "skip" ? null : quali };
+            Console.WriteLine("race track    fin exp start tier          purse bonus total    bank  plays  obj  pts rank   then: card pick, part pick, cards owned");
             int bad = 0, shown = 0;
             void Show()
             {
@@ -75,12 +76,33 @@ namespace GreenFlag.Harness
                 for (; shown < c.Results.Count; shown++)
                 {
                     var r = c.Results[shown];
-                    Console.WriteLine($"{shown + 1,4} {r.TrackId,-7} {(r.Dnf ? "DNF" : "P" + r.Finish),4} {r.Expected,3} {r.Start,5} {CareerRules.TierName(r.Tier),-13} {r.Purse,5} {r.Bonus,5} {r.Total,5} {c.Money,7}  {r.Plays,5}");
+                    Console.WriteLine($"{shown + 1,4} {r.TrackId,-7} {(r.Dnf ? "DNF" : "P" + r.Finish),4} {r.Expected,3} {r.Start,5} {CareerRules.TierName(r.Tier) + (r.TierFrom != null ? "*" : ""),-13} {r.Purse,5} {r.Bonus,5} {r.Total,5} {c.Money,7}  {r.Plays,5}  {r.ObjMet}/{r.Objectives.Count} {r.PtsTotal,4} P{r.Rank,-3}");
+                }
+            }
+            int seasonsShown = 0;
+            void Season()
+            {
+                var c = m.Career;
+                if (c.Sponsor != null && c.Results.Count(r => r.Season == c.Season) == 0 && c.Sponsor.Since == c.Season && seasonsShown < c.Season)
+                {
+                    seasonsShown = c.Season;
+                    var sp = SeasonRules.Sponsor(c.Sponsor.Id);
+                    Console.WriteLine($"  season {c.Season} · {SeasonRules.SeriesName(c.Series)} · {c.TeamName} (rating {c.SeriesTeams[c.Team].Rating}, {c.Contract.Per:N0} a race) · sponsor {sp.Name} {c.Sponsor.Per:N0} a race, goal: {SeasonRules.Goal(sp.Goal).Name(c.SeasonLength)}");
                 }
             }
             for (int done = 0; done < races; done++)
             {
-                for (int i = 0; i < 1000 && m.RaceWanted == null && bot.Step(m); i++) { }
+                for (int i = 0; i < 1000 && m.RaceWanted == null; i++)
+                {
+                    if (m.Screen == GreenFlag.View.CareerScreen.Season && m.Career.Review != null)
+                    {
+                        var rv = m.Career.Review;
+                        var ch = rv.Champion;
+                        Console.WriteLine($"  season {rv.Season} over: P{rv.Rank} with {rv.Pts} pts (champion {ch.Name}, {ch.Pts}){(rv.Sponsor != null ? $"; sponsor goal {(rv.Met ? "met, bonus " + rv.Bonus.ToString("N0") : "missed")} ({rv.Prog})" : "")}; offers: {string.Join(", ", m.Career.Offers.Select(o => $"{o.Kind} {o.Name} r{o.Rating} {o.Per:N0}"))}");
+                    }
+                    if (!bot.Step(m)) break;
+                    Season();
+                }
                 if (m.RaceWanted == null) { Console.Error.WriteLine("the menus stalled on " + m.Screen); return 1; }
                 var (desk, _) = GreenFlag.View.MousePlayer.Play(new Race(m.TakeRace()));
                 if (!desk.Race.Done) bad++;
@@ -92,6 +114,7 @@ namespace GreenFlag.Harness
                 Console.WriteLine($"     {"",-62} {(R.Picked == "skip" ? "skip +$1,000" : CardBook.Get(R.Picked).Name),-21} {(R.PartPicked != null ? Parts.Get(R.PartPicked).Name : "-"),-17} {c.Collection.Count,3} cards owned");
             }
             var k = m.Career;
+            Console.WriteLine($"ladder: {string.Join(" > ", k.Ladder.Select(SeasonRules.SeriesName))}; season {k.Season} race {k.RaceIdx + 1}; qualifying runs {bot.QualiRuns}, average start P{k.Results.Average(r => r.Start):F1}; contracts signed {bot.Contracts}");
             Console.WriteLine($"after {k.Results.Count} races: {k.Money:N0} in the bank, {k.Collection.Count} cards, parts {string.Join(", ", k.PartsOwned)}, upgrades bought {bot.Bought}, dealer parts {bot.PartsBought}, menu presses {bot.Presses}");
             Console.WriteLine($"car: power {k.Car.Power} handling {k.Car.Handling} aero {k.Car.Aero} durability {k.Car.Durability} racecraft {k.Car.Racecraft} defense {k.Car.Defense} consistency {k.Car.Consistency} tires {k.Car.TireMgmt}");
             Console.WriteLine($"average finish P{k.Results.Average(r => r.Finish):F1} vs expected P{k.Results.Average(r => r.Expected):F1}; tiers {string.Join(", ", k.Results.GroupBy(r => r.Tier).OrderBy(g => g.Key).Select(g => CareerRules.TierName(g.Key) + " " + g.Count()))}");

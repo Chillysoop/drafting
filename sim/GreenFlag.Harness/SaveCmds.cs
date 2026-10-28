@@ -54,7 +54,7 @@ namespace GreenFlag.Harness
             void Write(string name, CareerMenu m)
             {
                 var store = new MemorySaveStore();
-                var slots = new SaveSlots(store) { Now = () => Pinned, Build = $"step-35 sample (format {v})" };
+                var slots = new SaveSlots(store) { Now = () => Pinned, Build = $"sample save (format {v})" };
                 m.Saves = slots; m.Slot = 1;
                 if (!m.SaveNow()) throw new InvalidOperationException("save failed: " + slots.LastError);
                 var path = Path.Combine(dir, $"v{v}-{name}.json");
@@ -81,6 +81,13 @@ namespace GreenFlag.Harness
             Write("brawler-kart-reward", k);
             Write("bully-ironman-part-pick", ToReward(new CareerMenu { PickPersona = "bully", NewSeed = 13, PickStakes = Stakes.Ironman }, 1, R => R.Parts != null));
             Write("gambler-hard-season-2", MenuBot.Run(new CareerMenu { PickPersona = "gambler", NewSeed = 14, PickDiff = DifficultyLevel.Hard }, 11));
+            // step 37 (format 2): the season-end screen with contract offers waiting, a promoted career, and a qualified grid
+            Write("brawler-season-end-offers", MenuBot.Run(new CareerMenu { PickPersona = "brawler", NewSeed = 15 }, 6));
+            Write("linepainter-promoted-late-models", MenuBot.Run(new CareerMenu { PickPersona = "linepainter", NewSeed = 16 }, 7, null, new MenuBot { QualiSkill = "great" }));
+            var q = MenuBot.Run(new CareerMenu { PickPersona = "restart", NewSeed = 17 }, 2);
+            var qb = new MenuBot();
+            for (int i = 0; i < 100 && q.Screen != CareerScreen.QualiDone; i++) qb.Step(q);
+            Write("restart-qualified", q);
             return 0;
         }
     }

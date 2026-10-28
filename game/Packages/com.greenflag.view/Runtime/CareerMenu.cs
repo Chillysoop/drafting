@@ -6,7 +6,9 @@ using GreenFlag.Sim;
 
 namespace GreenFlag.View
 {
-    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over }
+    /// <summary>The career's screens. Qualifying (step 37) is three: pick a card, the timed run, the grid. Season is the
+    /// season-end review with its contract offers.</summary>
+    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season }
 
     /// <summary>What a menu line is: plain text, a label and value row, a button, a small toggle chip, a card or part tile.</summary>
     public enum MenuKind { Text, Row, Button, Chip, Card, Part }
@@ -118,7 +120,12 @@ namespace GreenFlag.View
         List<SlotInfo> slots;
 
         public CareerMenu() { }
-        public CareerMenu(Career c) { Career = c; Career.EnterGarage(); Screen = CareerScreen.Garage; }
+        public CareerMenu(Career c) { Career = c; Career.EnterGarage(); Screen = c.Offers != null ? CareerScreen.Season : CareerScreen.Garage; }
+
+        /// <summary>The qualifying run being played (Screen QualiRun). The engine calls QualiTick every frame.</summary>
+        public QualiRun Quali;
+        /// <summary>The card picked for qualifying (null = none).</summary>
+        public string QualiCard;
         public CareerMenu(SaveSlots saves) { Saves = saves; RefreshSlots(); }
 
         /// <summary>Re-reads the slots (the title screen shows them; reading files every frame would be wasteful).</summary>
@@ -167,7 +174,8 @@ namespace GreenFlag.View
             var g = info.Game;
             Career = g.Career; Slot = slot; snap = g.Retry; snapSeed = g.RetrySeed; RaceWanted = null; Dirty = false;
             Screen = g.Screen == SaveGame.Reward ? CareerScreen.Reward : g.Screen == SaveGame.Over ? CareerScreen.Over : CareerScreen.Garage;
-            if (Screen == CareerScreen.Garage) Career.EnterGarage();
+            Quali = null; QualiCard = null;
+            if (Screen == CareerScreen.Garage) { Career.EnterGarage(); if (Career.Offers != null) Screen = CareerScreen.Season; }
             Toast = info.FromBackup ? $"Slot {slot}'s newest save was damaged, so this is the one before it." : g.LoadedFrom < CareerSave.Version ? $"Save from an older version, updated." : null;
             return true;
         }
@@ -201,7 +209,8 @@ namespace GreenFlag.View
         void Checkpoint(string id, CareerScreen before)
         {
             if (Career == null || Screen == CareerScreen.Title || id.StartsWith("title.", StringComparison.Ordinal)) return;
-            bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward;
+            bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward || id.StartsWith("quali.", StringComparison.Ordinal)
+                || id.StartsWith("offer:", StringComparison.Ordinal) || id.StartsWith("sponsor:", StringComparison.Ordinal);
             if (now) SaveNow();
             else Dirty = true;
         }
@@ -250,9 +259,32 @@ namespace GreenFlag.View
                     RefreshSlots();
                     return true;
                 // garage
+                // the race weekend: Go racing opens qualifying, and its grid screen starts the race
                 case "go":
+                    QualiCard = null;
+                    Screen = c.QualiDone ? CareerScreen.QualiDone : CareerScreen.Quali;
+                    return true;
+                case "quali.card": QualiCard = arg == "none" ? null : arg; return true;
+                case "quali.back": Screen = CareerScreen.Garage; return true;
+                case "quali.start":
+                    Quali = c.StartQuali(QualiCard);
+                    Screen = CareerScreen.QualiRun;
+                    return true;
+                case "quali.skip": case "quali.giveup":
+                    Quali = null;
+                    c.FinishQuali(null);
+                    Screen = CareerScreen.QualiDone;
+                    return true;
+                case "quali.race":
                     snap = c.Clone(); snapSeed = c.RaceSeed;
                     RaceWanted = c.NextRace();
+                    Screen = CareerScreen.Garage;
+                    return true;
+                case "sponsor": if (c.SignSponsor(arg)) Toast = $"Signed {SeasonRules.Sponsor(arg).Name} for season {c.Season}."; return true;
+                case "offer":
+                    if (!c.SignContract(int.Parse(arg, inv))) return false;
+                    Toast = c.ContractNote;
+                    Screen = CareerScreen.Garage;
                     return true;
                 case "deck": Screen = CareerScreen.DeckBuilder; return true;
                 case "buy": if (c.BuyStat(arg)) Toast = $"{CareerRules.ShopStatOf(arg).Name} up to {c.StatLevel(arg)}."; return true;
@@ -289,10 +321,23 @@ namespace GreenFlag.View
                 case "reward.go":
                     if (c.Over) { Screen = CareerScreen.Over; return true; }
                     c.Continue();
-                    Screen = CareerScreen.Garage;
+                    Screen = c.Offers != null ? CareerScreen.Season : CareerScreen.Garage;
                     return true;
                 case "over.new": Career = null; Slot = 0; snap = null; Screen = CareerScreen.Title; RefreshSlots(); return true;
             }
+            return false;
+        }
+
+        /// <summary>Advances the qualifying run by dt seconds with brake held or not (Space, A or the BRAKE button). When the
+        /// car takes the flag the grid is set, saved, and the grid screen comes up. Returns true while the run goes on.</summary>
+        public bool QualiTick(double dt, bool held)
+        {
+            if (Screen != CareerScreen.QualiRun || Quali == null) return false;
+            Quali.Tick(dt, held);
+            if (!Quali.Done) return true;
+            Career.FinishQuali(Quali);
+            Screen = CareerScreen.QualiDone;
+            SaveNow();
             return false;
         }
 
@@ -318,6 +363,10 @@ namespace GreenFlag.View
                 case CareerScreen.DeckBuilder: return DeckPage();
                 case CareerScreen.Reward: return RewardPage();
                 case CareerScreen.Over: return OverPage();
+                case CareerScreen.Quali: return QualiPage();
+                case CareerScreen.QualiRun: return QualiRunPage();
+                case CareerScreen.QualiDone: return QualiDonePage();
+                case CareerScreen.Season: return SeasonPage();
                 default: return TitlePage();
             }
         }
@@ -338,7 +387,7 @@ namespace GreenFlag.View
                 case SlotState.Broken: return "Damaged: " + i.Error;
             }
             var g = i.Game; var c = g.Career;
-            string where = c.Over ? "Run over" : g.Screen == SaveGame.Reward ? $"Results of race {c.Reward.Res.RaceNo}" : $"Before race {c.RaceIdx + 1} of {c.SeasonLength}, {c.NextTrack.Name}";
+            string where = c.Over ? "Run over" : g.Screen == SaveGame.Reward ? $"Results of race {c.Reward.Res.RaceNo}" : c.Offers != null ? $"Season {c.Review?.Season} over, P{c.Review?.Rank}: contract offers" : $"Before race {c.RaceIdx + 1} of {c.SeasonLength}, {c.NextTrack.Name}";
             return $"{c.Name} · {Personas.Get(c.Persona).Name} · {c.Series} season {c.Season} · {where} · {Money(c.Money)} · saved {g.SavedAt.ToString("MMM d HH:mm", inv)} UTC{(i.FromBackup ? " (backup)" : "")}";
         }
 
@@ -442,11 +491,16 @@ namespace GreenFlag.View
                 Title = $"{c.Name} · {pr.Name}", Money = Money(c.Money), Notice = Toast ?? c.DeckNote,
             };
             var why = c.CantRace;
-            var nx = p.Section($"Next race · {c.RaceIdx + 1} of {c.SeasonLength}", 0, null, Green);
+            var nx = p.Section($"Next race · {c.RaceIdx + 1} of {c.SeasonLength} · {SeasonRules.SeriesName(c.Series)}", 0, null, Green);
             nx.Row(t.Name, $"{t.Type} · {t.Laps} laps");
-            if (why != null) nx.Text(why + ". Fix it in the deck builder.", Red);
+            nx.Row("Expected finish (car ratings)", "P" + c.ExpectedFinish().ToString(inv));
+            nx.Row("Points", c.SeasonResults.Count > 0 ? $"P{c.MyRank()} · {c.MyPoints} pts" : "Season starts here");
+            nx.Row("Team", $"{c.TeamName} · rating {c.SeriesTeams[c.Team].Rating}{(c.Contract.Per > 0 ? " · " + Money(c.Contract.Per) + " a race" : " · no salary yet")}");
+            if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
+            SponsorSection(p);
+            ObjectivesSection(p);
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "go", Label = "Go racing", Enabled = why == null, Primary = true, Note = why });
-            p.Default = why == null ? "go" : "deck";
+            p.Default = why == null ? "go" : c.Sponsor == null && c.SponsorOffers != null && c.SponsorOffers.Count > 0 ? "sponsor:" + c.SponsorOffers[0].Id : "deck";
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "deck", Label = "Build race deck" });
             if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit", Note = $"Saves to slot {Slot} and goes back to the title screen" });
 
@@ -477,6 +531,8 @@ namespace GreenFlag.View
                 else eq.Add(new MenuItem { Kind = MenuKind.Part, Label = "Empty slot", Value = CareerRules.SlotName(sl), Color = Dim });
             }
             foreach (var id in c.Spares) { var part = Parts.Get(id); eq.Add(new MenuItem { Kind = MenuKind.Part, Id = "equip:" + id, Label = part.Name, Value = "spare · " + CareerRules.SlotName(part.Slot), Note = part.Text }); }
+
+            StandingsSection(p, 1, $"Season {c.Season} standings", c.StandingsTop(10), c.SeasonResults.Count == 0 ? "No races yet. A win pays 40 points, 2nd 35, then one less per place." : null);
 
             bool ok = c.DeckOk(t);
             var dk = p.Section($"Race deck ({c.Deck.Count} of {c.Collection.Count} cards owned)", 1, "You keep every card in your collection. Before each race you pick which to take. The track sets a minimum, and your tune sets how many attack, defense and drafting cards fit.", ok ? (Rgb?)null : Red);
@@ -569,12 +625,21 @@ namespace GreenFlag.View
             var pay = p.Section("Payout", 0);
             pay.Row($"Purse for P{res.Finish}", Money(res.Purse));
             pay.Row($"Beat expectation by {res.BeatBy}", Money(res.Bonus));
+            foreach (var o in res.Objectives.Where(o => o.Ok)) pay.Row((o.Ask ? "Sponsor ask: " : "Objective: ") + o.Name, Money(o.Pay));
+            if (res.Sponsor != null) pay.Row(SeasonRules.Sponsor(res.Sponsor).Name + " (per race)", Money(res.Retainer));
+            if (res.Salary > 0) pay.Row("Team salary", Money(res.Salary));
             pay.Row("Total", "+" + Money(res.Total), Green);
+            pay.Row($"Points +{res.Pts}", $"P{res.Rank} in points · {res.PtsTotal} pts{(res.RankBefore != res.Rank && res.RaceNo > 1 ? $" (was P{res.RankBefore})" : "")}", res.Rank < res.RankBefore ? Green : (Rgb?)null);
             pay.Row("Bank", Money(c.Money));
             if (res.Penalty == "survive") pay.Text($"Survive token used: the DNF would have ended your run. It still cost {Money(CareerRules.DnfFine)}{(res.LostPart != null ? " and your spare " + Parts.Get(res.LostPart).Name : "")}. No tokens left.", Amber);
             else if (res.Penalty == "ironman") pay.Text($"Ironman penalty: the DNF cost {Money(CareerRules.DnfFine)}{(res.LostPart != null ? " and your spare " + Parts.Get(res.LostPart).Name : "")}.", Red);
             else if (res.Penalty == "dead") pay.Text("Permadeath: the DNF ends the run.", Red);
 
+            if (res.Objectives.Count > 0)
+            {
+                var ob = p.Section($"Objectives · {res.ObjMet} of {res.Objectives.Count}", 0, res.TierFrom != null ? $"All met: rewards moved up from {CareerRules.TierName(res.TierFrom.Value)} to {CareerRules.TierName(res.Tier)}." : "Meet them all and finish, and the rewards move up a tier.", res.TierFrom != null ? Green : (Rgb?)null);
+                foreach (var o in res.Objectives) ob.Row((o.Ok ? "✓ " : "✗ ") + (o.Ask ? "Sponsor ask: " : "") + o.Name, o.Ok ? "+" + Money(o.Pay) : Money(o.Pay), o.Ok ? Green : Dim);
+            }
             var top = p.Section("Top 10 this race", 1);
             foreach (var o in res.Order) top.Row($"{o.Pos}. {(o.IsMe ? o.Name + " (you)" : o.Name)}", (o.Dnf ? "DNF · " : "") + o.Team, o.IsMe ? Green : (Rgb?)null);
 
@@ -625,6 +690,168 @@ namespace GreenFlag.View
             return p;
         }
 
+        // ================================================================== the season (step 37)
+
+        static string GoalLine(SponsorDef sp, int seasonLength) => SeasonRules.Goal(sp.Goal).Name(seasonLength);
+
+        public static Rgb GoalColor(GoalState st) => st == GoalState.Met || st == GoalState.On ? Green : st == GoalState.Missed ? Red : st == GoalState.Behind ? Amber : Dim;
+
+        void SponsorSection(MenuPage p)
+        {
+            var c = Career;
+            int e = c.ExpectedFinish();
+            if (c.Sponsor != null)
+            {
+                var sp = SeasonRules.Sponsor(c.Sponsor.Id);
+                var gs = c.GoalStatus();
+                var s = p.Section("Sponsor · " + sp.Name, 0, null, Rgb.Hex(sp.Color));
+                s.Row("Per race", Money(c.Sponsor.Per));
+                s.Row("Season goal: " + GoalLine(sp, c.SeasonLength), $"{gs.prog} · {SeasonRules.GoalStateName(gs.st)}", GoalColor(gs.st));
+                s.Row("Goal bonus at season end", Money(c.Sponsor.Bonus));
+                return;
+            }
+            var o = p.Section($"Sign a sponsor for season {c.Season}", 0, "One sponsor a season. They pay every race, ask for one race objective each week (it pays 1.5×), and pay a bonus if you meet their season goal. Meet it and they renew with a 20% raise; miss it and they walk.", Amber);
+            foreach (var d in c.SponsorOffers ?? new List<SponsorDeal>())
+            {
+                var sp = SeasonRules.Sponsor(d.Id);
+                o.Add(new MenuItem
+                {
+                    Kind = MenuKind.Part, Id = "sponsor:" + d.Id, Label = sp.Name + (d.Renew ? " · renewal +20%" : ""), Value = Money(d.Per) + " a race", Color = Rgb.Hex(sp.Color),
+                    Note = $"{sp.Blurb} Season goal: {GoalLine(sp, c.SeasonLength)} (bonus {Money(d.Bonus)}). Asks: {string.Join(" · ", sp.Asks.Select(a => SeasonRules.Objective(a).Name(e, c.Kart)))}.",
+                });
+            }
+        }
+
+        void ObjectivesSection(MenuPage p)
+        {
+            var c = Career;
+            if (c.Objectives == null) return;
+            var s = p.Section("Race objectives", 1, "Meet them all and finish, and the rewards move up a tier. Targets follow your expected finish.");
+            foreach (var o in c.Objectives) s.Row((o.Ask ? "Sponsor ask: " : "") + c.ObjectiveText(o), Money(c.ObjectivePay(o, c.PayMul)), o.Ask ? Amber : (Rgb?)null);
+        }
+
+        void StandingsSection(MenuPage p, int column, string title, List<StandRow> rows, string note = null)
+        {
+            var s = p.Section(title, column, note);
+            int lead = rows.Count > 0 ? rows[0].Pts : 0;
+            foreach (var r in rows)
+                s.Row($"{r.Pos}. {(r.IsMe ? r.Name + " (you)" : r.Name)}", $"{r.Pts} pts{(r.Wins > 0 ? $" · {r.Wins} win{(r.Wins > 1 ? "s" : "")}" : "")}{(r.Pos > 1 && lead > 0 ? $" · −{lead - r.Pts}" : "")} · {r.Team}", r.IsMe ? Green : (Rgb?)null);
+        }
+
+        MenuPage QualiPage()
+        {
+            var c = Career; var t = c.NextTrack;
+            var st = c.Base.Car;
+            var pl = Qualifying.Plan(t, st, null, new SimRng(1));
+            var p = new MenuPage
+            {
+                Screen = CareerScreen.Quali, Eyebrow = $"Qualifying · race {c.RaceIdx + 1} of {c.SeasonLength}", Title = t.Name, Money = Money(c.Money), Notice = Toast,
+                Sub = $"A rolling start, then {pl.Laps} timed laps ({pl.Checks.Count} corners). At every corner a needle sweeps the brake bar: let go of Space (A on a controller, or the BRAKE button) when it is in the green zone, gold is Perfect. Hold it down early for slow-mo while your Focus lasts. Clean corners in a row build a chain up to ×4. Your time sets where you start.",
+            };
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quali.start", Label = "Start the run", Primary = true, Note = QualiCard != null ? CardBook.Get(QualiCard).Name + " starts the race in your discard pile" : null });
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quali.skip", Label = "Skip: sim an average lap", Note = "The same odds as a grid by car ratings" });
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quali.back", Label = "Back to the garage" });
+            p.Default = "quali.start";
+            var car = p.Section("Your car", 0, "Power, Aero, Handling and Racecraft set your base lap, like the AI's. Driver coaching (Racecraft and Consistency) makes every car quicker here.");
+            car.Row("Base lap", Qualifying.BaseLap(t, st).ToString("0.00", inv) + " s");
+            car.Row($"Good zone (Handling {st.Handling}, Consistency {st.Consistency})", Math.Round(pl.Wg * 200).ToString(inv) + "% of the bar");
+            car.Row($"Perfect zone (Racecraft {st.Racecraft})", Math.Round(pl.Wp * 200).ToString(inv) + "% of the bar");
+            var cards = p.Section("Use a card? (optional)", 1, "One card from your race deck can trim the run. It then starts the race in your discard pile.");
+            cards.Chip("quali.card:none", "No card", QualiCard == null);
+            foreach (var id in c.QualiOffer())
+            {
+                var cd = CardBook.Get(id);
+                var fx = Qualifying.CardFx(cd.Family, t);
+                cards.Add(new MenuItem { Kind = MenuKind.Card, Id = "quali.card:" + id, Label = cd.Name, Value = fx.name, Note = fx.text, On = QualiCard == id, Color = CardStyle.Family(cd.Family) });
+            }
+            return p;
+        }
+
+        MenuPage QualiRunPage()
+        {
+            var c = Career; var q = Quali;
+            var p = new MenuPage { Screen = CareerScreen.QualiRun, Eyebrow = "Qualifying · on the clock", Title = c.NextTrack.Name, Money = Money(c.Money) };
+            if (q != null)
+            {
+                var cur = q.Current;
+                var sc = q.Score;
+                p.Sub = cur == null ? "Take the flag" : q.Time < Qualifying.Roll ? "Rolling start · timing at the line" : $"{cur.Name} · {cur.Action}";
+                var s = p.Section("Run", 0);
+                s.Row("Corners", $"{q.Plan.Checks.Count(x => x.Res != null)} of {q.Plan.Checks.Count}");
+                s.Row("Chain", "×" + sc.Chain.ToString(inv));
+                s.Row("Focus", Math.Round(q.Focus * 100).ToString(inv) + "%");
+                for (int i = 0; i < q.LapTimes.Count; i++) s.Row("Lap " + (i + 1).ToString(inv), q.LapTimes[i].ToString("0.000", inv));
+            }
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quali.giveup", Label = "Give up: take an average lap" });
+            return p;
+        }
+
+        MenuPage QualiDonePage()
+        {
+            var c = Career; var q = c.Qual; var t = c.NextTrack;
+            var avgRef = Qualifying.BaseLap(t, c.Base.Car);
+            string how = q.Skip ? "Simmed an average lap." : string.Join(" · ", Enumerable.Range(0, 5).Where(i => q.Counts[i] > 0).Select(i => $"{q.Counts[i]} {Qualifying.MarkName((QualiMark)i)}")) + $" · best chain ×{q.Best}. "
+                + (q.Time < avgRef - 0.0005 ? $"{(avgRef - q.Time).ToString("0.000", inv)} s quicker than an average lap." : q.Time > avgRef + 0.0005 ? $"{(q.Time - avgRef).ToString("0.000", inv)} s slower than an average lap." : "About an average lap.");
+            var p = new MenuPage
+            {
+                Screen = CareerScreen.QualiDone, Eyebrow = "Qualifying results · " + t.Name, Title = $"You start P{q.Pos} · {q.Time.ToString("0.000", inv)}",
+                Sub = how + (q.Card != null ? $" {CardBook.Get(q.Card).Name} starts the race in your discard pile." : ""), Money = Money(c.Money), Notice = Toast,
+            };
+            p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quali.race", Label = "Go racing", Primary = true });
+            p.Default = "quali.race";
+            var g = p.Section("Starting grid", 0);
+            var teams = c.SeriesTeams;
+            for (int i = 0; i < q.Grid.Count; i++)
+            {
+                var e = c.Field.First(x => x.Id == q.Grid[i]);
+                g.Row($"P{i + 1}. #{e.Number} {(e.IsMe ? c.Name + " (you)" : e.Name)}", $"{q.Times[i].ToString("0.000", inv)} · {teams[e.Team].Name}", e.IsMe ? Green : (Rgb?)null);
+            }
+            ObjectivesSection(p);
+            return p;
+        }
+
+        MenuPage SeasonPage()
+        {
+            var c = Career; var rv = c.Review;
+            var champ = rv.Champion;
+            var p = new MenuPage
+            {
+                Screen = CareerScreen.Season, Eyebrow = $"Season {rv.Season} complete · {SeasonRules.SeriesName(rv.Series)}", Title = rv.Rank == 1 ? "Champion!" : $"P{rv.Rank} in the final standings",
+                TitleColor = rv.Rank == 1 ? Amber : (Rgb?)null, Money = Money(c.Money), Notice = Toast,
+                Sub = rv.Rank == 1 ? $"You win the title with {rv.Pts} points." : $"{champ.Name} ({champ.Team}) wins the title with {champ.Pts} points, {champ.Pts - rv.Pts} ahead of you.",
+            };
+            StandingsSection(p, 0, "Final standings", rv.Table);
+            if (rv.Sponsor != null)
+            {
+                var sp = SeasonRules.Sponsor(rv.Sponsor);
+                var s = p.Section("Sponsor review · " + sp.Name + (rv.Met ? " renews" : " walks"), 0, null, rv.Met ? Green : Red);
+                s.Row("Season goal: " + rv.Goal, rv.Prog + " · " + (rv.Met ? "Met" : "Missed"), rv.Met ? Green : Red);
+                s.Text(rv.Met ? $"Goal bonus paid: {Money(rv.Bonus)}. They offer to renew at {Money(rv.RenewPer)} a race with a {Money(rv.RenewBonus)} goal bonus; you'll see it with the other sponsor offers in the garage." : "No bonus. They won't sponsor you next season, so you'll pick from new offers in the garage.");
+            }
+            var res = p.Section("Results", 1);
+            foreach (var r in c.Results.Where(r => r.Season == rv.Season)) res.Row($"{r.RaceNo}. {r.TrackName}", $"P{r.Finish}{(r.Dnf ? " (DNF)" : "")} from P{r.Start}, expected P{r.Expected} · {CareerRules.TierName(r.Tier)}", TierColor(r.Tier));
+            var nx = SeasonRules.Next(rv.Series);
+            int ups = c.Offers.Count(o => o.Kind == OfferKind.Promote);
+            var off = p.Section("Contract offers for next season", 1, nx == null ? "Stay or move to a better team." : ups > 0 ? $"{ups} {SeasonRules.SeriesOne(nx.Value)} team{(ups > 1 ? "s" : "")} want{(ups > 1 ? "" : "s")} you." : $"No {SeasonRules.SeriesOne(nx.Value)} team called: the top 14 in points get step-up offers.", Amber);
+            var teams = c.SeriesTeams;
+            for (int i = 0; i < c.Offers.Count; i++)
+            {
+                var o = c.Offers[i];
+                string what = o.Kind == OfferKind.Stay ? "Same car, same crew, same series."
+                    : $"New car: power, handling and aero {o.Rating} (yours now {c.Base.Car.Power}/{c.Base.Car.Handling}/{c.Base.Car.Aero}). New crew at level {SeasonRules.CrewBase(o.Rating)}: perks and pit cards start over. You keep your driver coaching, money, cards and parts.";
+                if (o.Kind == OfferKind.Promote) what += c.Series == Series.Kart ? " Kart cards turn into late model cards and your persona grows into its stock car self." : "";
+                if (o.Kind == OfferKind.Promote) what += o.Series == Series.Late ? " Late models: pit stops and cautions, an 11 to 15 card deck." : " Stock cars: the full schedule, 12 to 16 cards.";
+                string kind = o.Kind == OfferKind.Stay ? "Stay" : o.Kind == OfferKind.Move ? "Better team" : "Step up · " + SeasonRules.SeriesName(o.Series);
+                off.Add(new MenuItem { Kind = MenuKind.Part, Id = "offer:" + i.ToString(inv), Label = $"{kind}: {o.Name}", Value = $"rating {o.Rating} · {Money(o.Per)} a race{(o.Sign > 0 ? " · " + Money(o.Sign) + " to sign" : "")}", Note = what, Color = o.Kind == OfferKind.Promote ? Amber : o.Kind == OfferKind.Move ? Green : (Rgb?)null });
+            }
+            off.Text("Contract talks (a d20 Negotiate check) come with the driver sheet in step 38. For now each offer signs at its listed terms.", Dim);
+            int best = c.Offers.FindIndex(o => o.Kind == OfferKind.Promote);
+            if (best < 0) best = c.Offers.FindIndex(o => o.Kind == OfferKind.Move);
+            p.Default = "offer:" + Math.Max(0, best).ToString(inv);
+            if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit" });
+            return p;
+        }
+
         MenuPage OverPage()
         {
             var c = Career;
@@ -670,7 +897,7 @@ namespace GreenFlag.View
             return cur != null && m.Press(cur.Id);
         }
 
-        /// <summary>B / Esc: leave the deck builder if the deck is legal.</summary>
-        public bool Back(CareerMenu m) => m.Screen == CareerScreen.DeckBuilder && m.Press("deck.done");
+        /// <summary>B / Esc: leave the deck builder if the deck is legal, or qualifying's card pick for the garage.</summary>
+        public bool Back(CareerMenu m) => m.Screen == CareerScreen.DeckBuilder ? m.Press("deck.done") : m.Screen == CareerScreen.Quali && m.Press("quali.back");
     }
 }
