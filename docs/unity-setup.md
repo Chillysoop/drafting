@@ -11,8 +11,8 @@ The Unity project is in `game/`. It is Unity 6.3 LTS (`6000.3.27f1`) with URP. T
 | `game/Packages/com.greenflag.sim/` | The race sim as a local package. `noEngineReferences: true`, so it can never touch UnityEngine. |
 | `game/Assets/GreenFlag/Presentation/` | Scripts that draw what the sim says. For now only `BootInfo`, which shows the build and a sim roll on screen. |
 | `game/Assets/GreenFlag/Editor/` | `ProjectBootstrap` (URP, player settings, boot scene) and `BuildScript` (command-line Windows build). |
-| `sim/` | .NET 8 solution that compiles the same sim files, plus xUnit tests. Runs in CI without Unity. |
-| `.github/workflows/sim.yml` | `dotnet test` on every PR that touches the sim. |
+| `sim/` | .NET 8 solution that compiles the same sim files, plus xUnit tests and the `GreenFlag.Harness` console app. Runs in CI without Unity. |
+| `.github/workflows/sim.yml` | `dotnet test`, then headless races on every track run twice (they must match), on every PR that touches the sim. |
 | `.github/workflows/nightly.yml` | Windows player build every night at 08:00 UTC, on demand, and on PRs that touch `game/`. |
 | `tools/setup-git.ps1`, `tools/setup-git.sh` | One-time Git LFS and Unity Smart Merge setup. |
 
@@ -20,7 +20,7 @@ The Unity project is in `game/`. It is Unity 6.3 LTS (`6000.3.27f1`) with URP. T
 
 1. **Install Unity Hub** from unity.com/download and sign in with a Unity account (Personal is free and fine for now).
 2. **Install the editor.** In Hub, Installs → Install Editor → Archive, pick **6000.3.27f1**, and tick **Windows Build Support (Mono)**. If 6000.3.27f1 is not offered, install the newest 6000.3 LTS and tell Claude the number; Claude updates `ProjectVersion.txt` to match.
-3. **Open the project.** Clone the repo, then in Hub choose Add → Add project from disk → the `game` folder. The first open takes a few minutes while Unity imports. When it finishes, the console says `[GreenFlag] Project setup checked`, and pressing Play shows "Green Flag Deck · build … · sim 0.1.0 · seed 61 roll 0.548171" in the middle of a dark screen. If the console shows red errors instead, copy them to Claude.
+3. **Open the project.** Clone the repo, then in Hub choose Add → Add project from disk → the `game` folder. The first open takes a few minutes while Unity imports. When it finishes, the console says `[GreenFlag] Project setup checked`, and pressing Play shows "Green Flag Deck · build … · sim 0.2.0 · seed 61 roll 0.548171" in the middle of a dark screen, and under it one headless race: "Carver seed 61: you P20 → P5, 1 caution(s) · fingerprint 9d777f1247127974". That fingerprint must match the one `dotnet` prints (below); if it differs, the engine and CI disagree on the math and Claude needs to know. If the console shows red errors instead, copy them to Claude.
 4. **Run the git setup once** from the repo root: `powershell -ExecutionPolicy Bypass -File tools/setup-git.ps1`.
 5. **Give CI a licence.** GitHub Actions needs three repository secrets (repo Settings → Secrets and variables → Actions → New repository secret):
    - `UNITY_EMAIL`: your Unity account email.
@@ -45,7 +45,11 @@ In the editor: `Green Flag → Build Windows` writes `game/Builds/Windows/GreenF
 dotnet test sim/GreenFlag.Sim.sln
 ```
 
-`SimRng` is the slice harness's mulberry32 generator, ported bit for bit, and the tests check its first rolls against the browser for three seeds. Step 26 builds the race sim on top of it.
+`SimRng` is the slice harness's mulberry32 generator, ported bit for bit, and the tests check its first rolls against the browser for three seeds. Step 26 built the race sim on top of it (see `docs/sim.md`). To watch a headless race:
+
+```
+dotnet run --project sim/GreenFlag.Harness -c Release -- race carver 61
+```
 
 ## Known gaps
 

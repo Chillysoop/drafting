@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -23,6 +23,16 @@ jobs:
           fi
       - name: dotnet test
         run: dotnet test sim/GreenFlag.Sim.sln --logger "trx;LogFileName=sim.trx" --results-directory "$RUNNER_TEMP/sim-tests"
+      - name: Headless races, each run twice (same seed must give the same race)
+        run: dotnet run --project sim/GreenFlag.Harness -c Release -- check 5
+      - name: Hands-off summary
+        run: |
+          {
+            echo '### Headless races (hands-off, 50 per track, Normal)'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- batch 50
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
