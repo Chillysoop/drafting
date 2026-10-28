@@ -11,7 +11,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
  const G=()=>p.evaluate(()=>{const g=window.__gfd.G;return {deck:[...g.deck],coll:[...g.coll],tune:g.tune,idx:g.raceIdx};});
  const ok=()=>p.evaluate(()=>{const g=window.__gfd;return g.deckOk(g.TRACKS[g.arcTi(g.G.raceIdx)]);});
  await load();await p.evaluate(()=>localStorage.clear());await load();
- await click('#t-go');await click('#g-spons [data-sign]');
+ await click('[data-series="mixed"]');await click('#t-go');await click('#g-spons [data-sign]');
  let s=await G();if(s.coll.length!==s.deck.length||s.deck.length!==12)fail('new career collection '+JSON.stringify(s));
  // give a mid-season collection so there are choices
  await p.evaluate(()=>{const g=window.__gfd;g.G.coll.push('slingshot','draft_train','crossover','clear_air','hot_laps','send_it','block','high_line','regroup','restart_jump');g.showGarage();});

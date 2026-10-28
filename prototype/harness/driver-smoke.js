@@ -38,7 +38,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
 
   await load();await p.evaluate(()=>localStorage.clear());await load();
   const bgs=await p.evaluate(()=>document.querySelectorAll('#t-bgs [data-bg]').length);if(bgs!==5)fail(W+': title backgrounds '+bgs);
-  await click('#t-bgs [data-bg="hero"]');await click('#t-go');
+  await click('[data-series="mixed"]');await click('#t-bgs [data-bg="hero"]');await click('#t-go');
   const d0=await p.evaluate(()=>{const G=window.__gfd.G;return {bg:G.drv.bg,attr:G.drv.attr,prof:G.drv.prof,lvl:G.drv.lvl,ev:G.event};});
   if(d0.bg!=='hero'||d0.attr.grit!==15||d0.prof.join()!=='media,endure'||d0.ev)fail('new driver '+JSON.stringify(d0));
   await click('#g-spons [data-sign]');

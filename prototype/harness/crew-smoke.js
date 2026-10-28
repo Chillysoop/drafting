@@ -20,7 +20,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const goRace=async()=>{await click('#g-go');if(await p.isVisible('#q-skip'))await click('#q-skip');await click('#q-race');};
 
   await load();await p.evaluate(()=>localStorage.clear());await load();
-  await click('#t-go');
+  await click('[data-series="mixed"]');await click('#t-go');
   const c0=await p.evaluate(()=>{const G=window.__gfd.G;return {roles:Object.keys(G.crew),pit:G.stats.pitCrew,chief:G.stats.crewChief,deck:G.pitDeck&&G.pitDeck.length,
    shopCrew:[...document.querySelectorAll('#garage [data-buy]')].some(b=>['crewChief','engineer','spotter'].includes(b.dataset.buy)),btn:!!document.getElementById('g-crew')};});
   if(c0.roles.join()!=='crewChief,spotter,engineer,pitCrew'||c0.pit!==c0.chief||c0.deck!==16||c0.shopCrew||!c0.btn)fail('new crew / garage '+JSON.stringify(c0));

@@ -12,7 +12,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   const load=async()=>{await p.goto('file://'+html);await p.waitForTimeout(350);};
   const click=async sel=>{await p.click(sel);await p.waitForTimeout(80);};
   await load();await p.evaluate(()=>localStorage.clear());await load();
-  await click('#t-go');
+  await click('[data-series="mixed"]');await click('#t-go');
   const g0=await p.evaluate(()=>({go:document.getElementById('g-go').disabled,offers:document.querySelectorAll('#g-spons [data-sign]').length,objs:window.__gfd.G.nextObjectives.length,ov:document.documentElement.scrollWidth>innerWidth+1||document.getElementById('garage').scrollWidth>document.getElementById('garage').clientWidth+1}));
   if(!g0.go||g0.offers!==3||g0.objs!==3)fail(W+': garage before signing '+JSON.stringify(g0));
   if(g0.ov)fail(W+': horizontal scroll in garage');
@@ -53,7 +53,7 @@ const html=process.argv[2],shots=process.argv[3]||null;
   if(w2.paid!==0||w2.offers.some(o=>o.id==='hitide')||!/walks/i.test(w2.txt)||!/walked/.test(w2.notice))fail('walk '+JSON.stringify(w2));
   await shot('season-end-walk');
   // a DNF never moves rewards up, even with every objective met
-  await p.evaluate(()=>{const g=window.__gfd;g.G.sponsor={id:'pinecrest',per:1000,bonus:6000};g.G.sponsorOffers=null;g.G.nextObjectives=g.rollRaceObjectives();g.showGarage();});
+  await p.evaluate(()=>{const g=window.__gfd;g.G.sponsor={id:'pinecrest',per:1000,bonus:6000};g.G.sponsorOffers=null;g.G.offers=null;/* step 22: skip the contract offers */g.G.nextObjectives=g.rollRaceObjectives();g.showGarage();});
   if(await p.isVisible('#g-ev-walk'))await click('#g-ev-walk');await click('#g-go');if(await p.$('#q-skip'))await click('#q-skip');await click('#q-race');
   const d=await fin('pass');
   console.log('season 3 race 1:',JSON.stringify({tier:d.tier,from:d.from}));

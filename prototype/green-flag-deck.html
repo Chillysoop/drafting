@@ -1153,6 +1153,9 @@ const TRACKS=[
 /* Career schedules (TRACK_SHAPES_8C): the 3-race arc can stay on ovals or mix in the kart circuit and road course. */
 /* SEASON_15: a 10-race season on the five tracks. Mixed shapes is the default (Q34/Q35: every series mixes shapes). */
 const SEASON_LEN=10;
+// races in a season: the length of the schedule (step 22, board Q82: kart and late model seasons are shorter)
+function evName(i,g){return i===seasonLen(g)-1?'Season Finale':EVENT_NAMES[i]||'Race '+(i+1);}
+function seasonLen(g){const k=g?g.sched:(screen==='title'||!G)?titleSel.sched:G.sched,S=SCHED[k];return S?S.ids.length:SEASON_LEN;}
 const SCHED={ovals:{n:'Ovals',ids:['mill','carver','talon','mill','carver','talon','mill','carver','talon','mill']},mixed:{n:'Mixed shapes',ids:['mill','pine','carver','ridge','talon','mill','pine','carver','ridge','mill']}};
 const EVENT_NAMES=['Season Opener','Spring Sprint','Memorial 200','Summer Showdown','Midseason 300','Night Race','Harvest Cup','Fall Classic','Cutoff Race','Season Finale'];
 // points for each finishing spot (index 0 = winner): 40 for a win, 35 for 2nd, then one less per place (17 for 20th)
@@ -1585,7 +1588,7 @@ function sponsorCard(o,sign){const sp=sponsorOf(o.id),g=SGOALS[sp.goal],e=expFin
   <div><span class="eyebrow">Season goal</span><div><b>${esc(g.n)}</b> · bonus <b class="mono">${money(o.bonus)}</b></div></div>
   <div style="font-size:13px"><span class="eyebrow">Race asks (pay ${ASK_MUL}×)</span><div>${sp.asks.map(id=>esc(objName(objOf(id),e))).join(' · ')}</div></div>
   ${sign?`<button class="btn primary small" data-sign="${sp.id}">Sign ${esc(sp.n.split(' ')[0])}</button>`:''}</div>`;}
-function sponsorStrip(){const S=G.sponsor,sp=S&&sponsorOf(S.id);if(!sp)return '';const g=SGOALS[sp.goal],gs=goalState(sp.goal,G.results,myRank(),SEASON_LEN-G.results.length),b=GOAL_BADGE[gs.st];
+function sponsorStrip(){const S=G.sponsor,sp=S&&sponsorOf(S.id);if(!sp)return '';const g=SGOALS[sp.goal],gs=goalState(sp.goal,G.results,myRank(),seasonLen()-G.results.length),b=GOAL_BADGE[gs.st];
  return `<div class="row spstrip" style="gap:10px;border-left:4px solid ${sp.c};padding-left:10px"><b style="color:${sp.c}">${esc(sp.n)}</b><span class="mono">${money(S.per)}/race</span><span>Season goal: <b>${esc(g.n)}</b> · ${esc(gs.prog)} <b style="color:${b[1]}">${b[0]}</b> · bonus ${money(S.bonus)}</span></div>`;}
 function objLines(list,e,mul){return normObjs(list).map(x=>{const o=objOf(x.id);return `<div class="row objl" style="justify-content:space-between"><span>${x.ask?'<span class="tier t-solid" style="font-size:11px">Sponsor ask</span> ':''}${x.rv?'<span class="tier t-rough" style="font-size:11px">Rival</span> ':''}${esc(objName(o,e))}</span><b class="mono">${money(r100(o.pay*(x.ask?ASK_MUL:1)*(mul||1)))}</b></div>`;}).join('');}
 // season end: pay the goal bonus, renew or walk, and set up the next season (career, collection, car and money carry over)
@@ -2687,9 +2690,10 @@ function render(dt){
  // apron
  const apron=ring(L(-TRACK_HW-0.07));
  g.beginPath();inner.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));for(let i=apron.length-1;i>=0;i--)g.lineTo(apron[i][0],apron[i][1]);g.closePath();g.fillStyle=PAL.apronBand;g.fill();
- poly(apron,PAL.infield);
+ // a figure-8 has no single infield (the two loops turn opposite ways): only the pit side of the front straight gets one
+ const inf=t.fig8?fig8Infield(t):apron;poly(inf,PAL.infield);
  // infield stripes
- g.save();g.beginPath();apron.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.clip();
+ g.save();g.beginPath();inf.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.clip();
  {const SR=t.path?TG(t).bb.h/2+0.6:t.R,SK=t.path?Math.ceil(TG(t).bb.w*2+3):12;for(let k=-SK;k<SK;k++){const a=proj(k*0.25,-SR),b=proj(k*0.25+0.12,-SR),c=proj(k*0.25+0.12,SR),d=proj(k*0.25,SR);poly([a,b,c,d],PAL.stripe);}}
  // pit road
  if(t.path)poly(pathPitQuad(t),PAL.pit);else{const pa=proj(-t.S/2+0.1,t.R-TRACK_HW-0.16),pb=proj(t.S/2-0.1,t.R-TRACK_HW-0.16),pc=proj(t.S/2-0.1,t.R-TRACK_HW-0.3),pd=proj(-t.S/2+0.1,t.R-TRACK_HW-0.3);
@@ -3163,7 +3167,7 @@ function famDot(f){return `<i class="famdot" style="background:${FAM[f].c}"></i>
 function miniCard(id,extra=''){const cd=CARDS[id];const cost=cd.cost.tire?`${cd.cost.tire}% tire`:cd.cost.mom?`${cd.cost.mom} Momentum`:'Free';
  return `<div class="minicard ${extra}" data-card="${id}" style="--fc:${FAM[cd.fam].c}"><div class="fl"><span>${FAM[cd.fam].n}</span><span>${cd.rar}</span></div><div class="nm">${esc(cd.n)}</div><p>${esc(cd.txt)}</p><div class="rl">${esc(cd.real)}</div><div class="fl"><span>${cost}</span><span>${cd.wreck?'Can wreck':cd.noFail?'Never fails':'Safe'}</span></div></div>`;}
 
-function seasonRaces(g){g=g||G;const S=SCHED[g.sched]||SCHED.mixed;return S.ids.map((id,i)=>({i,t:TRACKS.find(x=>x.id===id),ev:EVENT_NAMES[i]||'Race '+(i+1)}));}
+function seasonRaces(g){g=g||G;const S=SCHED[g.sched]||SCHED.mixed;return S.ids.map((id,i)=>({i,t:TRACKS.find(x=>x.id===id),ev:evName(i,g)||'Race '+(i+1)}));}
 function standingsTable(n,showMove){
  const st=standings(),lead=st[0].pts;let rows=st.slice(0,n);const mi=st.findIndex(s=>s.c.isMe);if(mi>=n)rows=[...rows,st[mi]];
  return `<div class="tw"><table class="standings"><thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Wins</th><th>Pts</th><th>Gap</th></tr></thead><tbody>${rows.map(s=>{const pos=st.indexOf(s)+1,c=s.c;return `<tr style="${c.isMe?'background:rgba(47,179,106,.2)':''}"><td class="num">${pos}</td><td><i class="famdot" style="background:${TEAMS[c.team].c}"></i>${esc(c.isMe?c.name+' (you)':c.name)}</td><td class="muted">${esc(TEAMS[c.team].name)}</td><td class="num">${s.wins}</td><td class="num"><b>${s.pts}</b></td><td class="num muted">${pos===1?'—':'−'+(lead-s.pts)}</td></tr>`;}).join('')}</tbody></table></div>`;}
@@ -3174,9 +3178,9 @@ function savedAgo(ms){const m=Math.round((Date.now()-ms)/60000);return m<1?'just
 function renderTitle(){
  const el=$('#title');
  el.innerHTML=`<div class="page-in">
-  <div class="grid" style="gap:10px"><span class="eyebrow">Vertical slice · ${SEASON_LEN}-race season</span><h1>Green Flag <em>Deck</em></h1>
+  <div class="grid" style="gap:10px"><span class="eyebrow">Vertical slice · ${seasonLen()}-race season</span><h1>Green Flag <em>Deck</em></h1>
   <p class="muted">A stock car race you drive with a hand of cards. The race runs on its own: 20 cars, 10 teams, tires, drafts, wrecks and cautions. Every time you reach the braking zone at the end of a straight, the race pauses and you draw cards (twice a lap, once at Millbrook). Every card shows its live odds. Sit back and the field will race you instead: play the right card at the right moment.</p></div>
-  ${(()=>{const sv=readSave();if(!sv)return '';const g=sv.G,n=Math.min(g.results.length+1,SEASON_LEN);return `<div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Saved season</span><h2>${esc(g.name)} · ${esc(ARCH[g.arch]?ARCH[g.arch].n:g.arch)}</h2><p class="muted">${g.reward?`After race ${g.results.length}`:`Race ${n}`} of ${SEASON_LEN} · P${myRank(g)} in points with ${(g.pts||{})[g.cars.find(c=>c.isMe).id]||0} · ${money(g.money)} · saved ${savedAgo(sv.at)}${g.inRace?(g.stakes==='standard'?' · the race in progress starts over':' · the race in progress counts as a DNF ('+esc(STAKES[g.stakes].n)+')'):''}</p><div class="row"><button class="btn primary" id="t-cont" style="font-size:18px">Continue season</button><button class="btn small" id="t-del">Delete save</button></div></div>`;})()}
+  ${(()=>{const sv=readSave();if(!sv)return '';const g=sv.G,n=Math.min(g.results.length+1,seasonLen(g));return `<div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Saved season</span><h2>${esc(g.name)} · ${esc(ARCH[g.arch]?ARCH[g.arch].n:g.arch)}</h2><p class="muted">${g.reward?`After race ${g.results.length}`:`Race ${n}`} of ${seasonLen(g)} · P${myRank(g)} in points with ${(g.pts||{})[g.cars.find(c=>c.isMe).id]||0} · ${money(g.money)} · saved ${savedAgo(sv.at)}${g.inRace?(g.stakes==='standard'?' · the race in progress starts over':' · the race in progress counts as a DNF ('+esc(STAKES[g.stakes].n)+')'):''}</p><div class="row"><button class="btn primary" id="t-cont" style="font-size:18px">Continue season</button><button class="btn small" id="t-del">Delete save</button></div></div>`;})()}
   <div class="panel grid" style="gap:10px"><h3>Driver name</h3><input id="t-name" value="${esc(titleSel.name)}" maxlength="18" style="background:var(--panel3);border:1px solid var(--line);color:var(--ink);padding:8px 10px;border-radius:4px;font:inherit;max-width:280px"></div>
   <div class="panel grid" style="gap:8px"><h3>Look <span class="muted" style="font-size:13px;text-transform:none;font-family:var(--body);font-weight:500">· style test, roadmap step 11. Press L in a race to flip between them.</span></h3><div class="lookpick">${LOOK_ORDER.map(k=>`<button class="panel sel${LOOK===k?' on':''}" data-look="${k}"><b>${LOOKS[k].n}</b><small>${LOOKS[k].d}</small></button>`).join('')}</div></div>
   <div class="grid" style="gap:10px"><h2>Pick a persona</h2><p class="muted" style="font-size:13px">A persona is a deck lean, not a class: it sets your starting cards, one signature relic and a default car tune. Card rewards and the garage can take you anywhere.</p><div class="grid g4 personas">${Object.entries(ARCH).filter(([k,a])=>!!a.kart===isKart()).map(([k,a])=>`<button class="panel sel arch${titleSel.arch===k?' on':''}" data-arch="${k}"><span class="eyebrow">${esc(a.tag)}</span><h3 style="margin:4px 0">${esc(a.n)}</h3><p style="font-size:13px">${esc(a.desc)}</p><p style="font-size:13px;margin-top:6px"><b>Relic:</b> ${esc(RELICS[a.relic].n)}. ${esc(RELICS[a.relic].txt)}</p><p style="font-size:13px;margin-top:6px"><b>Tune:</b> ${esc(tuneLabel(a.tune))}</p><p style="font-size:12px;margin-top:4px" class="muted">Strong: ${esc(a.strong)} · Weak: ${esc(a.weak)}</p><div class="minis">${a.add.map(id=>`<span>${esc(CARDS[id].n)}</span>`).join('')}</div></button>`).join('')}</div>
@@ -3185,7 +3189,7 @@ function renderTitle(){
   <div class="grid" style="gap:10px"><h2>Difficulty</h2><p class="muted" style="font-size:13px">Three separate dials. Pick a preset or set each one. Harder Information and Stakes settings pay bigger purses.</p>
    <div class="row">${Object.entries(PRESETS).map(([k,p])=>{const on=p.diff===titleSel.diff&&p.info===titleSel.info&&p.stakes===titleSel.stakes;return `<button class="chip${on?' on':''}" data-preset="${k}" style="font-size:15px;padding:6px 14px">${p.n}</button>`;}).join('')}</div>
    ${[['AI skill','diff',DIFF],['Information','info',INFO],['Stakes','stakes',STAKES]].map(([lab,key,tab])=>`<div class="grid" style="gap:6px"><span class="eyebrow">${lab}</span><div class="grid g4">${Object.entries(tab).map(([k,d])=>`<button class="panel sel${titleSel[key]===k?' on':''}" data-dial="${key}" data-val="${k}" style="padding:10px 12px"><h3>${d.n}${d.bonus?` <span class="mono" style="color:var(--amber);font-size:13px">+${Math.round(d.bonus*100)}% purse</span>`:''}</h3><p style="font-size:13px">${esc(d.desc)}</p></button>`).join('')}</div></div>`).join('')}</div>
-  <div class="panel grid" style="gap:8px"><h3>The season</h3><div class="row">${Object.entries(SCHED).map(([k,v])=>`<button class="chip${titleSel.sched===k?' on':''}" data-sched="${k}">${v.n}</button>`).join('')}</div><div class="grid g2" style="gap:2px 16px">${seasonRaces({sched:titleSel.sched}).map(({i,t,ev})=>`<div class="row"><b class="mono">${i+1}</b><b>${esc(ev)}</b><span class="muted">${t.short} · ${t.type} · ${t.laps} laps</span></div>`).join('')}</div><p class="muted" style="font-size:13px">Every race pays points: 40 for a win, 35 for 2nd, then one less per place down to 17 for 20th. Most points after ${SEASON_LEN} races wins the title. Your season saves in this browser after every race, so you can close the page and continue later.</p>
+  <div class="panel grid" style="gap:8px"><h3>The season</h3><div class="row">${Object.entries(SCHED).map(([k,v])=>`<button class="chip${titleSel.sched===k?' on':''}" data-sched="${k}">${v.n}</button>`).join('')}</div><div class="grid g2" style="gap:2px 16px">${seasonRaces({sched:titleSel.sched}).map(({i,t,ev})=>`<div class="row"><b class="mono">${i+1}</b><b>${esc(ev)}</b><span class="muted">${t.short} · ${t.type} · ${t.laps} laps</span></div>`).join('')}</div><p class="muted" style="font-size:13px">Every race pays points: 40 for a win, 35 for 2nd, then one less per place down to 17 for 20th. Most points after ${seasonLen()} races wins the title. Your season saves in this browser after every race, so you can close the page and continue later.</p>
   <p class="muted" style="font-size:13px">Combos: when a card succeeds you draw a follow-up card, and any card that glows blue chains off your last move for bonus odds (the combo meter, bottom left, shows the time left). The ▸ icons on each card show which families it sets up; colored chips under a card's odds show what is boosting or hurting it. Crew Board: every card you toss or let expire charges it; 3 charges draws a fresh card. Crew calls: the amber radio box above your cards offers risky extra moves; they roll against your crew stats, so upgrading your crew in Crew HQ makes them land more often and pay more. Controls: drag a card up out of your hand and let go to play it, or drop it back on the hand to cancel. You can also tap a card (or press 1–7) to put it on the live odds gauge; the race drops to slow motion while a card is selected (Esc cancels). Slow motion uses Focus, which refills at each draw beat. Tap it again, hold Space, or hold Play on the gauge, then let go to play it (Shift+release or sliding off the button cancels): your car sets up the move for a couple of seconds (watch the countdown and the landing marker), then you see the result on track. At each draw beat the race pauses: play a card or press P to go green. Cards you leave unplayed for 2 beats go back into your deck, and caution and restart cards go back at the green. Pit stops: a tank of fuel does not last the race, so you stop at least once. The Pit stop module shows your planned stop lap next to your current lap, your fuel, and a Safe and a Gamble strategy; you call every green-flag stop yourself with PIT (or B): the module glows yellow a lap before the plan, blinks green on the plan lap and turns red when you're late, and running dry means coasting to pit road. In your stall the race holds while you plan the stop: put pit cards into the tire, fuel and adjust lanes (the stop takes as long as the slowest lane), press GO, then tap RELEASE (Space) when the jack drops. Adjustment cards install Setups, up to 3 race-long bonuses that level up, pair into Packages and go stale on a long run without a stop. Under caution the field forms up behind the pace car, pit road opens the next time by, cars that stay out restart ahead, and lapped cars get the free pass or the wave-around. If you don't pick a pit call under caution, your crew chief makes the call. A wreck just ahead hands you a free Evade card for a moment. Toss a card you can't use to get the next one 10 s sooner. Draws favor cards that fit the moment, but only from your deck. Aggressive cards build Heat, which makes the field fight back. A / X answer the radio. P pauses, C changes the camera, O toggles odds. Click any car on the scoring pylon to open its sheet.</p></div>
   <div class="row"><button class="btn primary" id="t-go" style="font-size:20px;padding:10px 26px">Start career</button><button class="btn" id="t-tut" style="font-size:17px;padding:10px 18px">${tutDone()?'Replay first-lap tutorial':'First-lap tutorial'}</button><span class="muted" style="font-size:13px">Optional. Starts race 1 with a guided first lap that pauses and has you try each control. Skip it any time.</span></div>
  </div>`;
@@ -3218,11 +3222,11 @@ function showGarage(){
  if(!G.sponsor&&!G.sponsorOffers)G.sponsorOffers=rollSponsorOffers((G.past&&G.past.length)?G.past[G.past.length-1].rank:99);
  const sel=G.sponsor?null:G.sponsorOffers;
  el.innerHTML=`<div class="page-in">
-  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN} · ${G.results.length?`P${myRank()} in points`:'no points yet'}</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-dsheet">Driver sheet${G.drv&&G.drv.pts?` <span class="fxc up">+${G.drv.pts}</span>`:''}</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Garage · season ${G.season||1} · before race ${G.raceIdx+1} of ${seasonLen()} · ${G.results.length?`P${myRank()} in points`:'no points yet'}</span><h2>${esc(G.name)} · ${esc(ARCH[G.arch].n)}</h2><span class="muted" style="font-size:13px">${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n}${G.stakes==='permadeath'?` · Survive tokens: ${G.survive}`:''}</span></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn" id="g-sheet">Car sheet &amp; equipment</button><button class="btn" id="g-dsheet">Driver sheet${G.drv&&G.drv.pts?` <span class="fxc up">+${G.drv.pts}</span>`:''}</button><button class="btn" id="g-quit" title="Your season is saved in this browser">Save and quit</button></div></div>
   ${G.notice?`<div class="panel" style="border-color:var(--amber)"><p>${esc(G.notice)}</p></div>`:''}
   ${eventPanel()}
   ${sel?`<div class="panel grid" id="g-spons" style="gap:10px;border-color:var(--amber)"><div class="grid" style="gap:2px"><span class="eyebrow">Season ${G.season||1} · sponsor offers</span><h3>Sign a sponsor for the season</h3><p class="muted" style="font-size:13px">One contract for the whole season: money every race, a season goal with a bonus, and one race objective of their choosing each week that pays ${ASK_MUL}×. Hit the goal and they renew with a raise. Miss it and they walk.</p></div><div class="grid g4">${sel.map(o=>sponsorCard(o,true)).join('')}</div></div>`:''}
-  <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
+  <div class="panel grid" style="gap:8px;border-color:var(--green)"><span class="eyebrow">Next race · ${G.raceIdx+1} of ${seasonLen()} · ${esc(evName(G.raceIdx)||'')}</span><h2>${t.name}</h2><p class="muted">${t.type} · ${t.len} · ${t.laps} laps. ${esc(t.blurb)}</p>
    ${sponsorStrip()}
    <div class="grid" style="gap:4px"><span class="eyebrow">Race objectives · expected finish P${expFinish()} · meet them all to move your rewards up a tier</span>${objLines(G.nextObjectives,expFinish())}</div>
    <div class="row"><button class="btn primary" id="g-go" style="font-size:18px" ${deckOk(t)&&G.sponsor&&evClear()?'':'disabled'}>Go racing</button><button class="btn" id="g-deck2">Build race deck</button>${G.sponsor?'':'<span style="color:var(--amber)">Sign a sponsor above first.</span>'}${evClear()?'':`<span style="color:var(--amber)">${esc(EVENTS[G.event.id].n)} first (above).</span>`}${deckOk(t)?'':`<span style="color:var(--red)">Your race deck breaks a rule for ${esc(t.short)}. Fix it below.</span>`}</div></div>
@@ -3315,7 +3319,7 @@ function showDeckBuilder(){
  const famsOwned=FAM_ORDER.filter(f=>G.coll.some(id=>CARDS[id].fam===f));
  const last=G.trackDecks&&G.trackDecks[t.id],ok=deckOk(t),sz=deckSize();
  el.innerHTML=`<div class="page-in dbpage">
-  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Deck builder · race ${G.raceIdx+1} of ${SEASON_LEN}</span><h2>Race deck for ${esc(t.name)}</h2><span class="muted" style="font-size:13px">${t.type}. ${esc(t.blurb)}</span></div>
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Deck builder · race ${G.raceIdx+1} of ${seasonLen()}</span><h2>Race deck for ${esc(t.name)}</h2><span class="muted" style="font-size:13px">${t.type}. ${esc(t.blurb)}</span></div>
    <div class="row"><span class="dbsize ${ok?'ok':'bad'}">${ic('draw')}<b>${G.deck.length}</b> / ${sz.max}</span><button class="btn primary" id="d-done" ${ok?'':'disabled'}>Done</button></div></div>
   <div class="grid dbgrid">
    <div class="panel grid" style="gap:10px;align-content:start"><div class="row" style="justify-content:space-between"><h3>Collection (${G.coll.length})</h3>
@@ -3353,9 +3357,9 @@ function showReward(){
  const rows=[...fo.map((o,i)=>[i,o])];if(meIn>=10)rows.push([meIn,res.order[meIn]]);
  const tierName={rough:'Rough day',solid:'Solid run',strong:'Strong run',victory:'Victory lane'},tierTxt=tierName[res.tier];
  const spR=res.sponsor&&sponsorOf(res.sponsor),objPay=res.objs.filter(o=>o.ok).reduce((s,o)=>s+o.pay,0);
- const last=G.raceIdx>=SEASON_LEN-1;
+ const last=G.raceIdx>=seasonLen()-1;
  el.innerHTML=`<div class="page-in">
-  <div class="grid" style="gap:6px"><span class="eyebrow">Race ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')} · ${esc(res.track)}</span><h1 style="font-size:clamp(40px,7vw,64px)">P${res.finish}${res.dnf?' · DNF':''}</h1>
+  <div class="grid" style="gap:6px"><span class="eyebrow">Race ${G.raceIdx+1} of ${seasonLen()} · ${esc(evName(G.raceIdx)||'')} · ${esc(res.track)}</span><h1 style="font-size:clamp(40px,7vw,64px)">P${res.finish}${res.dnf?' · DNF':''}</h1>
    <div class="row"><span class="tier t-${res.tier}">${tierTxt}</span>${res.tierFrom?`<span style="color:var(--green);font-weight:700">▲ up from ${tierName[res.tierFrom]}: every objective met</span>`:''}<span class="muted">Started P${res.start} · expected P${res.expected} · ${res.succ} of ${res.plays} cards landed</span></div></div>
   ${res.abandoned?`<div class="panel" style="border-color:var(--red)"><h3 style="color:var(--red)">Race abandoned</h3><p>The page closed during this race. On ${esc(STAKES[G.stakes].n)} results stand, so it counts as a DNF in last place: no purse and no card.</p></div>`:''}
   <div class="grid g2">
@@ -3403,7 +3407,7 @@ function showEnd(dead){
    <p>Season goal: <b>${esc(SGOALS[sp.goal].n)}</b> · ${esc(W.prog)} · <b style="color:${W.met?'var(--green)':'var(--red)'}">${W.met?'Met':'Missed'}</b></p>
    <p class="muted">${W.met?`Goal bonus paid: <b class="mono">${money(W.bonus)}</b>. They offer to renew for season ${W.season+1} at ${money(W.renewPer)} per race with a ${money(W.renewBonus)} goal bonus. You can sign them again or take another offer in the garage.`:`No bonus. They won't sponsor you next season, so you'll pick from new offers in the garage.`}</p></div>`:'';
  el.innerHTML=`<div class="page-in"><span class="eyebrow">${dead?'Run over: permadeath':'Season complete'}</span><h1>${esc(G.name)}</h1><p class="muted">${esc(ARCH[G.arch].n)} · ${DIFF[G.diff].n} AI · ${INFO[G.info].n} · ${STAKES[G.stakes].n} · average finish P${avg.toFixed(1)}</p>
- <div class="panel grid" style="gap:8px;border-color:${rk===1?'var(--amber)':'var(--line)'}"><h2>${dead?`Out after ${nRes} of ${SEASON_LEN} races · P${rk} in points`:rk===1?'Champion!':`P${rk} in the final standings`}</h2><p class="muted">${dead?'':rk===1?`You win the title with ${st[0].pts} points.`:`${esc(champ.name)} (${esc(TEAMS[champ.team].name)}) wins the title with ${st[0].pts} points, ${st[0].pts-st[rk-1].pts} ahead of you.`}</p>${stTable}</div>
+ <div class="panel grid" style="gap:8px;border-color:${rk===1?'var(--amber)':'var(--line)'}"><h2>${dead?`Out after ${nRes} of ${seasonLen()} races · P${rk} in points`:rk===1?'Champion!':`P${rk} in the final standings`}</h2><p class="muted">${dead?'':rk===1?`You win the title with ${st[0].pts} points.`:`${esc(champ.name)} (${esc(TEAMS[champ.team].name)}) wins the title with ${st[0].pts} points, ${st[0].pts-st[rk-1].pts} ahead of you.`}</p>${stTable}</div>
  ${spHTML}
  <div class="panel grid" style="gap:6px">${resRows}</div>
  <div class="panel grid" style="gap:10px"><h3>Final race deck</h3>${deckHTML}</div>
@@ -4287,7 +4291,7 @@ Object.assign(GLOSS,{
 });
 
 setLook(LOOK);
-window.__gfd={SPONSORS,SGOALS,OBJECTIVES,goalState,expFinish,rollRaceObjectives,seasonWrap,showEnd,showReward,autoDeck,fixDeck,deckRules,deckOk,slotCaps,deckSize,showDeckBuilder,TRACK_MIN,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
+window.__gfd={SPONSORS,SGOALS,OBJECTIVES,goalState,expFinish,rollRaceObjectives,seasonWrap,showEnd,showReward,autoDeck,fixDeck,deckRules,deckOk,slotCaps,deckSize,showDeckBuilder,TRACK_MIN,get TRACKS(){return TRACKS;},arcTi,get me(){return me;},SEASON_LEN,seasonLen,SCHED,standings,myRank,saveSeason,readSave,clearSave,continueSeason,get PTS(){return PTS;},setLook,get LOOK(){return LOOK;},LOOKS,tossLive,tossTxt,riskRefill,TOSS,RISK_FOCUS,TOSS_BUFF,setTune,TUNE,FOCUS,ARCH,tuneLabel,burnCard,get TUT(){return TUT;},startTutorial,tutGo,BAL,setBal,idlePressure,get G(){return G;},get race(){return race;},update,startRace,newCareer,titleSel,showGarage,playCard,CARDS,computeOdds,ctxFor,cardBlock,meCar,acceptRadio,ignoreRadio,idx,pitButton,myPlan,lapOf,pgGo,pgRelease,pgToggle,setupReads,setupInstall};
 /* ===== Garage tune x pit Setups (step 7b): a pit adjustment nudges this race's tune one notch. ===== */
 const TUNE_NUDGE={trackbar:['hand',-1,'tighter'],spring:['hand',1,'looser'],wedge:['aero',1,'less drag']};
 const _setupInstall7b=setupInstall;
@@ -4985,7 +4989,7 @@ function renderQuali(){
  if(QS.phase==='pick'){
   const pl=qualiPlan(t,G.stats,null);
   el.innerHTML=`<div class="page-in">
-   <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying · race ${G.raceIdx+1} of ${SEASON_LEN} · ${esc(EVENT_NAMES[G.raceIdx]||'')}</span><h2>${t.name}</h2>
+   <div class="grid" style="gap:4px"><span class="eyebrow">Qualifying · race ${G.raceIdx+1} of ${seasonLen()} · ${esc(evName(G.raceIdx)||'')}</span><h2>${t.name}</h2>
     <p class="muted">A rolling start, then ${pl.laps} timed laps (${pl.checks.length} corners). Your time sets where you start, and car and driver upgrades make you quicker here.</p></div>
    <div class="panel grid" style="gap:10px"><h3>How it works</h3>
     <ul class="q-how"><li>At every corner a needle sweeps the brake bar. <b>Tap Space</b> (or the BRAKE button) when it is in the green zone. Gold in the middle is Perfect.</li>
@@ -5667,7 +5671,7 @@ function showCrewHQ(){ensureCrew();const el=$('#crewhq');$('#garage').innerHTML=
  const unlocked=RADIO_CALLS.filter(c=>c.lvl&&G.stats[c.stat]>=c.lvl).length,wages=CREW_ROLES.reduce((s,k)=>s+(G.crew[k].wage||0),0);
  const sw=crewUI.swap;
  el.innerHTML=`<div class="page-in">
-  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Crew HQ · season ${G.season||1} · before race ${G.raceIdx+1} of ${SEASON_LEN}</span><h2>Your crew</h2></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn primary" id="c-back">Back to garage</button></div></div>
+  <div class="row" style="justify-content:space-between"><div class="grid" style="gap:4px"><span class="eyebrow">Crew HQ · season ${G.season||1} · before race ${G.raceIdx+1} of ${seasonLen()}</span><h2>Your crew</h2></div><div class="row"><span class="money">${money(G.money)}</span><button class="btn primary" id="c-back">Back to garage</button></div></div>
   <div class="panel grid" style="gap:8px"><p>Crew calls are risky extra plays on the radio, separate from your cards and combos. A better crew offers them more often, lands them more and pays more, and levels 6 and 8 unlock bigger calls. Spending here instead of on driver coaching is a real way to race.</p>
    <div class="crewsum"><span>A call about every <b>${gap} s</b></span><span>Average call <b>${callAvg}%</b> to work</span><span>Big calls unlocked <b>${unlocked} of 6</b></span><span>Wages <b>${money(wages)}</b> a race</span></div></div>
   <div class="crew-staff">${CREW_ROLES.map(staffHTML).join('')}</div>
@@ -6196,4 +6200,214 @@ window.__gfdKart={KART,KART_CARDS,KART_BASE,kFairPenalty,kTrain};
 // (its update stays the one it had, plus the kart tick, so seeded stock car runs are unchanged)
 {const _gu=window.__gfd.update;Object.assign(window.__gfd,{update:dt=>{_gu(dt);kartTick(dt);},startRace,pitButton,isKart,linksTo,kartTick,KART,KART_BASE});}
 if(screen==='title'&&typeof document!=='undefined')renderTitle(); // the title was drawn before the kart series existed
+</script>
+<style id="late-css">
+.rung-tag{display:inline-block;background:#e9b52f;color:#1d1503;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:12px;padding:1px 6px;border-radius:3px;margin-right:6px;vertical-align:2px}
+.rung-tag.r1{background:#36c5ff;color:#05202e}.rung-tag.r3{background:#e5484d;color:#fff}
+.ladder{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.04em}
+.ladder span{color:var(--muted)}.ladder span.done{color:var(--green)}.ladder span.now{color:var(--ink)}.ladder i{color:var(--muted);font-style:normal}
+.offers{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.offer{display:grid;gap:8px;align-content:start}
+.offer.on{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset}
+.offer h3{margin:0}.offer .terms{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:13px}
+.offer .terms b{font-family:var(--mono,monospace)}
+.offer .neg{font-size:12px;line-height:1.35}
+.offer .neg .roll{font-family:var(--mono,monospace);font-weight:700}
+.offer ul{margin:0;padding-left:18px;font-size:13px;line-height:1.35}
+</style>
+<script id="late-js">
+/* ================= Late models and promotion (roadmap step 22) =================
+   The ladder: Karts (rung 1) → Late models (rung 2) → Stock cars (rung 3), in one save.
+   - New careers start in karts (board Q77). The title can still start straight in late models or stock cars.
+   - Late models race stock car cards and combos with pit stops and cautions (Q35: pit strategy unlocks here), on short
+     tracks: Cedar Bowl (a quarter-mile bullring), Millbrook (late model length) and Crossroads Figure-8, where the two
+     legs cross in the middle. Cars are closer to spec than a stock car (LATE.spec) and the deck is 11 to 15 cards.
+   - Season end: contract offers. Stay with your team, move to a better team in the same series, or step up a rung.
+     How many and how good depends on your final points position (OFFER_TIERS). Each offer can be negotiated once with
+     a d20 Negotiate check (Savvy), math shown, before you sign.
+   - A team switch keeps your driver (sheet, driver stats, money, collection, parts) and resets the car to the new
+     team's car and the crew to the new team's crew (perks and pit cards start over). A promotion out of karts also
+     turns kart cards into their stock car cousins (K2S) and grows the kart persona into its stock persona (ARCH.up).
+   - Rivals move up with you: same names, half their Grudge. */
+const LATE={spec:0.6,crossMe:0.45,crossAI:0.004,crossCd:14,crossWin:0.6};
+const SERIES={kart:{n:'Karts',one:'kart',rung:1,next:'late',sched:'kart',car:'kart',pay:150},late:{n:'Late models',one:'late model',rung:2,next:'stock',sched:'late',car:'late',pay:250},stock:{n:'Stock cars',one:'stock car',rung:3,next:null,sched:'mixed',car:'stock',pay:400}};
+CAR_TYPES.late={n:'Late model',min:11,max:15};
+const schedSeries=k=>(SCHED[k]||{}).series||'stock';
+const trackSeries=t=>t.kart?'kart':t.late?'late':'stock';
+const uiSeries=()=>(screen==='title'||!G)?schedSeries(titleSel.sched):(G.series||'stock');
+isKart=function(){if(race&&race.track)return !!race.track.kart;if(screen==='title'||!G)return schedSeries(titleSel.sched)==='kart';return G.series==='kart';};
+const isLate=()=>race&&race.track?!!race.track.late:uiSeries()==='late';
+
+/* ---------- late model tracks ---------- */
+{const mill=TRACKS.find(t=>t.id==='mill');
+ TRACKS.push(
+  {id:'cedar',late:1,name:'Cedar Bowl',short:'Cedar Bowl',type:'Bullring',len:'0.25 mi',laps:24,lapTime:16,S:0.6,R:0.72,draft:0.003,draftRange:0.3,draftBias:-0.9,wear:1.25,contact:1.5,passDiff:1.15,handlingW:1.7,
+   blurb:'A quarter-mile bowl. Everybody leans on everybody, tires go away fast, and the draft is nothing. Pass on the bumper.'},
+  Object.assign({},mill,{id:'milll',late:1,laps:22,_pg:undefined,
+   blurb:'The Millbrook half-mile at late model length. Flat, tight and rough on tires: one stop, and the restarts decide it.'}),
+  {id:'cross',late:1,fig8:1,aiWreckK:0.8,name:'Crossroads Figure-8',short:'Crossroads',type:'Figure-8',len:'0.4 mi',laps:21,lapTime:18,R:0.5,draft:0.005,draftRange:0.35,draftBias:-0.5,wear:1.1,contact:1.4,passDiff:1.1,handlingW:1.5,beatAt:[1],
+   path:[{s:1.2},{a:135,r:0.5},{s:2.697056},{a:-135,r:0.5},{s:1.2},{a:-135,r:0.5},{s:2.697056},{a:135,r:0.5}],
+   blurb:'Two loops that cross in the middle. Twice a lap you go through the crossover with the field coming the other way: time it, or get T-boned.'});}
+for(const t of TRACKS)if(t.path&&t.late)t.S=TG(t).S;
+Object.assign(BAL.lapBeats,{cedar:{pts:1,draw:2},milll:{pts:1,draw:2},cross:{pts:1,draw:2}});
+Object.assign(PIT.fuelRange,{cedar:14,milll:13,cross:12});
+Object.assign(TRACK_MIN,{cedar:{defend:2},milll:{defend:2},cross:{car:1}});
+Object.assign(QL.sweep,{cedar:1.5,milll:1.45,cross:1.45});
+SCHED.late={n:'Late model series',series:'late',ids:['cedar','milll','cross','cedar','milll','cross','cedar','milll']};
+// board Q82: shorter seasons low on the ladder (karts 6 races, late models 8, stock cars 10)
+SCHED.kart.ids=SCHED.kart.ids.slice(0,6);
+// sponsor goals that count races scale with the season: 6 of 10 races is 4 of 6
+for(const [k,base,txt] of [['beat6',6,n=>`Finish 3+ spots ahead of your expected spot in ${n} races`],['gain50',50,n=>`Gain ${n} spots over the season, start to finish`],['top10x4',4,n=>`${n} top-10 finishes`]]){const gl=SGOALS[k];if(!gl)continue;
+ Object.defineProperty(gl,'need',{get:()=>Math.max(1,Math.round(base*seasonLen()/SEASON_LEN)),configurable:true});Object.defineProperty(gl,'n',{get:()=>txt(gl.need),configurable:true});}
+
+/* ---------- the figure-8 ---------- */
+// the crossover is the middle of the two long legs (path pieces 2 and 6)
+function f8X(t){if(t._x)return t._x;const g=TG(t),a=i=>(g.segs[i].a0+g.segs[i].len/2)/g.P;return t._x=[a(2),a(6)];}
+function fig8Infield(t){const S=TG(t).S,i=-(TRACK_HW+0.07),o=-(TRACK_HW+0.5);return [tgProj(t,0.05,i),tgProj(t,S-0.05,i),tgProj(t,S-0.05,o),tgProj(t,0.05,o)];}
+// seconds until the car reaches the crossover, and on which leg
+function f8Next(t,car){const X=f8X(t),u=uOf(car.dist),a=uGap(t,u,X[0])*t.lapTime,b=uGap(t,u,X[1])*t.lapTime;return a<b?{leg:0,s:a}:{leg:1,s:b};}
+function crossHazard(){const m=meCar();if(TUT||m.dnf||race.hazard||race.phase!=='green')return;
+ race.hazard={until:race.t+BAL.hazardWin,uid:'hz'+Math.random().toString(36).slice(2),cross:1};
+ race.hand.push({id:'evade',uid:race.hazard.uid,special:1});if(race.sel==null)race.sel=race.hazard.uid;
+ race.stats.crossHz=(race.stats.crossHz||0)+1;
+ if(typeof document!=='undefined'&&!window.__gfdHeadless){flag('TRAFFIC AT THE CROSSOVER: EVADE','#e5484d','#fff',BAL.hazardWin);renderHand();renderGauges(true);}}
+function fig8Tick(){const r=race,t=r.track;if(!t.fig8||r.phase!=='green')return;
+ const L=r.cars.filter(c=>!c.dnf&&!c.pit&&!c.isPace).map(c=>({c,n:f8Next(t,c)}));
+ const m=L.find(x=>x.c.isMe);
+ // you: once per crossing, if a car on the other leg gets there within LATE.crossWin s of you
+ if(m&&BAL.hazard){const k=Math.floor(m.c.dist*2+0.5);if(m.n.s>0.6&&m.n.s<1.4&&r.f8k!==k&&r.t>=(r.f8cd||0)){r.f8k=k;
+   const hit=L.some(x=>x!==m&&x.n.leg!==m.n.leg&&Math.abs(x.n.s-m.n.s)<LATE.crossWin);r.stats.crossN=(r.stats.crossN||0)+1;if(hit)r.stats.crossC=(r.stats.crossC||0)+1;
+   if(hit&&Math.random()<LATE.crossMe){r.f8cd=r.t+LATE.crossCd;crossHazard();}}}
+ // AI against AI: a rare T-bone right at the crossover
+ for(const x of L){if(x.c.isMe||x.n.s>0.12)continue;const k=Math.floor(x.c.dist*2+0.5);if(x.c._f8k===k)continue;x.c._f8k=k;
+  const y=L.find(z=>z!==x&&!z.c.isMe&&z.n.leg!==x.n.leg&&Math.abs(z.n.s-x.n.s)<0.12);
+  if(y&&Math.random()<LATE.crossAI*BAL.aiWreck/0.2){r.stats.crossWr=(r.stats.crossWr||0)+1;wreck(x.c,y.c,'gets T-boned at the crossover');}}}
+{const _dd=drawPathDeco;drawPathDeco=function(t){_dd(t);if(!t.fig8)return;const g8=TG(t),X=f8X(t);
+  // the crossover: asphalt where the legs overlap and a painted X
+  const a=X[0]*g8.P,w=TRACK_HW*1.05,q=[tgProj(t,a-w,-TRACK_HW),tgProj(t,a+w,-TRACK_HW),tgProj(t,a+w,TRACK_HW),tgProj(t,a-w,TRACK_HW)];poly(q,PAL.asphalt);
+  g.strokeStyle='rgba(233,181,47,.6)';g.lineWidth=Math.max(1.5,race.camK*0.006);g.beginPath();g.moveTo(q[0][0],q[0][1]);g.lineTo(q[2][0],q[2][1]);g.moveTo(q[1][0],q[1][1]);g.lineTo(q[3][0],q[3][1]);g.stroke();};}
+
+/* ---------- late model race rules ---------- */
+// closer to spec than a stock car: car and driver stats move pace 60% as much
+{const _pm=paceMult;paceMult=function(car){const m=_pm(car),t=race.track;if(!t.late)return m;const s=car.stats,sp=1+(s.power-5)*0.0032+(s.handling-5)*0.0024*t.handlingW+(s.racecraft-5)*0.0012;return m/sp*(1+(sp-1)*LATE.spec);};}
+{const _up=update;update=function(dt){_up(dt);if(race&&race.track&&race.track.fig8)fig8Tick();};}
+{const _sr=startRace;startRace=function(){_sr.apply(this,arguments);const r=race;if(!r||!r.track.late)return;
+  r.ticker=r.ticker.map(s=>s.replace(/^Welcome to (.*?)\. (\d+) laps on the .*$/,(m,n,l)=>`Welcome to ${n}. ${l} laps of late model racing: one pit stop${r.track.fig8?', and the crossover twice a lap':''}.`));};}
+
+/* ---------- teams by series ---------- */
+const SERIES_TEAMS={
+ kart:['Velocity Kart Works','Brickyard Juniors','Tri-County Karting','Hotshoe Karts','Kingpin Kart Club','Rattlesnake Karts','Sawmill Kart Shop','Burnout Brothers','Gravel Lot Karting','Garage 77 Karting'],
+ late:['Delmar Late Models','Cobalt Speed Shop','Ironside Racing','Big Sky Late Models','Rusty Gate Motorsports','Bayou Bullring Racing','Two Rivers Racing','Mason-Dix Motorsports','Backstretch Garage','Lowline Late Models'],
+ stock:TEAMS.map(t=>t.name)};
+function applySeriesTeams(s){(SERIES_TEAMS[s]||SERIES_TEAMS.stock).forEach((n,i)=>{TEAMS[i].name=n;});}
+const myTeam=()=>G&&G.team!=null?G.team:TEAMS.findIndex(t=>t.player);
+const crewBase=r=>clamp(3+Math.floor((r-3)/2),2,8);
+// put your car in team ti's first seat; that team's driver takes your old seat
+function seatMe(ti){const m=me(),o=G.cars.find(c=>!c.isMe&&c.team===ti);if(o&&m.team!==ti){o.team=m.team;}m.team=ti;G.team=ti;}
+{const _nc=newCareer;newCareer=function(){const s=schedSeries(titleSel.sched),a=ARCH[titleSel.arch];applySeriesTeams(a.kart?'kart':s==='late'?'late':'stock');_nc.apply(this,arguments);
+  if(s==='late'&&!a.kart){G.series='late';G.carType='late';}
+  // a stock persona picked while the title showed the kart series (the harness does this) races the stock schedule
+  if(!a.kart&&s==='kart')G.sched='mixed';G.team=myTeam();G.ladder=[G.series];};}
+{const _rl=relinkG;relinkG=function(){_rl.apply(this,arguments);if(!G)return;applySeriesTeams(G.series);if(G.team==null)G.team=me().team;if(!G.ladder)G.ladder=[G.series];};}
+
+/* ---------- contract offers ---------- */
+// promotion offers by final points position: which team ratings come calling from the next series
+const OFFER_TIERS=[{max:3,up:[7,5,3]},{max:8,up:[5,3]},{max:14,up:[3]}];
+const K2S={k_tow:'tuck_in',k_push:'bump_draft',k_pullout:'side_draft',k_show:'dive_bomb',k_switch:'crossover',k_outside:'high_line',k_owninside:'high_line',k_latebrake:'send_it',k_door:'bump_run',k_cover:'block',k_smooth:'save_tires',k_limit:'push_limit',k_board:'spotter_focus'};
+const teamAt=(s,r)=>{let best=9,d=99;SERIES_TEAMS[s].forEach((n,i)=>{const q=Math.abs(TEAMS[i].r-r)+(i===9?0.1:0);if(q<d){d=q;best=i;}});return best;};
+const r100x=v=>Math.round(v/50)*50;
+function makeOffer(kind,s,ti,rk){const r=TEAMS[ti].r,pay=SERIES[s].pay*r*(kind==='stay'&&rk<=5?1.15:1);
+ return {kind,series:s,team:ti,name:SERIES_TEAMS[s][ti],r,per:r100x(pay),sign:kind==='stay'?0:r100x(pay*4),neg:null};}
+function rollOffers(rk){const s=G.series||'stock',cur=myTeam(),curR=TEAMS[cur].r,out=[makeOffer('stay',s,cur,rk)];
+ if(rk<=10){const want=Math.min(9,curR+(rk<=3?3:rk<=6?2:1)),ti=teamAt(s,want);if(TEAMS[ti].r>curR&&ti!==cur)out.push(makeOffer('move',s,ti,rk));}
+ const nx=SERIES[s].next,tier=OFFER_TIERS.find(o=>rk<=o.max);
+ if(nx&&tier){const used=new Set();for(const r of tier.up){const ti=teamAt(nx,r);if(used.has(ti))continue;used.add(ti);out.push(makeOffer('promote',nx,ti,rk));}}
+ return out;}
+{const _sw=seasonWrap;seasonWrap=function(rk){const out=_sw.apply(this,arguments);const P=G.past[G.past.length-1];if(P)P.series=G.series||'stock';
+  G.offers={rk,list:rollOffers(rk),pick:0};out.offers=G.offers;saveSeason();return out;};}
+// the d20 Negotiate check (Savvy), harder at better teams
+function negBuild(o){const d=G.drv,sc=d.attr.savvy,L=[{v:amod(sc),src:`Savvy ${sc}`}];if(d.prof.includes('negotiate'))L.push({v:DPROF,src:'Proficiency'});
+ const mod=L.reduce((a,l)=>a+l.v,0),dc=10+Math.floor(o.r/2)+(o.kind==='promote'?1:0);return {L,mod,dc,mode:'flat',odds:chkOdds(mod,dc,'flat')};}
+const NEG_FX={crit:[1.3,'Critical: +30% salary and signing bonus.'],succ:[1.15,'Success: +15% salary and signing bonus.'],mixed:[1,'Mixed: they hold firm. Same terms.'],fail:[0.9,'Failure: you push too hard. −10%.'],fumble:[0.8,'Fumble: you insult the owner. −20%.']};
+function negotiate(i){const o=G.offers.list[i];if(!o||o.neg)return;const b=negBuild(o),R=chkRoll(b),f=NEG_FX[R.tier];
+ o.neg={kept:R.kept,mod:b.mod,dc:b.dc,total:R.total,tier:R.tier,txt:f[1]};o.per=r100x(o.per*f[0]);o.sign=r100x(o.sign*f[0]);saveSeason();return o.neg;}
+function translateColl(arr){return arr.map(id=>CARDS[id]&&CARDS[id].kart?K2S[id]||'tuck_in':id);}
+function signOffer(i){const o=G.offers.list[i];if(!o)return;const from=G.series||'stock';
+ G.money+=o.sign;G.contract={per:o.per,clauses:[],team:o.team,series:o.series,since:{season:G.season||1,race:0}};
+ const lines=[];
+ if(o.kind!=='stay'){
+  const r=TEAMS[o.team].r;
+  if(o.kind==='promote'){
+   const oldRiv={};for(const id in (G.riv||{})){const c=G.cars[id];if(c&&c.rival)oldRiv[c.rival]=G.riv[id];}
+   const myCareer=me().career,wasArch=G.arch;
+   G.series=o.series;G.carType=SERIES[o.series].car;G.sched=SERIES[o.series].sched;(G.ladder=G.ladder||[from]).push(o.series);
+   if(ARCH[G.arch].kart&&ARCH[G.arch].up&&ARCH[ARCH[G.arch].up]){const up=ARCH[G.arch].up;G.arch=up;const rl=ARCH[up].relic;if(!G.relics.includes(rl))G.relics.push(rl);lines.push(`${ARCH[wasArch].n} grows into ${ARCH[up].n}.`);}
+   if(from==='kart'){const n=G.coll.filter(id=>CARDS[id].kart).length;G.coll=translateColl(G.coll);G.deck=translateColl(G.deck);lines.push(`Your ${n} kart cards became their late model cousins.`);
+    G.relics=G.relics.filter(k=>!RELICS[k].kart);for(const sl in G.equipped)if(G.equipped[sl]&&RELICS[G.equipped[sl]].kart)G.equipped[sl]=null;
+    const rl=ARCH[G.arch].relic;if(RELICS[rl]&&!G.equipped[RELICS[rl].slot])G.equipped[RELICS[rl].slot]=rl;}
+   G.trackDecks={};G.deckFor=null;
+   applySeriesTeams(o.series);const seat=TEAMS.findIndex(t=>t.player);G.team=seat;buildField();me().career=myCareer;
+   for(const id in G.riv){const c=G.cars[id],was=c&&oldRiv[c.rival];if(was){G.riv[id].g=Math.round(was.g*0.5*4)/4;G.riv[id].hist=was.hist||[];}}
+   if(Object.keys(oldRiv).length)lines.push('Your rivals moved up too, with half the Grudge.');
+  }
+  seatMe(o.team);
+  // the car is the new team's car; the crew is the new team's crew
+  const a=ARCH[G.arch],bo=a.bonus||{};for(const k of ['power','handling','aero'])G.stats[k]=clamp(r+(bo[k]||0),1,10);G.stats.durability=clamp(4+(bo.durability||0),1,10);
+  const cb=crewBase(r);for(const k of CREW_ROLES)G.stats[k]=cb;G.crew=newCrew();G.pitDeck=[...PIT_DECK0];
+  lines.unshift(`Car: power, handling and aero ${r}. Crew level ${cb}, new faces, perks and pit cards start over.`);
+ }
+ G.offers=null;G.notice=`${o.kind==='stay'?'Re-signed with':'Signed with'} ${o.name}${o.kind==='promote'?` · ${SERIES[o.series].n}`:''}. ${money(o.per)} a race${o.sign?` and ${money(o.sign)} to sign`:''}. ${lines.join(' ')}`;
+ saveSeason();return o;}
+
+/* ---------- the offers screen (after the season review) ---------- */
+function offerHTML(o,i,pick){const S=SERIES[o.series],cur=myTeam(),b=negBuild(o),od=b.odds,good=od.crit+od.succ,bad=od.fail+od.fumble,st=G.stats,cb=crewBase(o.r);
+ const what=o.kind==='stay'?['Same car, same crew, same series.']:[`New car: power, handling, aero ${o.r} (yours now ${st.power}/${st.handling}/${st.aero}).`,`New crew at level ${cb}: perks, traits and pit card upgrades start over.`,'You keep your driver, money, cards and parts.'];
+ if(o.kind==='promote'&&G.series==='kart')what.push('Kart cards turn into late model cards; your persona grows into its stock car self.');
+ if(o.kind==='promote')what.push(`New series: ${S.n}. ${o.series==='late'?'Pit stops and cautions, an 11 to 15 card deck.':'The full stock car schedule, 12 to 16 cards.'}`);
+ const neg=o.neg?`<div class="neg"><span class="roll">d20 ${o.neg.kept} ${sgn(o.neg.mod)} = ${o.neg.total} vs DC ${o.neg.dc}</span> · ${esc(o.neg.txt)}</div>`
+  :`<div class="neg muted">Negotiate: d20 ${b.L.map(l=>`${sgn(l.v)} ${esc(l.src)}`).join(' ')} vs DC ${b.dc}. Better terms ${pct(good)}, worse ${pct(bad)}.</div><button class="btn small" data-neg="${i}">Negotiate</button>`;
+ return `<div class="panel offer${pick===i?' on':''}" data-offer="${i}"><span class="eyebrow"><span class="rung-tag r${S.rung}">Rung ${S.rung} · ${S.n}</span>${o.kind==='stay'?'Stay':o.kind==='move'?'Better team':'Step up'}</span>
+  <h3>${esc(o.name)}</h3><div class="terms"><span>Team rating</span><b>${o.r}/10${o.kind!=='stay'&&o.series===G.series?` (yours ${TEAMS[cur].r})`:''}</b><span>Salary</span><b>${money(o.per)} a race</b><span>To sign</span><b>${money(o.sign)}</b></div>
+  <ul>${what.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>${neg}<button class="btn${pick===i?' primary':''}" data-pick="${i}">${pick===i?'Picked':'Pick this one'}</button></div>`;}
+function showOffers(){const el=$('#reward'),O=G.offers;if(!O){showGarage();return;}const s=G.series||'stock',S=SERIES[s],nx=S.next&&SERIES[S.next];
+ const ups=O.list.filter(o=>o.kind==='promote').length,pk=O.list[O.pick]||O.list[0];
+ el.innerHTML=`<div class="page-in"><span class="eyebrow">Season ${(G.season||2)-1} done · contract offers</span><h1>Where next?</h1>
+  ${ladderHTML()}
+  <p class="muted">You finished P${O.rk} in ${esc(S.one)} points. ${nx?(ups?`${ups} ${esc(nx.one)} team${ups>1?'s':''} want${ups>1?'':'s'} you.`:`No ${esc(nx.one)} team called: the top ${OFFER_TIERS[OFFER_TIERS.length-1].max} in points get a ${esc(nx.one)} offer.`):'You are at the top rung.'} Each offer can be negotiated once.</p>
+  <div class="offers">${O.list.map((o,i)=>offerHTML(o,i,O.pick)).join('')}</div>
+  <div class="row"><button class="btn primary" id="o-sign" style="font-size:18px">Sign with ${esc(pk.name)}</button><span class="muted" style="font-size:13px">Season ${G.season||2}${pk.series!==s?` in ${esc(SERIES[pk.series].n.toLowerCase())}`:''}.</span></div></div>`;
+ el.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{O.pick=+b.dataset.pick;saveSeason();showOffers();});
+ el.querySelectorAll('[data-neg]').forEach(b=>b.onclick=()=>{negotiate(+b.dataset.neg);showOffers();});
+ const sg=$('#o-sign');if(pk.kind==='promote')armTap(sg,'Tap again: '+esc(SERIES[pk.series].n.toLowerCase())+' it is',()=>{signOffer(O.pick);showGarage();});else sg.onclick=()=>{signOffer(O.pick);showGarage();};
+ showScreen('reward');el.scrollTop=0;}
+function ladderHTML(){const L=G?G.ladder||[G.series]:[],cur=G?G.series:uiSeries();
+ return `<div class="ladder">${['kart','late','stock'].map((k,i)=>`${i?'<i>→</i>':''}<span class="${k===cur?'now':L.includes(k)?'done':''}">${SERIES[k].n}</span>`).join('')}</div>`;}
+// the season review's "Start season N" goes through the offers first; a reload with offers pending comes back to them
+{const _se=showEnd;showEnd=function(dead){_se.apply(this,arguments);const nx=$('#e-next');if(!nx||!G||!G.offers)return;nx.textContent='See contract offers';nx.onclick=()=>showOffers();
+  const p=nx.parentNode.nextElementSibling;if(p&&p.tagName==='P')p.textContent=`Next: contract offers. Stay, move to a better team, or step up a rung. Money (${money(G.money)}), collection and parts come with you; the car and crew belong to the team.`;};}
+{const _sg=showGarage;showGarage=function(){if(G&&G.offers){showOffers();return;}_sg.apply(this,arguments);
+  const el=$('#garage .page-in');if(!el||el.querySelector('#g-ride'))return;const s=G.series||'stock',S=SERIES[s],ti=myTeam(),d=document.createElement('div');
+  d.className='panel grid';d.id='g-ride';d.style.gap='6px';
+  d.innerHTML=`<div class="row" style="justify-content:space-between"><span><span class="rung-tag r${S.rung}">Rung ${S.rung} · ${S.n}</span><b>${esc(TEAMS[ti].name)}</b> <span class="muted">· team rating ${TEAMS[ti].r}/10 · salary ${G.contract&&G.contract.per?money(G.contract.per)+' a race':'none'}</span></span>${ladderHTML()}</div><span class="muted" style="font-size:13px">${S.next?`Finish in the top ${OFFER_TIERS[OFFER_TIERS.length-1].max} in points for a ${esc(SERIES[S.next].one)} offer at season end (the top 3 get three).`:'The top rung. Better teams call when you finish in the top 10.'}</span>`;
+  el.insertBefore(d,el.children[1]||null);};}
+
+/* ---------- title: the ladder, karts first ---------- */
+titleSel.sched='kart';titleSel.arch='packrat';
+{const _rt=renderTitle;renderTitle=function(){const s=schedSeries(titleSel.sched);if(!!ARCH[titleSel.arch].kart!==(s==='kart'))titleSel.arch=Object.keys(ARCH).find(k=>!!ARCH[k].kart===(s==='kart'));_rt.apply(this,arguments);
+  const sp=$('#title .series-pick');if(sp){sp.innerHTML=`<span class="eyebrow">Start in</span>${[['kart','Karts · rung 1'],['late','Late models · rung 2'],['mixed','Stock cars · rung 3']].map(([k,n])=>`<button class="chip${schedSeries(k)===s?' on':''}" data-series="${k}" style="font-size:15px;padding:6px 14px">${n}</button>`).join('')}`;
+   sp.querySelectorAll('[data-series]').forEach(b=>b.onclick=()=>{const k=b.dataset.series;if(schedSeries(k)===s)return;titleSel.sched=k;titleSel.name=$('#t-name').value;titleSel.bg=null;renderTitle();});
+   if(!$('#title .ladder-note')){const p=document.createElement('p');p.className='muted ladder-note';p.style.fontSize='13px';p.innerHTML=`A career climbs <b>Karts → Late models → Stock cars</b> in one save. Finish high in points and better teams, then the next series, make you offers at season end. New careers start in karts.`;sp.parentNode.insertBefore(p,sp.nextSibling);}}
+  document.querySelectorAll('#title [data-sched]').forEach(b=>{b.hidden=schedSeries(b.dataset.sched)!==s;});
+  if(s==='late'){const h=$('#title .personas');if(h&&!$('#title .late-intro')){const p=document.createElement('p');p.className='muted late-intro';p.style.fontSize='13px';
+   p.innerHTML=`<span class="rung-tag">Rung 2 · Late models</span>Short tracks, a figure-8 and pit stops, with stock car cards and combos and an 11 to 15 card deck. The cars are closer together than stock cars, so the deck matters more than the car.`;h.parentNode.insertBefore(p,h);}}
+  {const c=$('#t-cont');const sv=c&&readSave();if(sv){const eb=c.closest('.panel').querySelector('.eyebrow');const ss=SERIES[sv.G.series||'stock'];if(eb&&ss&&!/·/.test(eb.textContent))eb.textContent+=` · ${ss.n} · season ${sv.G.season||1}`;}}
+  // the tutorial is a stock car race
+  const tt=$('#t-tut');if(tt&&!tt._late){tt._late=1;tt.addEventListener('click',()=>{if(schedSeries(titleSel.sched)==='late'){titleSel.sched='mixed';}},true);}};}
+{prTrackChips=function(sel){const cs=uiSeries(),ok=TRACKS.map((t,i)=>trackSeries(t)===cs?i:-1).filter(i=>i>=0);if(!ok.includes(sel))sel=ok[0];
+  return TRACKS.map((t,i)=>trackSeries(t)!==cs?'':`<button class="chip${sel===i?' on':''}" data-prt="${i}">${esc(t.name)} <span class="muted" style="font-size:12px">${esc(t.type)}</span></button>`).join('');};}
+{const _sp=startPractice;startPractice=function(ti,from){const cs=uiSeries();if(TRACKS[ti]&&trackSeries(TRACKS[ti])!==cs)ti=TRACKS.findIndex(t=>trackSeries(t)===cs);return _sp(ti,from);};}
+
+window.__gfdLate={LATE,SERIES,SERIES_TEAMS,OFFER_TIERS,K2S,rollOffers,signOffer,negotiate,negBuild,showOffers,applySeriesTeams,f8X,f8Next,fig8Tick,myTeam,crewBase};
+{const _gu=window.__gfd.update;Object.assign(window.__gfd,{update:dt=>{_gu(dt);if(race&&race.track&&race.track.fig8)fig8Tick();},startRace,newCareer,isKart,showGarage,showEnd,seasonWrap,TEAMS});}
+if(screen==='title'&&typeof document!=='undefined')renderTitle();
 </script>
