@@ -76,6 +76,20 @@ jobs:
           for t in carver ridge; do
             dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- hud $t 61 "$RUNNER_TEMP/frames/hud-$t.html" 9
           done
+      - name: Career loop (step 34 race, rewards, shop and the next race, through the menus, every race played with the mouse)
+        run: |
+          set -o pipefail
+          {
+            echo '### Career through the menus: stock cars (Drafter), 10 races'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- career 10 drafter 1
+            echo '```'
+            echo '### Karts (Brawler), 7 races (into season 2)'
+            echo '```'
+            dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- career 7 brawler 1
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          dotnet run --project sim/GreenFlag.Harness -c Release --no-build -- menus drafter 3 "$RUNNER_TEMP/frames/career-screens.html"
       - uses: actions/upload-artifact@v4
         with:
           name: race-view-frames

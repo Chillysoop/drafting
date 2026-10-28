@@ -29,7 +29,18 @@ namespace GreenFlag.Presentation
         UnityEngine.InputSystem.Controls.ButtonControl[] controls;
 #endif
 
+        PadInput target;
+        System.Action<PadStyle, PadButton, bool> toTarget;
+
         public void Read(PadInput pad, float dt)
+        {
+            target = pad;
+            toTarget ??= (style, b, down) => { target.Style = style; target.Press(b, down); };
+            Read(toTarget, dt);
+        }
+
+        /// <summary>The same reading for anything else that takes pad buttons (the career menus, step 34).</summary>
+        public void Read(System.Action<PadStyle, PadButton, bool> press, float dt)
         {
             ConfirmOrStart = false;
 #if GF_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM
@@ -54,8 +65,7 @@ namespace GreenFlag.Presentation
                 any = true;
                 if (PadMap.Of(style, (PadPhysical)i) is PadButton b)
                 {
-                    pad.Style = style;
-                    pad.Press(b, now[i]);
+                    press(style, b, now[i]);
                     if (now[i] && (b == PadButton.Confirm || b == PadButton.Pause)) ConfirmOrStart = true;
                 }
             }
@@ -64,7 +74,7 @@ namespace GreenFlag.Presentation
             PadButton? dir = null;
             for (int i = 0; i < 4; i++) if (now[i]) { dir = PadMap.Of(style, (PadPhysical)i); break; }
             if (dir == null) { var v = g.leftStick.ReadValue(); dir = PadRepeat.Dir(v.x, v.y); }
-            if (repeat.Step(dir, dt) is PadButton d) { pad.Style = style; pad.Press(d, true); any = true; }
+            if (repeat.Step(dir, dt) is PadButton d) { press(style, d, true); any = true; }
             if (any) LastStyle = style;
 #else
             Connected = false;
