@@ -35,6 +35,7 @@ namespace GreenFlag.Sim
                 if (car.Trait == Trait.Closer && Leader.Dist > Track.Laps * 0.8) read += 10;
                 if (car.Trait == Trait.Restarter && T - LastGreenAt < 12) read += 15;
                 if (a.Trait == Trait.Wall) read -= 10;
+                read += KartAi(car, a);
                 // defending makes a pass harder, but should not make the attacker more likely to crash
                 double def = 0;
                 if (a.HasEffect(EffectKind.Block)) def += 35;
@@ -50,7 +51,11 @@ namespace GreenFlag.Sim
                 double trackK = Bal.TrackWreck && Track.AiWreckK.HasValue ? Track.AiWreckK.Value : 1;
                 if (raw < cfT && Rng.NextDouble() < Bal.AiWreck * trackK)
                     Wreck(car, Rng.NextDouble() < (a.IsMe ? 0.3 : 0.5) ? a : null, "gets loose making a move");
-                else if (roll < 30) { Slow(car, 0.25); Emit(RaceEventKind.AutoLift, car, a); }
+                else if (roll < 30)
+                {
+                    Slow(car, 0.25);
+                    if (!KartBumped(car, a)) Emit(RaceEventKind.AutoLift, car, a);
+                }
                 else if (roll < 55) Emit(RaceEventKind.AutoAlongside, car, a);   // side by side for a moment: presentation only
                 else
                 {
@@ -66,11 +71,49 @@ namespace GreenFlag.Sim
                 {
                     BlockFor(car, 8);
                     Emit(RaceEventKind.Block, car, b);
+                    KartCoverFor(car, b);
                     return;
                 }
             }
             if (a != null && g < Track.DraftRange) { AddPace(car, 1.012, 6); car.Tires = Math.Max(5, car.Tires - 1.5); }
             else if (car.Tires < 55) WearFx(car, 0.7, 15);
+        }
+
+        bool KartFieldOn => Track.Kart && Bal.KartField;
+        /// <summary>How often the kart field bumped you and covered the inside from you this race.</summary>
+        public int KartBumps, KartCovers;
+
+        /// <summary>
+        /// Step 40, the kart field's styles on a pass: train rats (Drafter) slingshot out of a train, late brakers (Closer) dive
+        /// at the hairpins, rookies get flustered by a kart covering the inside.
+        /// </summary>
+        double KartAi(RaceCar car, RaceCar a)
+        {
+            if (!KartFieldOn) return 0;
+            double r = 0;
+            if (car.Trait == Trait.Drafter && KartTrain(car) >= 1) r += 8;
+            if (car.Trait == Trait.Closer && Shape.SpotOf(car.Dist).Kind == TurnKind.Hairpin) r += 8;
+            if (car.Trait == Trait.Rookie && Covering(a)) r -= 6;
+            return r;
+        }
+
+        /// <summary>A bumper's (Aggressive) stalled move ends with a shove on the kart ahead. On you it pushes your fairing in.</summary>
+        bool KartBumped(RaceCar car, RaceCar a)
+        {
+            if (!KartFieldOn || car.Trait != Trait.Aggressive || car.IsMe || Rng.NextDouble() >= Bal.KartBump) return false;
+            Slow(a, 0.15);
+            if (a.IsMe) { AddFairing(1); KartBumps++; }
+            Emit(RaceEventKind.KartBump, car, a);
+            return true;
+        }
+
+        /// <summary>A kart that blocks you covers the inside too, so Switchback and Around the Outside read better against it.</summary>
+        void KartCoverFor(RaceCar car, RaceCar b)
+        {
+            if (!KartFieldOn || !b.IsMe) return;
+            car.CoverUntil = Math.Max(car.CoverUntil, T + Bal.KartCover);
+            KartCovers++;
+            Emit(RaceEventKind.KartCover, car, b);
         }
 
         /// <summary>AI cars feel the shape of a road course: they pass in the hairpins and get stuck in the esses.</summary>

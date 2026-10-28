@@ -104,6 +104,8 @@ namespace GreenFlag.Sim
             ["ridge"] = new[] { (CardFamily.Car, 2) },
             ["pinek"] = new[] { (CardFamily.Pass, 2) },
             ["hollow"] = new[] { (CardFamily.Draft, 1) },
+            ["bramble"] = new[] { (CardFamily.Pass, 3) },
+            ["lake"] = new[] { (CardFamily.Draft, 2) },
             ["cedar"] = new[] { (CardFamily.Defend, 2) },
             ["milll"] = new[] { (CardFamily.Defend, 2) },
             ["cross"] = new[] { (CardFamily.Car, 1) },
@@ -117,9 +119,10 @@ namespace GreenFlag.Sim
             return 0;
         }
 
-        /// <summary>The season calendar for a series: karts 6 races, late models 8, stock cars 10 on mixed shapes (board Q35, Q82).</summary>
+        /// <summary>The season calendar for a series: karts 6 races, late models 8, stock cars 10 on mixed shapes (board Q35, Q82).
+        /// Karts (step 40) visit all four kart circuits: Pinewood opens, the two new ones run twice, the finale is at Lakeshore.</summary>
         public static IReadOnlyList<string> Calendar(Series s) =>
-            s == Series.Kart ? new[] { "pinek", "hollow", "pinek", "hollow", "pinek", "hollow" }
+            s == Series.Kart ? new[] { "pinek", "bramble", "hollow", "lake", "bramble", "lake" }
             : s == Series.Late ? new[] { "cedar", "milll", "cross", "cedar", "milll", "cross", "cedar", "milll" }
             : new[] { "mill", "pine", "carver", "ridge", "talon", "mill", "pine", "carver", "ridge", "mill" };
 

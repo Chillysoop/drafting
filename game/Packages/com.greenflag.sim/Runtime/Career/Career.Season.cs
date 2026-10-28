@@ -243,6 +243,7 @@ namespace GreenFlag.Sim
             Review = rv;
             Season++;
             RaceIdx = 0;
+            Cal = null;
             Pts.Clear();
             foreach (var e in Field) e.SeasonWins = 0;
             Objectives = null; Qual = null; QualRunning = false;
@@ -265,6 +266,7 @@ namespace GreenFlag.Sim
             {
                 Series = o.Series;
                 Ladder.Add(o.Series);
+                Cal = null;
                 var up = SeasonRules.PersonaUp(Persona);
                 if (from == Series.Kart && up != null)
                 {

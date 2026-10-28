@@ -125,7 +125,10 @@ namespace GreenFlag.Sim
         public Difficulty Difficulty => Difficulty.For(Diff);
         public CarStats Car => Base.Car;
         public bool Kart => Series == Series.Kart;
-        public IReadOnlyList<string> Calendar => CareerRules.Calendar(Series);
+        /// <summary>This season's calendar once a save has fixed it (step 40, save format 5); null = the series' calendar in this build.
+        /// A season that is under way keeps the tracks it started with when a later build changes the calendar.</summary>
+        public List<string> Cal;
+        public IReadOnlyList<string> Calendar => (IReadOnlyList<string>)Cal ?? CareerRules.Calendar(Series);
         public int SeasonLength => Calendar.Count;
         public TrackDef NextTrack => Tracks.ById(Calendar[RaceIdx % Calendar.Count]);
         public double PayMul => CareerRules.PayMul(Difficulty, Info, Stakes, Series);
@@ -189,7 +192,8 @@ namespace GreenFlag.Sim
         {
             var l = Base.Clone();
             l.Deck = new List<string>(Deck);
-            l.Parts = Equipped.Values.Where(x => x != null).ToList();
+            // slot order, as the save writes them: a reloaded career must fit its parts in the same order (step 40 fix)
+            l.Parts = Enum.GetValues(typeof(PartSlot)).Cast<PartSlot>().Select(EquippedIn).Where(x => x != null).ToList();
             l.Tune = Tune.Clone();
             l.Grit = Driver.Score(DAttr.Grit);
             l.Wits = Driver.Score(DAttr.Wits);

@@ -62,6 +62,7 @@ namespace GreenFlag.Sim
                 j.Set("offers", a);
             }
             j.Set("ladder", JsonValue.Of(Ladder.Select(x => x.ToString())));
+            j.Set("calendar", JsonValue.Of(Calendar));
             if (Qual == null) j.Set("qual", JsonValue.Null);
             else
             {
@@ -109,6 +110,8 @@ namespace GreenFlag.Sim
                 Kind = o["kind"].Enum(OfferKind.Stay), Series = o["series"].Enum(Series.Stock), Team = o["team"].Int(), Name = o["name"].Str(""), Rating = o["rating"].Int(), Per = o["per"].Int(), Sign = o["sign"].Int(), Neg = NegFrom(o["neg"]),
             }).ToList();
             Ladder = j["ladder"].Strings().Select(x => JsonValue.Of(x).Enum(Series.Stock)).ToList();
+            Cal = j["calendar"].Strings();
+            foreach (var id in Cal) Tracks.ById(id);
             var q = j["qual"];
             Qual = q.IsNull ? null : new QualiResult
             {
@@ -125,6 +128,26 @@ namespace GreenFlag.Sim
         /// from its seed with its own generator, so the career's rolls don't move), no points yet this season, the smallest
         /// team's contract with no salary, and no sponsor: the garage offers sponsors, and you sign one before the next race.
         /// </summary>
+        /// <summary>The kart calendar before step 40: Pinewood and Hollow Creek, three times each.</summary>
+        public static readonly IReadOnlyList<string> KartCalendarV4 = new[] { "pinek", "hollow", "pinek", "hollow", "pinek", "hollow" };
+
+        /// <summary>
+        /// Save format 4 to 5 (step 40): the season's calendar goes in the save. A kart season that already ran a race keeps the
+        /// old two-track calendar until it ends; one that hasn't started gets the new four-circuit one. A kart field's
+        /// Restarters (karts have no restarts) become Rookies, as step 40's field builder rolls them.
+        /// </summary>
+        public static JsonValue MigrateV4(JsonValue c)
+        {
+            var series = c["series"].Enum(Series.Stock);
+            int season = c["season"].Int(1);
+            bool started = c["raceIdx"].Int() > 0 || c["results"].Items.Any(r => r["season"].Int() == season);
+            c.Set("calendar", JsonValue.Of(series == Series.Kart && started ? KartCalendarV4 : CareerRules.Calendar(series)));
+            if (series == Series.Kart)
+                foreach (var e in c["field"].Items)
+                    if (e["trait"].Str() == nameof(Trait.Restarter)) e.Set("trait", nameof(Trait.Rookie));
+            return c;
+        }
+
         public static JsonValue MigrateV1(JsonValue c)
         {
             var series = c["series"].Enum(Series.Stock);

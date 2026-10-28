@@ -56,6 +56,12 @@ namespace GreenFlag.Harness
             rs.PitPolicy = style == "none" ? PitPolicy.Chief : PitPolicy.Bot;
             var r = new Race(rs);
             setup?.Invoke(r);
+            return (r, Drive(r, style));
+        }
+
+        /// <summary>Plays a race that is already set up (a career's, say) to the flag with one of the styles.</summary>
+        public static RaceRow Drive(Race r, string style)
+        {
             var row = new RaceRow();
             var bal = r.Bal;
             string pol = style == "human" || style == "human2" ? "smart" : style;
@@ -182,7 +188,7 @@ namespace GreenFlag.Harness
             row.cautions = res.Cautions; row.tlive = s.TossLive; row.rref = s.RiskRefills; row.fgain = s.FocusGain; row.rep = s.Repassed; row.push = s.PushBack;
             row.calls = s.Calls; row.cwon = s.CallsWon;
             row.odds = oddsN > 0 ? oddsSum / oddsN : 0;
-            return (r, row);
+            return row;
         }
 
         /// <summary>The browser harness's want(): the playable card with the best success chance, if the style would play it.</summary>

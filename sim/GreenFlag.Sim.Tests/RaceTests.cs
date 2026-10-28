@@ -62,7 +62,7 @@ namespace GreenFlag.Sim.Tests
         [Theory]
         [InlineData("carver", 61u, "9d777f1247127974")]
         [InlineData("mill", 62u, "f59b5524e24a079e")]
-        [InlineData("hollow", 63u, "ebafe2e96243c7c8")]
+        [InlineData("hollow", 63u, "0f56cd0a7c9947e5")] // step 40: the kart field (Bal.KartField) moved it
         [InlineData("cross", 64u, "2df1d989010d6652")]
         public void GoldenSeeds(string track, uint seed, string fingerprint)
         {

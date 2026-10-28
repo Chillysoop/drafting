@@ -64,6 +64,13 @@ namespace GreenFlag.Sim
     {
         static readonly string[] Names = { "Diego Reyes", "Tobi Okafor", "Erik Lindqvist", "Cal Bram", "Marco Castellano", "Jace Whitaker", "Ren Nakamura", "Luc Dubois", "Wade Haskins", "Remy Moreau", "Ivan Petrov", "Femi Adeyemi", "Shane Sullivan", "Kasey Kowalski", "Bruno Ferreira", "Kenta Tanaka", "Rory McAllister", "Liam Brennan", "Ana Ruiz" };
         static readonly Trait[] TraitPool = { Trait.Aggressive, Trait.Smooth, Trait.Wall, Trait.Drafter, Trait.Closer, Trait.Rookie, Trait.Veteran, Trait.Restarter };
+        /// <summary>Step 40: karts have no restarts, so a kart field has more rookies instead (same pool size, same rolls).</summary>
+        static readonly Trait[] KartPool = { Trait.Aggressive, Trait.Smooth, Trait.Wall, Trait.Drafter, Trait.Closer, Trait.Rookie, Trait.Veteran, Trait.Rookie };
+
+        /// <summary>What each AI style is called in a kart field (step 40), for screens and the booth.</summary>
+        public static string KartStyle(Trait t) =>
+            t == Trait.Aggressive ? "Bumper" : t == Trait.Smooth ? "Tidy" : t == Trait.Wall ? "Blocker" : t == Trait.Drafter ? "Train rat"
+            : t == Trait.Closer ? "Late braker" : t == Trait.Rookie ? "Rookie" : t == Trait.Veteran ? "Old hand" : "";
 
         public static List<Entrant> Build(SimRng rng, Series series, CarStats myStats, string myName = "Rookie")
         {
@@ -93,7 +100,7 @@ namespace GreenFlag.Sim
                         e.Number = nums[ni++];
                         e.Name = names[names.Count - 1];
                         names.RemoveAt(names.Count - 1);
-                        e.Trait = rng.Pick(TraitPool);
+                        e.Trait = rng.Pick(series == Series.Kart ? KartPool : TraitPool);
                         e.Stats = new CarStats { Power = R(t.Rating), Handling = R(t.Rating), Aero = R(t.Rating), Durability = R(5), Racecraft = R(d), Defense = R(d), Consistency = R(d), TireMgmt = R(d) };
                     }
                     cars.Add(e);

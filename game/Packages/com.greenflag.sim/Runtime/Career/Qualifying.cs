@@ -85,7 +85,8 @@ namespace GreenFlag.Sim
             {
                 case "carver": return 1.4;
                 case "talon": return 1.2;
-                case "pine": case "ridge": case "pinek": case "cedar": return 1.5;
+                case "pine": case "ridge": case "pinek": case "cedar": case "bramble": return 1.5;
+                case "lake": return 1.35;
                 default: return 1.45;
             }
         }

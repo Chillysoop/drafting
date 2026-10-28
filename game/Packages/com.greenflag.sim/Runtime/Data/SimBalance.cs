@@ -35,6 +35,10 @@ namespace GreenFlag.Sim
         // KART and LATE: how much car and driver stats move pace, as a share of a stock car
         public double KartSpec = 0.35;
         public double LateSpec = 0.6;
+        /// <summary>Step 40: kart AI styles (train rats slingshot out of the tow, late brakers dive at hairpins, bumpers push your
+        /// fairing in, blockers cover the inside). Off = the browser slice's kart field, for comparing with it.</summary>
+        public bool KartField = true;
+        public double KartBump = 0.35, KartCover = 6;
         public double LateCrossMe = 0.45, LateCrossAi = 0.004, LateCrossCd = 14, LateCrossWin = 0.6;
 
         // BAL: cards, beats, combos and Focus (only used when the race has a card layer, RaceSetup.Loadout)
