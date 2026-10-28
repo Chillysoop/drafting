@@ -26,8 +26,8 @@ namespace GreenFlag.Harness
     ///   smart   instant bot: plays Evade or Reel Them In at once, else the best card at 65%+ with under 5% wreck
     ///   spam    instant bot: always plays the best card
     ///   human   smart's rules with human timing: looks every 2.5 s, reacts in 1.5 s (0.15 s of race time in slow-mo while
-    ///           Focus lasts), Evade after 2 s (0.2 s in slow-mo), tosses dead cards at each draw beat and tosses a weak card
-    ///           (under 55%) when its toss effect is live
+    ///           Focus lasts), Evade after 2 s (0.2 s in slow-mo); at each draw beat the race pauses, so it tosses dead cards,
+    ///           tosses a weak card (under 55%) when its toss effect is live and plays its pick at once
     ///   human2  human, but tosses only dead or under 40% cards
     ///   bold    human timing, plays 50%+ with under 8% wreck
     ///   hspam   human timing, always plays the best card, never tosses for effect
@@ -39,6 +39,9 @@ namespace GreenFlag.Harness
         public static readonly string[] Styles = { "none", "smart", "spam", "human", "human2", "bold", "hspam" };
         public static bool IsStyle(string p) => Array.IndexOf(Styles, p) >= 0;
         static bool Human(string p) => p == "human" || p == "human2" || p == "bold" || p == "hspam";
+
+        /// <summary>The slice pauses at each draw beat (BAL.beatPause defaults to true and the engine preset keeps it).</summary>
+        public const bool BeatPause = true;
 
         sealed class Pending { public int Uid; public double At; public bool Hazard; }
 
@@ -124,6 +127,14 @@ namespace GreenFlag.Harness
                     if (xs.Count > 0 && r.Hand.Count >= 2) { r.TossCard(xs[0].Uid); row.tfx++; }
                 }
                 if (beatNow) TossNow();
+                // the slice pauses the race at every draw beat (BAL.beatPause), so a human picks there with no reaction time
+                if (beatNow && BeatPause && r.Phase == RacePhase.Green)
+                {
+                    row.beats++;
+                    var pk = Want(r, c, pol);
+                    if (pk.h != null) { Play(pk.h, pk.o); pend = null; }
+                    continue;
+                }
                 if (pend != null && hz == null && pend.Hazard) pend = null;
                 if (pend != null)
                 {

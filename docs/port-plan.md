@@ -77,7 +77,7 @@ One HTML file, about 4,200 lines and 300 functions. The parts that matter for th
 25. Unity 6.3 LTS (6000.3.27f1) project in `game/` with URP, Git LFS, UnityYAMLMerge, and GameCI building a Windows player nightly. Built Oct 28 (see `docs/unity-setup.md`): the project rebuilds its URP asset and boot scene from scripts, `SimRng` is ported and tested against the slice, and `sim.yml` runs `dotnet test`. Waits on Conner for the Unity licence secrets and opening the project once.
 26. `com.greenflag.sim` package and the `sim/` solution. Port tracks, field, pace, tires, fuel, pit road and cautions. A headless race runs in CI and gives the same order from the same seed every time. Built Oct 28 (see `docs/sim.md`): all ten slice tracks, the field, AI moves, wrecks and damage zones, the caution sequence with lucky dog and wave-around, pit road and fuel windows, kart and figure-8 rules. `sim.yml` runs every track twice per seed and fails on any difference.
 27. Cards, odds, outcomes, combos, Heat, beats, Focus, personas and tunes as data plus card classes.
-28. C# balance harness matching the slice within half a place.
+28. C# balance harness matching the slice within half a place. Built Oct 28 (see `docs/parity.md`): the browser harness's seven play styles run in C#, and `sim.yml` checks every style against a 7,000-race browser baseline on every PR.
 29 to 36. Race view, motion, hand UI, controller, radio lane, rewards and garage, saves, then the engine feel check.
 
 ## Open questions

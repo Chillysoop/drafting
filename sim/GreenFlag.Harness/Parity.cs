@@ -38,9 +38,11 @@ namespace GreenFlag.Harness
             System.Threading.Tasks.Parallel.ForEach(cells, c =>
             {
                 double fin = 0, start = 0, dnf = 0, pl = 0, su = 0, stops = 0, pf = 0;
+                // fixed seeds, different for every persona and track (the same for every style, so styles compare on the same grids)
+                uint seed0 = 5000u + (uint)c.Track * 1000u + (uint)c.Persona.Sum(ch => ch) * 10000u;
                 for (int i = 0; i < n; i++)
                 {
-                    var (_, r) = Bots.Run(Tracks.All[c.Track], 5000 + (uint)i, c.Style, c.Persona);
+                    var (_, r) = Bots.Run(Tracks.All[c.Track], seed0 + (uint)i, c.Style, c.Persona);
                     fin += r.f; start += r.s; dnf += r.dnf; pl += r.pl; su += r.su; stops += r.stops; pf += r.perfect;
                 }
                 c.Cn = n; c.CFin = fin / n; c.CStart = start / n; c.CDnf = dnf / n; c.CPlays = pl / n; c.CLanded = pl > 0 ? su / pl : 0; c.CPerfect = stops > 0 ? pf / stops : 0;

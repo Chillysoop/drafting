@@ -76,16 +76,6 @@ dotnet run --project sim/GreenFlag.Harness -c Release -- race carver 61 smart bu
 
 Harness policies: `none` (no cards, Bot stops), `hands` (holds a hand, never plays), `smart` (plays the best card at 65% or better with under 5% wreck chance, Evade at once), `spam` (plays the best card whatever the odds).
 
-## First comparison with the browser slice
+## Parity with the browser slice
 
-Drafter persona, Normal, engine preset. Slice: `sim-harness-v9.js`, 15 races per track. C#: `batch 40 <track> smart drafter`.
-
-| Track | Policy | Finish vs expected, slice | C# | Plays per race, slice | C# | Landed, slice | C# | Perfect stops, slice | C# |
-|---|---|---|---|---|---|---|---|---|---|
-| Millbrook | smart | +6.8 | +4.3 | 24 | 20 | 76% | 75% | 82% | 55% |
-| Carver | smart | +5.8 | +8.8 | 39 | 40 | 78% | 83% | 75% | 50% |
-| Talon Ridge | smart | +10.5 | +11.6 | 59 | 61 | 82% | 85% | 67% | 58% |
-| all three | none | −1.0 to −1.9 | about 0 | | | | | | |
-| all three | spam | 67 to 100% DNF | 65 to 85% DNF | | | | | | |
-
-Plays per race and landed rates match closely, so the cards, odds and beats line up. The finish gap (2 to 3 places either way) comes mostly from the bot: the C# smart bot is a simpler rule than the slice harness's, and 15 races is a small sample. The C# Bot pit release lands in the window less often. Step 28 turns this into a proper parity check with the same bot on both sides.
+Step 27's first comparison was 2 to 3 places off. Step 28 found why (a slice bug that made every pit card roll a critical success, and the personas' missing driver Grit) and now checks every play style against the slice on every PR: see [parity.md](parity.md).
