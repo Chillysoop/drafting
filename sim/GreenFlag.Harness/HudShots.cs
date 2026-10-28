@@ -21,7 +21,7 @@ namespace GreenFlag.Harness
         public static int Mouse(string tracks, int n, string persona, uint seed0)
         {
             var list = tracks == "all" ? Tracks.All.ToList() : tracks.Split(',').Select(Tracks.ById).ToList();
-            Console.WriteLine("track   seed  fin exp start  plays drag click hold toss beats stops perfect  focus-out  real-min  ms");
+            Console.WriteLine("track   seed  fin exp start  plays drag click hold toss beats stops perfect  calls won  focus-out  real-min  ms");
             int bad = 0;
             foreach (var t in list)
                 for (int i = 0; i < n; i++)
@@ -31,7 +31,7 @@ namespace GreenFlag.Harness
                     var (desk, bot) = MousePlayer.Run(t, seed, persona);
                     var r = desk.Race; var res = r.Result();
                     if (!r.Done) bad++;
-                    Console.WriteLine($"{t.Id,-7}{seed,5} {(res.MyDnf ? "DNF" : "P" + res.MyFinish),4} {res.MyExpected,3} {res.MyStart,5}  {desk.Plays,5} {bot.Drags,4} {bot.Clicks,5} {bot.Holds,4} {desk.Tosses,4} {desk.BeatStops,5} {r.CardStats.PitStops,5} {r.CardStats.Perfect,7}  {r.CardStats.Plays,9}  {desk.Clock / 60,8:F1} {sw.ElapsedMilliseconds,5}");
+                    Console.WriteLine($"{t.Id,-7}{seed,5} {(res.MyDnf ? "DNF" : "P" + res.MyFinish),4} {res.MyExpected,3} {res.MyStart,5}  {desk.Plays,5} {bot.Drags,4} {bot.Clicks,5} {bot.Holds,4} {desk.Tosses,4} {desk.BeatStops,5} {r.CardStats.PitStops,5} {r.CardStats.Perfect,7}  {r.CardStats.Calls,5} {r.CardStats.CallsWon,3}  {r.CardStats.Plays,9}  {desk.Clock / 60,8:F1} {sw.ElapsedMilliseconds,5}");
                 }
             return bad == 0 ? 0 : 1;
         }
@@ -41,7 +41,7 @@ namespace GreenFlag.Harness
         {
             var list = tracks == "all" ? Tracks.All.ToList() : tracks.Split(',').Select(Tracks.ById).ToList();
             var st = (PadStyle)Enum.Parse(typeof(PadStyle), style, true);
-            Console.WriteLine("track   seed  fin exp start  plays  tap hold toss beats stops perfect  moves presses lost  real-min  ms");
+            Console.WriteLine("track   seed  fin exp start  plays  tap hold toss beats stops perfect  calls won  moves presses lost  real-min  ms");
             int bad = 0;
             foreach (var t in list)
                 for (int i = 0; i < n; i++)
@@ -51,7 +51,7 @@ namespace GreenFlag.Harness
                     var (desk, bot) = PadPlayer.Run(t, seed, persona, style: st);
                     var r = desk.Race; var res = r.Result();
                     if (!r.Done || bot.Lost > 0) bad++;
-                    Console.WriteLine($"{t.Id,-7}{seed,5} {(res.MyDnf ? "DNF" : "P" + res.MyFinish),4} {res.MyExpected,3} {res.MyStart,5}  {desk.Plays,5} {bot.Taps,4} {bot.Holds,4} {desk.Tosses,4} {desk.BeatStops,5} {r.CardStats.PitStops,5} {r.CardStats.Perfect,7}  {bot.Moves,5} {bot.Moves + bot.Taps * 2 + bot.Tosses + bot.PitPresses + bot.Resumes,7} {bot.Lost,4}  {desk.Clock / 60,8:F1} {sw.ElapsedMilliseconds,5}");
+                    Console.WriteLine($"{t.Id,-7}{seed,5} {(res.MyDnf ? "DNF" : "P" + res.MyFinish),4} {res.MyExpected,3} {res.MyStart,5}  {desk.Plays,5} {bot.Taps,4} {bot.Holds,4} {desk.Tosses,4} {desk.BeatStops,5} {r.CardStats.PitStops,5} {r.CardStats.Perfect,7}  {r.CardStats.Calls,5} {r.CardStats.CallsWon,3}  {bot.Moves,5} {bot.Moves + bot.Taps * 2 + bot.Tosses + bot.PitPresses + bot.Resumes + bot.CallShoulders + bot.CallWalks,7} {bot.Lost,4}  {desk.Clock / 60,8:F1} {sw.ElapsedMilliseconds,5}");
                 }
             return bad == 0 ? 0 : 1;
         }
@@ -77,11 +77,14 @@ namespace GreenFlag.Harness
                 ("Pit stop: planning the stop", () => desk.Race.Holding && desk.PlanT > 0.5),
                 ("Pit stop: waiting to drop the jack", () => ro.Pit.Stop == PitGamePhase.Work && ro.Pit.Elapsed > ro.Pit.Total * 0.6),
                 ("Caution: your pit call", () => ro.Pit.Caution && !ro.Pit.CallLocked),
+                ("Radio: a risky crew call", () => ro.Radio.Risky),
+                ("Radio: advice", () => ro.Radio.Advice),
+                ("Radio: the crew chief's pit call", () => ro.Radio.PitCall && desk.Race.Phase == RacePhase.Green),
             };
             var got = new HashSet<string>();
             var sb = new StringBuilder();
-            sb.Append("<!doctype html><meta charset=utf-8><title>Hand and beats HUD</title><style>body{background:#05070c;color:#dfe6f3;font:14px system-ui;margin:16px}figure{margin:0 0 24px}figcaption{margin:4px 0 6px;font-weight:600}svg{width:100%;max-width:1600px;height:auto;border-radius:6px}</style>");
-            sb.Append($"<h2>{t.Name}, seed {seed}: the step 31 HUD at 1920x1080, played by the mouse player</h2>");
+            sb.Append("<!doctype html><meta charset=utf-8><title>Race HUD</title><style>body{background:#05070c;color:#dfe6f3;font:14px system-ui;margin:16px}figure{margin:0 0 24px}figcaption{margin:4px 0 6px;font-weight:600}svg{width:100%;max-width:1600px;height:auto;border-radius:6px}</style>");
+            sb.Append($"<h2>{t.Name}, seed {seed}: the race HUD (steps 31-33) at 1920x1080, played by the mouse player</h2>");
             int shots = 0;
             for (int f = 0; f < 400000 && !desk.Race.Done && shots < n; f++)
             {
@@ -127,15 +130,15 @@ namespace GreenFlag.Harness
                 sb.Append($"<rect x='{F(b.X)}' y='{F(b.Y)}' width='{F(b.W)}' height='{F(b.H)}' fill='{fill}' fill-opacity='{op.ToString("F2", CultureInfo.InvariantCulture)}'{(stroke != null ? $" stroke='{stroke}' stroke-width='{F(sw)}'" : "")}/>");
             void Text(double x, double y, string t, string col, double size, string anchor = "start", string weight = "400") =>
                 sb.Append($"<text x='{F(x)}' y='{F(y)}' fill='{col}' font-size='{F(size * s)}' text-anchor='{anchor}' font-weight='{weight}'>{Esc(t)}</text>");
-            void Wrap(double x, double y, double w, string text, int max)
+            void Wrap(double x, double y, double w, string text, int max, string col = "#9aa3b5")
             {
                 var line = ""; int n = 0;
                 foreach (var w0 in (text ?? "").Split(' '))
                 {
-                    if ((line + " " + w0).Length * 5.6 * s > w && line.Length > 0) { if (n++ >= max) return; Text(x, y, line.Trim(), "#9aa3b5", 10); y += 12 * s; line = ""; }
+                    if ((line + " " + w0).Length * 5.6 * s > w && line.Length > 0) { if (n++ >= max) return; Text(x, y, line.Trim(), col, 10); y += 12 * s; line = ""; }
                     line += " " + w0;
                 }
-                if (n < max && line.Trim().Length > 0) Text(x, y, line.Trim(), "#9aa3b5", 10);
+                if (n < max && line.Trim().Length > 0) Text(x, y, line.Trim(), col, 10);
             }
             void Panel(Box b, string title)
             {
@@ -361,6 +364,29 @@ namespace GreenFlag.Harness
                 Panel(L.PauseBox, null);
                 Text(L.PauseBox.CX, L.PauseBox.Y + 40 * s, d.BeatPaused ? "DRAW" : "PAUSED", d.BeatPaused ? "#e9b52f" : "#fff", 30, "middle", "800");
                 Text(L.PauseBox.CX, L.PauseBox.Y + 72 * s, d.BeatPaused ? "Plan your next move. Play a card, hold Space, or press P to go green." : "P resumes.", "#9aa3b5", 12, "middle");
+            }
+            // the radio lane (step 33)
+            var rr = ro.Radio;
+            if (rr.Show)
+            {
+                var R = L.Radio;
+                Rect(R, rr.Advice || rr.PitCall ? "#dfe6f3" : "#e9b52f", null, 1, 0.97);
+                Text(R.X + 12 * s, R.Y + 22 * s, "RADIO · " + rr.Who.ToUpperInvariant(), "#241a00", 12, "start", "800");
+                Text(R.Right - 12 * s, R.Y + 22 * s, rr.Tag.ToUpperInvariant() + (rr.Wits != null ? " · " + rr.Wits : "") + (rr.Left != null ? " · " + rr.Left : ""), "#241a00", 12, "end", "800");
+                Text(R.X + 12 * s, R.Y + 48 * s, rr.Line, "#241a00", 15, "start", "500");
+                foreach (var (hit, box, label) in L.RadioBoxes)
+                {
+                    bool take = hit.Kind == HitKind.RadioTake;
+                    Rect(box, take ? "#241a00" : "none", "#241a00", 1);
+                    Text(box.CX, box.CY + 5 * s, label + (take ? " (Y)" : " (N)"), take ? "#e9b52f" : "#241a00", 12, "middle", "800");
+                }
+                if (rr.Risky)
+                {
+                    var last = L.RadioBoxes[L.RadioBoxes.Count - 1].box;
+                    Wrap(last.Right + 10 * s, R.Y + 72 * s, R.Right - last.Right - 22 * s, $"{rr.Win} / risk: {rr.Risk.ToLowerInvariant()}", 2, "#241a00");
+                    Text(R.X + 12 * s, R.Y + 110 * s, rr.Crew, "#241a00cc", 10);
+                }
+                if (rr.Frac > 0) sb.Append($"<rect x='{F(R.X)}' y='{F(R.Bottom - 4 * s)}' width='{F(R.W * rr.Frac)}' height='{F(4 * s)}' fill='#241a00'/>");
             }
             if (d.Toast is Toast to)
             {

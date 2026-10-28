@@ -60,7 +60,7 @@ The plan timer (`PgPlanSec`) is UI time. The sim simply waits while you plan.
 
 ## Not in the sim yet
 
-- Radio and crew calls (side bets above the hand): step 33.
+- Radio and crew calls (side bets above the hand): step 33, see [radio.md](radio.md).
 - Rivals' Grudge, payback and rival objectives: step 37.
 - The plan timer, drag-to-play, slow-mo pacing and the odds display: the UI, steps 29 to 31. `SlowMo(realSeconds, cardSelected)` gives the game the time scale and drains Focus.
 

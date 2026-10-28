@@ -40,6 +40,9 @@ every 0.11 s).
 - When the car stops in its stall, the focus jumps to the pit stop hand and stays there until the stop is done: walk the pit
   cards and press A to put each in or take it out, or go down to the crew chief's plan and GO. While the crew works, A drops the
   jack (RELEASE is the only thing to focus). Afterwards the focus goes back to the hand.
+- Crew calls (step 33): while a call is on the radio, the right shoulder tries it and the left shoulder turns it down (they sort
+  and filter again once the radio is quiet), and the radio lane's two buttons are in the focus ring. On the keyboard, Y tries the
+  call and N turns it down. See [radio.md](radio.md) (board Q110).
 - At a draw beat the race waits, as with the mouse: A twice plays a card and goes green, the trigger aims and goes green while
   you hold, Menu goes green without playing.
 

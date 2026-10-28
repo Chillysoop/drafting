@@ -21,7 +21,8 @@ namespace GreenFlag.Harness
 
     /// <summary>
     /// The browser harness's play styles, move for move (sim-harness-v10.js runRace). Every tick: the race moves 0.05 s, then
-    /// the bot presses PIT on the plan lap, calls cautions by tires and damage, and plays (or tosses) cards.
+    /// the bot presses PIT on the plan lap, takes crew calls at 55%+ (all but none), calls cautions by tires and damage, and plays
+    /// (or tosses) cards.
     ///   none    hands-off: holds a hand, never plays, never presses PIT, the crew chief runs the stops and caution calls
     ///   smart   instant bot: plays Evade or Reel Them In at once, else the best card at 65%+ with under 5% wreck
     ///   spam    instant bot: always plays the best card
@@ -42,6 +43,9 @@ namespace GreenFlag.Harness
 
         /// <summary>The slice pauses at each draw beat (BAL.beatPause defaults to true and the engine preset keeps it).</summary>
         public const bool BeatPause = true;
+
+        /// <summary>The lowest call chance the bots take (the browser harness's bal.callMin, default 55).</summary>
+        public static int CallMin = 55;
 
         sealed class Pending { public int Uid; public double At; public bool Hazard; }
 
@@ -84,6 +88,8 @@ namespace GreenFlag.Harness
                     var pl = r.MyPlan;
                     if (pl != null && r.LapOf(me) >= pl.Value.Lap) r.PressPit();
                 }
+                // crew calls: every style but hands-off takes a risky call at CallMin% or better and lets the rest time out
+                if (style != "none" && r.Radio != null && r.Radio.Kind == RadioKind.Mech && r.Radio.Chance >= CallMin) r.TakeCall();
                 var c = r.Ctx();
                 if (r.HazardCard != null && hzSeen != r.HazardCard.Uid) { hzSeen = r.HazardCard.Uid; row.hz++; }
                 if (ticks % 20 == 0 && r.Phase == RacePhase.Green)
@@ -174,6 +180,7 @@ namespace GreenFlag.Harness
             row.stops = s.PitStops; row.perfect = s.Perfect; row.setups = s.Setups; row.pk = s.Packages;
             double st = 0; foreach (var x in s.StopTimes) st += x; row.stopT = st / Math.Max(1, s.StopTimes.Count);
             row.cautions = res.Cautions; row.tlive = s.TossLive; row.rref = s.RiskRefills; row.fgain = s.FocusGain; row.rep = s.Repassed; row.push = s.PushBack;
+            row.calls = s.Calls; row.cwon = s.CallsWon;
             row.odds = oddsN > 0 ? oddsSum / oddsN : 0;
             return (r, row);
         }

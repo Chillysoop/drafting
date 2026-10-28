@@ -25,9 +25,9 @@ namespace GreenFlag.View
         Pause,
         /// <summary>View / −: odds on or off.</summary>
         Odds,
-        /// <summary>Left shoulder: next sort (Best odds, Safest, Family).</summary>
+        /// <summary>Left shoulder: next sort (Best odds, Safest, Family). While a crew call is on the radio: No thanks.</summary>
         Sort,
-        /// <summary>Right shoulder: next family filter (All, then each family in hand).</summary>
+        /// <summary>Right shoulder: next family filter (All, then each family in hand). While a risky crew call is on the radio: Try it.</summary>
         Filter,
     }
 
@@ -223,6 +223,7 @@ namespace GreenFlag.View
             foreach (var (u, b) in lay.CardBoxes) items.Add((new Hit(HitKind.Card, u), new Box(b.X, lay.Hand.Y, b.W, b.H)));
             foreach (var (h, b, _) in lay.ChipBoxes) items.Add((h, b));
             foreach (var (h, b, _) in lay.PitBoxes) items.Add((h, b));
+            foreach (var (h, b, _) in lay.RadioBoxes) items.Add((h, b));
             return items;
         }
 
@@ -291,6 +292,9 @@ namespace GreenFlag.View
                 case PadButton.Pit: desk.PressPit(); break;
                 case PadButton.Pause: desk.TogglePause(); break;
                 case PadButton.Odds: desk.ToggleOdds(); break;
+                // a crew call lasts seconds, so the shoulders answer it while it is up instead of walking the focus there
+                case PadButton.Sort when desk.Race.Radio != null: desk.PassCall(); break;
+                case PadButton.Filter when desk.RiskyCall: desk.TakeCall(); break;
                 case PadButton.Sort: desk.SetSort((HandSort)(((int)desk.Sort + 1) % 3)); break;
                 case PadButton.Filter:
                 {
@@ -390,14 +394,29 @@ namespace GreenFlag.View
                     string label = null;
                     foreach (var (h, _, lb) in lay.ChipBoxes) if (h.Kind == f.Kind && h.Arg == f.Arg) label = lb;
                     foreach (var (h, _, lb) in lay.PitBoxes) if (h.Kind == f.Kind && h.Arg == f.Arg) label = lb;
+                    foreach (var (h, _, lb) in lay.RadioBoxes) if (h.Kind == f.Kind && h.Arg == f.Arg) label = lb;
                     Add(PadButton.Confirm, label ?? "Select");
                     break;
             }
             if (d.Race.Selected != null || d.Aim != null) Add(PadButton.Back, d.Aim != null ? "Cancel" : "Put down");
             Add(PadButton.Pit, "PIT");
             Add(PadButton.Pause, d.BeatPaused ? "Go green" : d.Driver.Paused ? "Resume" : "Pause");
-            Add(PadButton.Sort, "Sort");
-            Add(PadButton.Filter, "Filter");
+            var radio = d.Race.Radio;
+            if (radio != null && st == PadStyle.Keyboard)
+            {
+                if (d.RiskyCall) l.Add(("Y", $"Try the call ({radio.Chance}%)"));
+                l.Add(("N", d.RiskyCall ? "No thanks" : "Got it"));
+            }
+            else if (radio != null)
+            {
+                if (d.RiskyCall) Add(PadButton.Filter, $"Try the call ({radio.Chance}%)");
+                Add(PadButton.Sort, d.RiskyCall ? "No thanks" : "Got it");
+            }
+            else
+            {
+                Add(PadButton.Sort, "Sort");
+                Add(PadButton.Filter, "Filter");
+            }
             return l;
         }
     }

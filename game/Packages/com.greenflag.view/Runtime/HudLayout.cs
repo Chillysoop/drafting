@@ -8,6 +8,7 @@ namespace GreenFlag.View
     {
         None, Card, Sort, Family, AllFamilies, FadeRisk, PlayButton, TossBin, Pause,
         PitButton, Strategy, CautionCall, PitCard, PitAuto, PitGo, PitRelease,
+        RadioTake, RadioPass,
     }
 
     /// <summary>What is under the pointer: a kind and its argument (card uid, sort, family, pit card index, pit service...).</summary>
@@ -30,6 +31,9 @@ namespace GreenFlag.View
     {
         public double W, H, S;
         public Box Dash, Gauge, PlayButton, Clock, PitDock, PitButton, Hand, Chips, Console, FocusBar, ComboBar, TossBin, Tiles, Booth, Toast, PitStop, PauseBox;
+        /// <summary>The radio lane, just above the console (zero height when the radio is quiet), and its two buttons.</summary>
+        public Box Radio;
+        public readonly List<(Hit hit, Box box, string label)> RadioBoxes = new List<(Hit, Box, string)>();
         /// <summary>Let go of a dragged card above this line to play it.</summary>
         public double PlayLine;
         public double CardW, CardH;
@@ -63,7 +67,9 @@ namespace GreenFlag.View
             FocusBar = new Box(Console.X + 6 * s, Console.Y + 6 * s, cw * 0.38, Console.H - 12 * s);
             ComboBar = new Box(FocusBar.Right + 10 * s, Console.Y + 6 * s, TossBin.X - FocusBar.Right - 20 * s, Console.H - 12 * s);
             Tiles = new Box(Console.X, Console.Y - 30 * s, cw, 26 * s);
-            Booth = new Box(Console.X, Tiles.Y - 6 * s - 92 * s, Math.Min(cw, 560 * s), 92 * s);
+            LayRadio(ro.Radio, hx, hw);
+            double over = ro.Radio.Show ? Radio.Y : Tiles.Y;
+            Booth = new Box(Console.X, over - 6 * s - 92 * s, Math.Min(cw, 560 * s), 92 * s);
             Toast = new Box(hx + (hw - Math.Min(hw, 520 * s)) / 2, Booth.Y - 70 * s, Math.Min(hw, 520 * s), 58 * s);
             PitStop = new Box(hx + (hw - Math.Min(hw, 820 * s)) / 2, Console.Y - 290 * s, Math.Min(hw, 820 * s), 280 * s);
             PauseBox = new Box((w - 460 * s) / 2, h * 0.3, 460 * s, 96 * s);
@@ -77,6 +83,23 @@ namespace GreenFlag.View
 
         /// <summary>Lays out again at the same size after the hand changed mid-frame (a controller press played a card).</summary>
         public void Relayout(PlayDesk d) { if (last != null) Update(W, H, d, last); }
+
+        /// <summary>The slice puts the radio just above the hand, in the main field of view (Conner, Oct 27): a risky call has
+        /// its two buttons, advice one, the pit call none (the pit module has the buttons).</summary>
+        void LayRadio(RadioReadout rr, double hx, double hw)
+        {
+            RadioBoxes.Clear();
+            double s = S, rw = Math.Min(hw, 560 * s), rh = !rr.Show ? 0 : rr.Risky ? 128 * s : rr.Advice ? 92 * s : 70 * s;
+            Radio = new Box(hx + (hw - rw) / 2, Tiles.Y - 6 * s - rh, rw, rh);
+            if (!rr.Show || rr.PitCall) return;
+            double by = Radio.Y + 62 * s, bh = 28 * s;
+            if (rr.Risky)
+            {
+                RadioBoxes.Add((new Hit(HitKind.RadioTake), new Box(Radio.X + 12 * s, by, 200 * s, bh), rr.TakeLabel));
+                RadioBoxes.Add((new Hit(HitKind.RadioPass), new Box(Radio.X + 20 * s + 200 * s, by, 110 * s, bh), rr.PassLabel));
+            }
+            else RadioBoxes.Add((new Hit(HitKind.RadioPass), new Box(Radio.X + 12 * s, by, 90 * s, bh), rr.PassLabel));
+        }
 
         void LayCards(PlayDesk d)
         {
@@ -170,6 +193,7 @@ namespace GreenFlag.View
         {
             foreach (var (hit, b, _) in StopBoxes) if (b.Contains(x, y)) return hit;
             if (d.Race.Holding && PitStop.Contains(x, y)) return new Hit(HitKind.None);
+            foreach (var (hit, b, _) in RadioBoxes) if (b.Contains(x, y)) return hit;
             foreach (var (hit, b, _) in PitBoxes) if (b.Contains(x, y)) return hit;
             if (PlayButton.Contains(x, y)) return new Hit(HitKind.PlayButton);
             if (TossBin.Contains(x, y)) return new Hit(HitKind.TossBin);
@@ -181,7 +205,7 @@ namespace GreenFlag.View
         }
     }
 
-    public enum HudKey { Space, Shift, Escape, Pause, Odds, Pit, Release, Digit }
+    public enum HudKey { Space, Shift, Escape, Pause, Odds, Pit, Release, Digit, RadioTake, RadioPass }
 
     /// <summary>
     /// Turns pointer and key events into PlayDesk calls, through the layout's hit test. The Unity HUD forwards the engine's
@@ -225,6 +249,8 @@ namespace GreenFlag.View
                 case HitKind.PitAuto: desk.PitAuto(); break;
                 case HitKind.PitGo: desk.PitGo(); break;
                 case HitKind.PitRelease: desk.PitRelease(); break;
+                case HitKind.RadioTake: desk.TakeCall(); break;
+                case HitKind.RadioPass: desk.PassCall(); break;
             }
         }
 
@@ -249,7 +275,8 @@ namespace GreenFlag.View
             if (desk.Aim != null) { aimMouse = false; desk.AimEnd(true); }
         }
 
-        /// <summary>Space hold-to-play (Shift held cancels the release), Esc, P pause, O odds, B pit, R release, 1-9 cards.</summary>
+        /// <summary>Space hold-to-play (Shift held cancels the release), Esc, P pause, O odds, B pit, R release, 1-9 cards, Y / N
+        /// answer the radio.</summary>
         public void Key(HudKey k, bool down, bool shift = false, int digit = 0)
         {
             switch (k)
@@ -271,6 +298,8 @@ namespace GreenFlag.View
                 case HudKey.Pit: if (down) desk.PressPit(); break;
                 case HudKey.Release: if (down) desk.PitRelease(); break;
                 case HudKey.Digit: if (down) desk.Key(digit); break;
+                case HudKey.RadioTake: if (down) desk.TakeCall(); break;
+                case HudKey.RadioPass: if (down) desk.PassCall(); break;
             }
         }
     }

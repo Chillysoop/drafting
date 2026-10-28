@@ -121,6 +121,13 @@ namespace GreenFlag.View
             foreach (var e in Race.Events) { OnEvent(e); Motion.OnEvent(e); EventHook?.Invoke(e); }
         }
 
+        /// <summary>Hands on the events a call between ticks raised (answering the radio), from index <paramref name="from"/> of
+        /// Race.Events. The next tick clears them, so nothing is delivered twice.</summary>
+        public void Deliver(int from)
+        {
+            for (int i = from; i < Race.Events.Count; i++) { var e = Race.Events[i]; OnEvent(e); Motion.OnEvent(e); EventHook?.Invoke(e); }
+        }
+
         static readonly Rgb Green = Rgb.Hex("#2fb36a"), Yellow = Rgb.Hex("#e9b52f"), White = Rgb.Hex("#ffffff"), Black = Rgb.Hex("#000000"), Ink = Rgb.Hex("#0b0f18");
 
         void OnEvent(RaceEvent e)
@@ -157,6 +164,10 @@ namespace GreenFlag.View
                 case RaceEventKind.LuckyDog: return car != null ? Label(car) + " gets the free pass" : null;
                 case RaceEventKind.PitPenalty: return car != null ? Label(car) + ": pit road penalty" : null;
                 case RaceEventKind.OutOfFuel: return car != null ? Label(car) + " is out of fuel" : null;
+                // the slice's commentate on acceptRadio
+                case RaceEventKind.RadioAnswered:
+                    var who = RadioCalls.Get(e.Card).Who;
+                    return e.Tier == (int)Tier.Success ? who + " call works." : e.Tier == (int)Tier.Neutral ? who + " call goes wrong. The spotter bailed you out: no harm done." : who + " call goes wrong.";
                 case RaceEventKind.Checkered:
                     var lead = Race.Leader;
                     return lead.IsMe ? "You win it!" : Label(lead) + " takes the checkered flag";

@@ -7,7 +7,7 @@ namespace GreenFlag.View
     /// <summary>
     /// Plays a race with nothing but controller buttons, through PadInput, the way the mouse player does with a pointer: it
     /// walks the focus to a card with the d-pad, picks it and presses A again to play it or holds the right trigger, tosses
-    /// weak cards with X at draw beats, presses Y on the plan lap, presses Menu to leave a draw beat, and in the stall walks to
+    /// weak cards with X at draw beats, takes crew calls at 55%+ (right shoulder, or the focus on Try it), presses Y on the plan lap, presses Menu to leave a draw beat, and in the stall walks to
     /// the crew chief's plan and GO and drops the jack with A. The card rules are the mouse player's (the harness's human
     /// style). Tests and the harness use it to prove a race is fully playable on a controller.
     /// </summary>
@@ -25,6 +25,10 @@ namespace GreenFlag.View
         /// <summary>Gestures made: pick-then-play with A, holds of the trigger, tosses, pit presses, Menu presses to leave a
         /// draw beat, and focus moves.</summary>
         public int Taps, Holds, Tosses, PitPresses, Resumes, Moves;
+        /// <summary>Crew calls taken with the right shoulder, and by walking the focus to Try it.</summary>
+        public int CallShoulders, CallWalks;
+        /// <summary>The lowest crew call chance it takes (the harness's callMin).</summary>
+        public int CallMin = 55;
         /// <summary>Walks to a control that never got the focus (should stay 0).</summary>
         public int Lost;
         public double MinOdds = 0.65, MaxWreck = 0.05;
@@ -110,6 +114,20 @@ namespace GreenFlag.View
             if (r.Phase == RacePhase.Green && r.Me.Pit == null && !p.Requested && p.Show && r.MyPlan is PitPlan plan && r.LapOf(r.Me) >= plan.Lap)
             {
                 Tap(PadButton.Pit); PitPresses++;
+                Wait(2);
+                return;
+            }
+
+            // the radio: take a crew call at CallMin% or better, alternately with the right shoulder and by walking to Try it
+            if (ro.Radio.Risky && ro.Radio.Chance >= CallMin)
+            {
+                if ((CallShoulders + CallWalks) % 2 == 0) { Tap(PadButton.Filter); CallShoulders++; }
+                else
+                {
+                    WalkTo(HitKind.RadioTake);
+                    Do(() => { if (pad.Focus.Kind == HitKind.RadioTake) { pad.Press(PadButton.Confirm, true); pad.Press(PadButton.Confirm, false); } });
+                    CallWalks++;
+                }
                 Wait(2);
                 return;
             }

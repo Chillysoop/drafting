@@ -96,7 +96,7 @@ CI prints the mouse races in the run summary and uploads the HUD pictures with t
 - The red or green card edge leaves out the field strength odds changer, which is on every stock card and would paint the whole
   hand red.
 - Controller and keyboard-only play is step 32 (see [controller.md](controller.md)). The radio lane (engineer, spotter and crew
-  calls) comes in step 33, the reward and garage screens in step 34. The slice's first-lap tutorial and keyword tooltips are not ported yet.
+  calls) is step 33 (see [radio.md](radio.md)), the reward and garage screens in step 34. The slice's first-lap tutorial and keyword tooltips are not ported yet.
 
 ## Not checked yet
 

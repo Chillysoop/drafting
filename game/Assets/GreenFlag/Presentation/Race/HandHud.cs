@@ -135,6 +135,7 @@ namespace GreenFlag.Presentation
             Console(desk, ro, lay);
             Chips(desk, lay);
             Hand(desk, lay);
+            Radio(ro.Radio, lay);
             if (ro.Pit.Stop != null && (ro.Pit.Stop != PitGamePhase.Done || ro.Pit.Result != null)) PitStop(ro.Pit, lay);
             Pause(desk, lay);
             ToastBox(desk, lay);
@@ -191,6 +192,9 @@ namespace GreenFlag.Presentation
                         case KeyCode.P: inp.Key(HudKey.Pause, down); e.Use(); break;
                         case KeyCode.O: inp.Key(HudKey.Odds, down); e.Use(); break;
                         case KeyCode.B: inp.Key(HudKey.Pit, down); e.Use(); break;
+                        // the slice answers the radio with A / X; here A is autoplay and X tosses, so Y tries the call and N turns it down
+                        case KeyCode.Y: inp.Key(HudKey.RadioTake, down); e.Use(); break;
+                        case KeyCode.N: inp.Key(HudKey.RadioPass, down); e.Use(); break;
                         default:
                             if (e.keyCode >= KeyCode.Alpha1 && e.keyCode <= KeyCode.Alpha9) { inp.Key(HudKey.Digit, down, false, e.keyCode - KeyCode.Alpha0); e.Use(); }
                             break;
@@ -635,6 +639,39 @@ namespace GreenFlag.Presentation
                     Text(b, "RELEASE", bigC, Color.white);
                 }
             }
+        }
+
+        // ------------------------------------------------------------------ the radio lane
+
+        static readonly Color AmberBox = new Color(0.91f, 0.71f, 0.18f, 0.97f), AdviceBox = new Color(0.875f, 0.9f, 0.953f, 0.97f), RadioInk = new Color(0.14f, 0.1f, 0f);
+
+        /// <summary>The slice's amber radio box just above the hand: who's talking, the call, Try it / No thanks with the odds,
+        /// what it pays and costs, the crew level, and the countdown. Advice is pale blue; the pit call has no buttons.</summary>
+        void Radio(RadioReadout rr, HudLayout lay)
+        {
+            if (!rr.Show) return;
+            float s = sc;
+            var r = R(lay.Radio);
+            Fill(r, rr.Advice || rr.PitCall ? AdviceBox : AmberBox);
+            float x = r.x + 12 * s, w = r.width - 24 * s;
+            Text(new Rect(x, r.y + 8 * s, w, 18 * s), "RADIO · " + rr.Who.ToUpperInvariant(), small, RadioInk);
+            Text(new Rect(x, r.y + 8 * s, w, 18 * s), rr.Tag.ToUpperInvariant() + (rr.Wits != null ? " · " + rr.Wits : "") + (rr.Left != null ? " · " + rr.Left : ""), txtR, RadioInk);
+            Text(new Rect(x, r.y + 30 * s, w, 26 * s), rr.Line, txt, RadioInk);
+            foreach (var (hit, box, label) in lay.RadioBoxes)
+            {
+                var b = R(box);
+                bool take = hit.Kind == HitKind.RadioTake;
+                Fill(b, take ? RadioInk : new Color(0, 0, 0, 0));
+                Outline(b, RadioInk, 1);
+                Text(b, label + (take ? " (Y)" : " (N)"), smallC, take ? Gold : RadioInk);
+            }
+            if (rr.Risky)
+            {
+                var last = lay.RadioBoxes[lay.RadioBoxes.Count - 1].box;
+                Text(new Rect((float)last.Right + 10 * s, r.y + 60 * s, r.xMax - (float)last.Right - 22 * s, 32 * s), $"{rr.Win} / risk: {rr.Risk.ToLowerInvariant()}", wrap, RadioInk);
+                Text(new Rect(x, r.y + 96 * s, w, 16 * s), rr.Crew, tiny, A(RadioInk, 0.8f));
+            }
+            if (rr.Frac > 0) Fill(new Rect(r.x, r.yMax - 4 * s, r.width * (float)rr.Frac, 4 * s), RadioInk);
         }
 
         // ------------------------------------------------------------------ pauses and toasts

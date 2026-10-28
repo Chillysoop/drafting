@@ -1,6 +1,6 @@
 # The race sim (roadmap step 26)
 
-`game/Packages/com.greenflag.sim/Runtime/` is the race, as plain C# with no engine reference. The same files compile into the Unity game and into `sim/GreenFlag.Sim` for CI. It is a port of the slice's race loop (`update`, `autoMove`, pit road and cautions in `prototype/green-flag-deck.html`, slice v47) with the same rules and numbers. Step 27 added the card layer and the pit stop mini-game on top: see [cards.md](cards.md). Radio and crew calls come in step 33.
+`game/Packages/com.greenflag.sim/Runtime/` is the race, as plain C# with no engine reference. The same files compile into the Unity game and into `sim/GreenFlag.Sim` for CI. It is a port of the slice's race loop (`update`, `autoMove`, pit road and cautions in `prototype/green-flag-deck.html`, slice v47) with the same rules and numbers. Step 27 added the card layer and the pit stop mini-game on top: see [cards.md](cards.md). Step 33 added crew radio calls: see [radio.md](radio.md).
 
 ## How a race runs
 
@@ -48,7 +48,7 @@ The effect methods cards will call: `AddPace`, `Slow`, `WearFx`, `BlockFor`, `Ho
 ## Not in the sim yet
 
 - Cards, odds, combos, beats, Focus, kart tow and the pit stop mini-game are in since step 27 ([cards.md](cards.md)). Without a loadout, your stops still use the crew chief's stop time.
-- Radio and crew calls: step 33.
+- Radio and crew calls: step 33 ([radio.md](radio.md)).
 - Rivals' Grudge, payback and blocking: step 37 (career).
 - Practice mode: after step 36.
 - Visual-only rolls (side-by-side moments, wiggles, spin direction, smoke) are not in the sim at all. They belong to the presentation's own random generator.

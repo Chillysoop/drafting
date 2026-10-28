@@ -41,7 +41,7 @@ namespace GreenFlag.Sim
         {
             if (Phase != RacePhase.Green) return;
             if (Track.Kart) { pendingCautionAt = -1; return; }
-            if (CardsOn) CardsCaution();
+            if (CardsOn) { CardsCaution(); RadioCaution(); }
             Phase = RacePhase.Caution; PhaseT = 0; Cautions++; PitBonus = 0;
             CautionInit(reason);
             Emit(RaceEventKind.Caution, null, null, reason);
