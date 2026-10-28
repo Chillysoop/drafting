@@ -109,6 +109,8 @@ namespace GreenFlag.Sim
             ["cedar"] = new[] { (CardFamily.Defend, 2) },
             ["milll"] = new[] { (CardFamily.Defend, 2) },
             ["cross"] = new[] { (CardFamily.Car, 1) },
+            ["gran"] = new[] { (CardFamily.Car, 2) },
+            ["ridgel"] = new[] { (CardFamily.Car, 2) },
         };
 
         public static IReadOnlyList<(CardFamily f, int n)> TrackMin(TrackDef t) => trackMin.TryGetValue(t.Id, out var m) ? m : Array.Empty<(CardFamily, int)>();
@@ -120,10 +122,12 @@ namespace GreenFlag.Sim
         }
 
         /// <summary>The season calendar for a series: karts 6 races, late models 8, stock cars 10 on mixed shapes (board Q35, Q82).
-        /// Karts (step 40) visit all four kart circuits: Pinewood opens, the two new ones run twice, the finale is at Lakeshore.</summary>
+        /// Karts (step 40) visit all four kart circuits: Pinewood opens, the two new ones run twice, the finale is at Lakeshore.
+        /// Late models (step 41) are mostly short ovals (Cedar Bowl, Millbrook, Granite Falls twice each) plus the figure-8 and the
+        /// Ridgeback road course; the finale is the tire race at Granite Falls.</summary>
         public static IReadOnlyList<string> Calendar(Series s) =>
             s == Series.Kart ? new[] { "pinek", "bramble", "hollow", "lake", "bramble", "lake" }
-            : s == Series.Late ? new[] { "cedar", "milll", "cross", "cedar", "milll", "cross", "cedar", "milll" }
+            : s == Series.Late ? new[] { "cedar", "gran", "milll", "cross", "cedar", "ridgel", "milll", "gran" }
             : new[] { "mill", "pine", "carver", "ridge", "talon", "mill", "pine", "carver", "ridge", "mill" };
 
         public static readonly IReadOnlyList<ShopStat> Shop = new[]

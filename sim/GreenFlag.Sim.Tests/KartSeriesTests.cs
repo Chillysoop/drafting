@@ -78,7 +78,7 @@ namespace GreenFlag.Sim.Tests
         {
             var ids = Tracks.All.Select(t => t.Id).ToList();
             Assert.Equal(new[] { "mill", "carver", "talon", "pine", "ridge", "pinek", "hollow", "cedar", "milll", "cross" }, ids.Take(10));
-            Assert.Equal(new[] { "bramble", "lake" }, ids.Skip(10));
+            Assert.Equal(new[] { "bramble", "lake" }, ids.Skip(10).Take(2));
             Assert.Equal("Bramble Hill", Pylon.ShortName(Tracks.BrambleHill));
             Assert.Equal("Lakeshore", Pylon.ShortName(Tracks.Lakeshore));
         }

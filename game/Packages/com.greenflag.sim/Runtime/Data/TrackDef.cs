@@ -51,7 +51,7 @@ namespace GreenFlag.Sim
     }
 
     /// <summary>Every track in slice v47 (three stock ovals, two stock non-ovals, two kart circuits and three late model tracks), plus
-    /// the two kart circuits from step 40. New tracks go on the end so the browser harness's track indexes still match.</summary>
+    /// the two kart circuits from step 40 and the two late model tracks from step 41. New tracks go on the end so the browser harness's track indexes still match.</summary>
     public static class Tracks
     {
         static PathPiece St(double s) => PathPiece.Straight(s);
@@ -104,7 +104,14 @@ namespace GreenFlag.Sim
             Path = new[] { St(1.2), Tn(135, 0.5), St(2.697056), Tn(-135, 0.5), St(1.2), Tn(-135, 0.5), St(2.697056), Tn(135, 0.5) },
         };
 
-        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads, BrambleHill, Lakeshore };
+        /// <summary>Step 41: a high-banked half-mile that eats tires. Two stops on fuel, and a long green run turns the race into a
+        /// tire race: four fresh tires late are worth a lot, staying out is worth track position.</summary>
+        public static readonly TrackDef GraniteFalls = new TrackDef { Id = "gran", DraftBias = -0.2, Name = "Granite Falls Speedway", Type = "Half-mile", Late = true, Laps = 26, LapTime = 17, S = 0.9, R = 0.8, Draft = 0.008, DraftRange = 0.45, Wear = 1.45, Contact = 1.25, PassDiff = 1.05, HandlingW = 1.4, FuelRange = 12 };
+
+        /// <summary>Step 41: Ridgeback at late model length, so the late model calendar has a road course too (board Q35).</summary>
+        public static readonly TrackDef RidgebackLate = Ridgeback.With("ridgel", t => { t.Late = true; t.Laps = 9; t.FuelRange = 6; });
+
+        public static readonly IReadOnlyList<TrackDef> All = new[] { Millbrook, Carver, Talon, Pinewood, Ridgeback, PinewoodKart, HollowCreek, CedarBowl, MillbrookLate, Crossroads, BrambleHill, Lakeshore, GraniteFalls, RidgebackLate };
 
         public static TrackDef ById(string id)
         {

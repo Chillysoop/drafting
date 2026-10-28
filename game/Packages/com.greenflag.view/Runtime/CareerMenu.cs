@@ -103,6 +103,8 @@ namespace GreenFlag.View
         public string PickBg;
         public DifficultyLevel PickDiff = DifficultyLevel.Normal;
         public Stakes PickStakes = Stakes.Standard;
+        /// <summary>Where a stock persona starts: stock cars, or late models (step 41). Kart personas always start in karts.</summary>
+        public Series PickSeries = Series.Stock;
         public uint NewSeed = 1;
 
         // the deck builder's sort and family tab
@@ -234,11 +236,12 @@ namespace GreenFlag.View
                 case "title.bg": PickBg = arg == "auto" ? null : arg; return true;
                 case "title.diff": PickDiff = (DifficultyLevel)Enum.Parse(typeof(DifficultyLevel), arg); return true;
                 case "title.stakes": PickStakes = (Stakes)Enum.Parse(typeof(Stakes), arg); return true;
+                case "title.series": PickSeries = (Series)Enum.Parse(typeof(Series), arg); return true;
                 case "title.start":
                 {
                     var into = Saves != null ? Slots.FirstOrDefault(i => i.Slot == PickSlot) : null;
                     if (into != null && into.Used && !again) { armed = id; Toast = $"Slot {PickSlot} already has a career. Press Start career again to replace it."; return true; }
-                    Career = Career.New(PickPersona, PickDiff, PickStakes, NewSeed, background: PickBg);
+                    Career = Career.New(PickPersona, PickDiff, PickStakes, NewSeed, background: PickBg, start: Personas.Get(PickPersona).Kart ? Series.Kart : PickSeries);
                     Career.EnterGarage();
                     Screen = CareerScreen.Garage;
                     snap = null;
@@ -428,6 +431,12 @@ namespace GreenFlag.View
                 var part = Parts.Get(pr.Part);
                 (pr.Kart ? kart : stock).Add(new MenuItem { Kind = MenuKind.Chip, Id = "title.persona:" + pr.Id, Label = pr.Name, Value = pr.Tag, On = PickPersona == pr.Id, Note = $"Part: {part.Name}. {part.Text} Tune: {TuneLabel(pr.Tune, pr.Kart)}. Cards: {string.Join(", ", pr.Add.Select(id => CardBook.Get(id).Name))}." });
             }
+            if (!Personas.Get(PickPersona).Kart)
+            {
+                var st = p.Section("Start in", 1, "A stock car persona can start one rung lower, in late models.");
+                st.Chip("title.series:Late", "Late models", PickSeries == Series.Late, note: "Short ovals, a figure-8 and a road course. Pit stops and tire strategy start here. 8 races, then stock car offers for the top 14.");
+                st.Chip("title.series:Stock", "Stock cars", PickSeries != Series.Late, note: "The full stock car schedule, 10 races.");
+            }
             BackgroundSection(p);
             var d = p.Section("AI skill", 0, "Harder fields pay less and cost more to reroll.");
             foreach (DifficultyLevel l in Enum.GetValues(typeof(DifficultyLevel)))
@@ -507,6 +516,8 @@ namespace GreenFlag.View
             nx.Row("Expected finish (car ratings)", "P" + c.ExpectedFinish().ToString(inv));
             nx.Row("Points", c.SeasonResults.Count > 0 ? $"P{c.MyRank()} · {c.MyPoints} pts" : "Season starts here");
             nx.Row("Team", $"{c.TeamName} · rating {c.SeriesTeams[c.Team].Rating}{(c.Contract.Per > 0 ? " · " + Money(c.Contract.Per) + " a race" : " · no salary yet")}");
+            if (c.Series == Series.Late && !c.Results.Any(r => Tracks.ById(r.TrackId).Late))
+                nx.Text("New in late models: pit stops and tire strategy. Your crew chief plans a stop in the fuel window (press PIT on the plan lap, or leave it to the crew chief), and under caution you choose stay out, fuel, two or four tires. Fresh tires pass cars on old ones; staying out keeps track position.", Amber);
             if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
             EventPanel(p);
             PoachPanel(p);
