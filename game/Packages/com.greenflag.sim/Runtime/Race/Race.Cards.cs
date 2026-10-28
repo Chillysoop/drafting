@@ -557,7 +557,7 @@ namespace GreenFlag.Sim
                 }
                 else { Chain = 0; ChainFam = null; }
             }
-            Emit(RaceEventKind.CardResolved, car, a.Target, $"{cd.Name}: {CardRules.TierName(tier)}{(rf > 0 ? $" · Focus +{rf * 100:F0}%" : "")}", cd.Id);
+            Emit(RaceEventKind.CardResolved, car, a.Target, $"{cd.Name}: {CardRules.TierName(tier)}{(rf > 0 ? $" · Focus +{rf * 100:F0}%" : "")}", cd.Id, (int)tier);
         }
 
         /// <summary>Focus refill when a risky card lands: the lower the odds you took it at, the more comes back.</summary>

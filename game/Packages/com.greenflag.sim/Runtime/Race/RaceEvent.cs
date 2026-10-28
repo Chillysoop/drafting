@@ -11,6 +11,8 @@ namespace GreenFlag.Sim
         CardPlayed, CardResolved, CardReturned, CardRerolled, CardTossed, CardsExpired, DrawBeat, Combo, BoardFull, Overdrive, ReelOffered,
         FairingPushed, FairingPenalty, Repassed, PartnerPush,
         PitGameOpen, PitGameGo, LooseWheel, PitGameRelease, PerfectStop, SetupInstalled, PackageComplete, SetupsStale,
+        // presentation only (step 30): an AI move that came to nothing, so the view can show it (Other = the car it tried)
+        AutoLift, AutoAlongside,
     }
 
     /// <summary>
@@ -25,9 +27,11 @@ namespace GreenFlag.Sim
         public readonly string Text;
         /// <summary>The card involved, for card events.</summary>
         public readonly string Card;
+        /// <summary>How a card landed (CardResolved: a Tier as int), otherwise -1.</summary>
+        public readonly int Tier;
 
-        public RaceEvent(RaceEventKind kind, double time, int car = -1, int other = -1, string text = null, string card = null)
-        { Kind = kind; Time = time; Car = car; Other = other; Text = text; Card = card; }
+        public RaceEvent(RaceEventKind kind, double time, int car = -1, int other = -1, string text = null, string card = null, int tier = -1)
+        { Kind = kind; Time = time; Car = car; Other = other; Text = text; Card = card; Tier = tier; }
 
         public override string ToString() => $"{Time,8:F2} {Kind}{(Car >= 0 ? " car " + Car : "")}{(Other >= 0 ? " / " + Other : "")}{(Text != null ? ": " + Text : "")}";
     }

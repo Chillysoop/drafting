@@ -52,6 +52,7 @@ namespace GreenFlag.View
             Motion = new CarMotion(race, Layout);
             foreach (var c in race.Cars) prev[c] = c.Dist;
             distFn = DistOf;
+            Motion.Dist = distFn;
             Motion.Poses(distFn, Poses);
         }
 
@@ -107,7 +108,7 @@ namespace GreenFlag.View
                 if (step < -1e-9 || step > typical + 0.004) Motion.Jumped(c, step - typical, c.Pit != null);
                 prev[c] = c.Dist - (step < -1e-9 || step > typical + 0.004 ? typical : step);
             }
-            foreach (var e in Race.Events) OnEvent(e);
+            foreach (var e in Race.Events) { OnEvent(e); Motion.OnEvent(e); }
         }
 
         static readonly Rgb Green = Rgb.Hex("#2fb36a"), Yellow = Rgb.Hex("#e9b52f"), White = Rgb.Hex("#ffffff"), Black = Rgb.Hex("#000000"), Ink = Rgb.Hex("#0b0f18");

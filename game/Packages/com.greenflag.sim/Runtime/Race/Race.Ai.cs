@@ -50,8 +50,8 @@ namespace GreenFlag.Sim
                 double trackK = Bal.TrackWreck && Track.AiWreckK.HasValue ? Track.AiWreckK.Value : 1;
                 if (raw < cfT && Rng.NextDouble() < Bal.AiWreck * trackK)
                     Wreck(car, Rng.NextDouble() < (a.IsMe ? 0.3 : 0.5) ? a : null, "gets loose making a move");
-                else if (roll < 30) Slow(car, 0.25);
-                else if (roll < 55) { /* side by side for a moment: presentation only */ }
+                else if (roll < 30) { Slow(car, 0.25); Emit(RaceEventKind.AutoLift, car, a); }
+                else if (roll < 55) Emit(RaceEventKind.AutoAlongside, car, a);   // side by side for a moment: presentation only
                 else
                 {
                     StartOvertake(car, 1);
