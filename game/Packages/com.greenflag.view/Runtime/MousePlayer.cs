@@ -171,7 +171,13 @@ namespace GreenFlag.View
         public static (PlayDesk desk, MousePlayer bot) Run(TrackDef track, uint seed, string persona = "drafter", double w = 1920, double h = 1080,
             int speedIndex = 3, double frame = 1 / 30.0, int maxFrames = 400000)
         {
-            var desk = new PlayDesk(new RaceDriver(PlayDesk.NewRace(track, seed, persona)));
+            return Play(PlayDesk.NewRace(track, seed, persona), w, h, speedIndex, frame, maxFrames);
+        }
+
+        /// <summary>Plays a race you built (a career's next race, step 34) to the flag with the mouse.</summary>
+        public static (PlayDesk desk, MousePlayer bot) Play(Race race, double w = 1920, double h = 1080, int speedIndex = 3, double frame = 1 / 30.0, int maxFrames = 400000)
+        {
+            var desk = new PlayDesk(new RaceDriver(race));
             desk.Driver.SpeedIndex = speedIndex;
             var ro = new HudReadouts();
             var lay = new HudLayout();

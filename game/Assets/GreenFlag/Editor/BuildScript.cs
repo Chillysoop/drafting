@@ -24,7 +24,7 @@ namespace GreenFlag.EditorTools
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { ProjectBootstrap.RaceScenePath, ProjectBootstrap.BootScenePath },
+                scenes = new[] { ProjectBootstrap.CareerScenePath, ProjectBootstrap.RaceScenePath, ProjectBootstrap.BootScenePath },
                 locationPathName = Arg("-customBuildPath") ?? DefaultPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,

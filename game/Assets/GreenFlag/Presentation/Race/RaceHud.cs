@@ -69,8 +69,10 @@ namespace GreenFlag.Presentation
                 case KeyCode.LeftBracket: d.SpeedIndex = Mathf.Max(0, d.SpeedIndex - 1); break;
                 case KeyCode.RightBracket: d.SpeedIndex = Mathf.Min(RaceDriver.Speeds.Length - 1, d.SpeedIndex + 1); break;
                 case KeyCode.A when cards: view.Autoplay = !view.Autoplay; break;
-                case KeyCode.R: view.Restart(true); break;
-                case KeyCode.T: view.NextTrack(e.shift ? -1 : 1); break;
+                case KeyCode.R when !view.InCareer: view.Restart(true); break;
+                case KeyCode.Return when d.Race.Done:
+                case KeyCode.KeypadEnter when d.Race.Done: view.FinishOrRestart(); break;
+                case KeyCode.T when !view.InCareer: view.NextTrack(e.shift ? -1 : 1); break;
                 case KeyCode.L: view.NextLook(); break;
                 case KeyCode.F: d.Finish(); break;
                 default: return;
@@ -179,9 +181,11 @@ namespace GreenFlag.Presentation
             if (GUILayout.Button("Speed: " + d.Speed + "x  (" + (cards ? "[ ]" : "1-4") + ")", bs)) d.SpeedIndex = (d.SpeedIndex + 1) % RaceDriver.Speeds.Length;
             if (GUILayout.Button((d.Paused ? "Resume" : "Pause") + (cards ? "  (P)" : "  (Space)"), bs)) { if (cards) view.Desk.TogglePause(); else d.Paused = !d.Paused; }
             if (cards && GUILayout.Button("Autoplay: " + (view.Autoplay ? "on" : "off") + "  (A)", bs)) view.Autoplay = !view.Autoplay;
-            if (GUILayout.Button("Track: " + Pylon.ShortName(d.Race.Track) + "  (T)", bs)) view.NextTrack(1);
+            if (view.InCareer) GUILayout.Label("Career race: " + Pylon.ShortName(d.Race.Track), new GUIStyle(small) { fixedHeight = bh, alignment = TextAnchor.MiddleCenter });
+            else if (GUILayout.Button("Track: " + Pylon.ShortName(d.Race.Track) + "  (T)", bs)) view.NextTrack(1);
             if (GUILayout.Button("Look: " + view.Look.Name + (view.Look.Finished ? "" : "*") + "  (L)", bs)) view.NextLook();
-            if (GUILayout.Button("New race  (R)", bs)) view.Restart(true);
+            if (view.InCareer) { GUI.enabled = d.Race.Done; if (GUILayout.Button("Rewards  (Enter)", bs)) view.FinishOrRestart(); GUI.enabled = true; }
+            else if (GUILayout.Button("New race  (R)", bs)) view.Restart(true);
             if (GUILayout.Button("Skip to flag  (F)", bs)) d.Finish();
             GUILayout.EndArea();
             var st = new GUIStyle(small) { alignment = TextAnchor.LowerRight, wordWrap = false }; st.normal.textColor = Dim;
@@ -203,7 +207,10 @@ namespace GreenFlag.Presentation
             GUI.Label(new Rect(rect.x, rect.y + 12 * s, w, 40 * s), res.MyDnf ? "OUT OF THE RACE" : "YOU FINISHED P" + res.MyFinish, title);
             var st = new GUIStyle(small) { alignment = TextAnchor.MiddleCenter }; st.normal.textColor = Dim;
             GUI.Label(new Rect(rect.x, rect.y + 56 * s, w, 50 * s), $"Started P{res.MyStart}, expected P{res.MyExpected} · {res.Cautions} caution(s)\nfingerprint {fingerprint}", st);
-            GUI.Label(new Rect(rect.x, rect.y + 108 * s, w, 30 * s), view.Pad != null && view.Pad.Active ? $"{PadGlyphs.Of(view.Pad.Style, PadButton.Confirm)} or {PadGlyphs.Of(view.Pad.Style, PadButton.Pause)} new race · R new race · T next track" : "R new race · T next track", st);
+            bool pad = view.Pad != null && view.Pad.Active;
+            string go = view.InCareer ? (pad ? $"{PadGlyphs.Of(view.Pad.Style, PadButton.Confirm)} rewards" : "Enter: rewards and the garage")
+                : pad ? $"{PadGlyphs.Of(view.Pad.Style, PadButton.Confirm)} or {PadGlyphs.Of(view.Pad.Style, PadButton.Pause)} new race · R new race · T next track" : "R or Enter new race · T next track";
+            GUI.Label(new Rect(rect.x, rect.y + 108 * s, w, 30 * s), go, st);
         }
     }
 }

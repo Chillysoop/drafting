@@ -39,6 +39,18 @@ namespace GreenFlag.Sim
         public int Combo;
     }
 
+    /// <summary>One card you played, for the reward screen's "Your calls" table: the leader's lap, the odds it was played at, how it
+    /// landed and the three biggest factors that moved it (the slice's race.log).</summary>
+    public readonly struct PlayLogEntry
+    {
+        public readonly int Lap;
+        public readonly string Card;
+        public readonly double Succ;
+        public readonly Tier Tier;
+        public readonly OddsTag[] Tags;
+        public PlayLogEntry(int lap, string card, double succ, Tier tier, OddsTag[] tags) { Lap = lap; Card = card; Succ = succ; Tier = tier; Tags = tags; }
+    }
+
     public sealed class InstalledSetup
     {
         public string Id;
@@ -79,6 +91,8 @@ namespace GreenFlag.Sim
         public bool CardsOn => Loadout != null;
 
         public readonly List<HandCard> Hand = new List<HandCard>();
+        /// <summary>Every card you played this race, in order (the reward screen's "Your calls").</summary>
+        public readonly List<PlayLogEntry> PlayLog = new List<PlayLogEntry>();
         public readonly List<string> Pile = new List<string>();
         public readonly List<string> Discard = new List<string>();
         public int Momentum;
@@ -522,6 +536,12 @@ namespace GreenFlag.Sim
                 Emit(RaceEventKind.CardRerolled, car, null, "Lucky Lug Nut", cd.Id);
             }
             CardStats.Plays++; PlayerPlays++;
+            {
+                var tags = o.Tags ?? new List<OddsTag>();
+                var top = new OddsTag[Math.Min(3, tags.Count)];
+                for (int i = 0; i < top.Length; i++) top[i] = tags[i];
+                PlayLog.Add(new PlayLogEntry(LapOf(Leader), cd.Id, o.Succ, tier, top));
+            }
             if (!CardStats.ByCard.TryGetValue(cd.Id, out var hist)) CardStats.ByCard[cd.Id] = hist = new int[6];
             hist[5]++; hist[(int)tier]++;
             // Heat: every aggressive move makes the field more willing to block and retaliate

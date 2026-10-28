@@ -13,7 +13,8 @@ namespace GreenFlag.Presentation
     /// in FxView). Step 31 hands you the car: PlayDesk runs the hand and beats rules and HandHud draws the hand, the console,
     /// the dash, the gauge, the beat clock and the pit stop hand (see HandHud for the keys). Step 32 adds the controller:
     /// PadReader reads the pad, PadInput moves a focus over the HUD, and the arrow keys and Enter do the same without a mouse.
-    /// Keys: C camera, [ and ] speed, R new race, T / Shift+T track, L look, F fast-forward to the flag, A autoplay.
+    /// Keys: C camera, [ and ] speed, R new race, T / Shift+T track, L look, F fast-forward to the flag, A autoplay. Step 34 runs
+    /// it inside a career (CareerFlow sets RaceSource and Finished): R and T are off and Enter at the flag goes to the rewards.
     /// </summary>
     public sealed class RaceView : MonoBehaviour
     {
@@ -38,6 +39,12 @@ namespace GreenFlag.Presentation
         /// <summary>The mouse player drives the HUD (A): a demo, and a quick way to watch a whole race played with cards.</summary>
         public bool Autoplay;
         MousePlayer bot;
+
+        /// <summary>Career mode (step 34): where the race comes from, and who takes it back at the flag. While these are set the
+        /// track and new-race keys are off and Enter or A at the finish goes to the reward screen.</summary>
+        public System.Func<Race> RaceSource;
+        public System.Action<Race> Finished;
+        public bool InCareer => RaceSource != null;
 
         public RaceDriver Driver { get; private set; }
         public CameraRig Rig { get; } = new CameraRig();
@@ -76,7 +83,7 @@ namespace GreenFlag.Presentation
             else
             {
                 int speed = Driver?.SpeedIndex ?? 0;
-                Driver = new RaceDriver(PlayDesk.NewRace(t, (uint)seed, persona)) { SpeedIndex = speed };
+                Driver = new RaceDriver(InCareer ? RaceSource() : PlayDesk.NewRace(t, (uint)seed, persona)) { SpeedIndex = speed };
                 Desk = new PlayDesk(Driver);
                 HudInput = new HudInput(Desk, Layout);
                 Pad = new PadInput(Desk, Layout, HudInput) { Style = padReader.LastStyle, Active = Pad?.Active ?? false };
@@ -122,6 +129,7 @@ namespace GreenFlag.Presentation
 
         public void NextTrack(int dir)
         {
+            if (InCareer) return;
             var all = Tracks.All;
             int i = 0;
             for (int k = 0; k < all.Count; k++) if (all[k].Id == trackId) i = k;
@@ -129,8 +137,16 @@ namespace GreenFlag.Presentation
             NewRace();
         }
 
+        /// <summary>At the flag: back to the career's reward screen, or a new race outside a career.</summary>
+        public void FinishOrRestart()
+        {
+            if (InCareer) { if (Driver != null && Driver.Race.Done) Finished?.Invoke(Driver.Race); }
+            else Restart(true);
+        }
+
         public void Restart(bool newSeed)
         {
+            if (InCareer) return;
             if (newSeed) seed = Random.Range(1, 100000);
             NewRace();
         }
@@ -148,7 +164,7 @@ namespace GreenFlag.Presentation
                 if (Autoplay) bot.Frame();
                 else padReader.Read(Pad, dt);
                 Pad.Frame();
-                if (Desk.Race.Done && padReader.ConfirmOrStart) { Restart(true); return; }
+                if (Desk.Race.Done && padReader.ConfirmOrStart) { FinishOrRestart(); return; }
             }
             else Driver.Advance(dt);
             double now = Driver.ViewT;
@@ -178,7 +194,10 @@ namespace GreenFlag.Presentation
 
         void OnDestroy()
         {
-            if (LowRes != null) { LowRes.Release(); Destroy(LowRes); }
+            if (LowRes != null) { if (Cam != null) Cam.targetTexture = null; LowRes.Release(); Destroy(LowRes); }
+            // a career race (step 34) is torn down for the reward screen: the track and cars go with it
+            if (track != null) Destroy(track);
+            if (carsRoot != null) Destroy(carsRoot);
             Kit.ClearMaterials();
         }
     }

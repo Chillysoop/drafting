@@ -16,6 +16,8 @@ namespace GreenFlag.Harness
     ///   json   [n] [personas] [tracks] [styles] [out] [seed]   the browser harness's JSON, for comparing anything else
     ///   frames [track] [seed] [out.html] [n] [style] n top-down snapshots of the race view (step 29) and its pylon; style = a card bot
     ///   wrecks [track] [seed] [out.html] [style] [n] close-ups of the first n wrecks as the view plays them out (step 30)
+    ///   career [races] [persona] [seed]              a career through the menus (step 34): MenuBot shops and picks rewards, the mouse bot races
+    ///   menus  [persona] [seed] [out.html]           the career screens as HTML, laid out as MenuHud draws them (step 34)
     /// Policies without cards (the step 26 core): none (hands-off: never presses PIT, takes the crew chief's caution call)
     /// and pit (presses PIT on the plan lap and calls cautions by tires and damage, like the browser harness's bots).
     /// Policies with cards (a persona's starting deck, part, tune and driver; default drafter, its kart cousin on kart tracks):
@@ -41,9 +43,11 @@ namespace GreenFlag.Harness
                     case "wrecks": return ViewFrames.Wrecks(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "wrecks.html"), Arg(args, 4, "spam"), int.Parse(Arg(args, 5, "3")));
                     case "mouse": return HudShots.Mouse(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")));
                     case "pad": return HudShots.Pad(Arg(args, 1, "all"), int.Parse(Arg(args, 2, "1")), Arg(args, 3, "drafter"), uint.Parse(Arg(args, 4, "61")), Arg(args, 5, "xbox"));
+                    case "career": return CareerCmd(int.Parse(Arg(args, 1, "10")), Arg(args, 2, "drafter"), uint.Parse(Arg(args, 3, "1")));
+                    case "menus": return MenuShots.Run(Arg(args, 1, "drafter"), uint.Parse(Arg(args, 2, "1")), Arg(args, 3, "menus.html"));
                     case "hud": return HudShots.Run(Arg(args, 1, "carver"), uint.Parse(Arg(args, 2, "61")), Arg(args, 3, "hud.html"), int.Parse(Arg(args, 4, "6")));
                     case "json": return Json(int.Parse(Arg(args, 1, "40")), Arg(args, 2, "drafter"), Arg(args, 3, "0,1,2"), Arg(args, 4, "none,smart,spam"), Arg(args, 5, "parity.json"), uint.Parse(Arg(args, 6, "1000")));
-                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n]"); return 2;
+                    default: Console.Error.WriteLine("usage: race [track] [seed] [policy] [persona] | batch [n] [tracks] [policy] [persona] | check [n] | parity [baseline] [n] [styles] | json [n] [personas] [tracks] [styles] [out] [seed] | frames [track] [seed] [out.html] [n] [style] | wrecks [track] [seed] [out.html] [style] [n] | mouse [tracks] [n] [persona] [seed] | pad [tracks] [n] [persona] [seed] [xbox|playstation|nintendo|keyboard] | hud [track] [seed] [out.html] [n] | career [races] [persona] [seed] | menus [persona] [seed] [out.html]"); return 2;
                 }
             }
             catch (Exception e) { Console.Error.WriteLine(e); return 1; }
@@ -52,6 +56,43 @@ namespace GreenFlag.Harness
         static string Arg(string[] a, int i, string d) => a.Length > i ? a[i] : d;
 
         static IEnumerable<TrackDef> TracksFor(string spec) => spec == "all" ? Tracks.All : spec.Split(',').Select(Tracks.ById);
+
+        /// <summary>Step 34: race, rewards, shop and the next race, through the career menus' buttons, with every race played by
+        /// the mouse bot on the HUD. Fails if a race doesn't finish or the loop stalls.</summary>
+        static int CareerCmd(int races, string persona, uint seed)
+        {
+            var m = new GreenFlag.View.CareerMenu { PickPersona = persona, NewSeed = seed };
+            var bot = new GreenFlag.View.MenuBot();
+            Console.WriteLine("race track    fin exp start tier          purse bonus total    bank  plays  then: card pick, part pick, cards owned");
+            int bad = 0, shown = 0;
+            void Show()
+            {
+                var c = m.Career;
+                for (; shown < c.Results.Count; shown++)
+                {
+                    var r = c.Results[shown];
+                    Console.WriteLine($"{shown + 1,4} {r.TrackId,-7} {(r.Dnf ? "DNF" : "P" + r.Finish),4} {r.Expected,3} {r.Start,5} {CareerRules.TierName(r.Tier),-13} {r.Purse,5} {r.Bonus,5} {r.Total,5} {c.Money,7}  {r.Plays,5}");
+                }
+            }
+            for (int done = 0; done < races; done++)
+            {
+                for (int i = 0; i < 1000 && m.RaceWanted == null && bot.Step(m); i++) { }
+                if (m.RaceWanted == null) { Console.Error.WriteLine("the menus stalled on " + m.Screen); return 1; }
+                var (desk, _) = GreenFlag.View.MousePlayer.Play(new Race(m.TakeRace()));
+                if (!desk.Race.Done) bad++;
+                var res = m.RaceFinished(desk.Race);
+                var c = m.Career; var R = c.Reward;
+                int bought = bot.Bought;
+                for (int i = 0; i < 1000 && m.Screen == GreenFlag.View.CareerScreen.Reward && bot.Step(m); i++) { }
+                Show();
+                Console.WriteLine($"     {"",-62} {(R.Picked == "skip" ? "skip +$1,000" : CardBook.Get(R.Picked).Name),-21} {(R.PartPicked != null ? Parts.Get(R.PartPicked).Name : "-"),-17} {c.Collection.Count,3} cards owned");
+            }
+            var k = m.Career;
+            Console.WriteLine($"after {k.Results.Count} races: {k.Money:N0} in the bank, {k.Collection.Count} cards, parts {string.Join(", ", k.PartsOwned)}, upgrades bought {bot.Bought}, dealer parts {bot.PartsBought}, menu presses {bot.Presses}");
+            Console.WriteLine($"car: power {k.Car.Power} handling {k.Car.Handling} aero {k.Car.Aero} durability {k.Car.Durability} racecraft {k.Car.Racecraft} defense {k.Car.Defense} consistency {k.Car.Consistency} tires {k.Car.TireMgmt}");
+            Console.WriteLine($"average finish P{k.Results.Average(r => r.Finish):F1} vs expected P{k.Results.Average(r => r.Expected):F1}; tiers {string.Join(", ", k.Results.GroupBy(r => r.Tier).OrderBy(g => g.Key).Select(g => CareerRules.TierName(g.Key) + " " + g.Count()))}");
+            return bad == 0 ? 0 : 1;
+        }
 
         /// <summary>Card play styles: hands (holds a hand, never plays; the browser harness's "none") and the browser harness's bots (Bots.Styles).</summary>
         public static bool UsesCards(string policy) => policy == "hands" || (policy != "none" && Bots.IsStyle(policy));

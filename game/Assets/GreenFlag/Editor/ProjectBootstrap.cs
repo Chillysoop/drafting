@@ -21,6 +21,7 @@ namespace GreenFlag.EditorTools
         public const string RendererPath = SettingsDir + "/URP_Renderer.asset";
         public const string BootScenePath = "Assets/GreenFlag/Scenes/Boot.unity";
         public const string RaceScenePath = "Assets/GreenFlag/Scenes/Race.unity";
+        public const string CareerScenePath = "Assets/GreenFlag/Scenes/Career.unity";
         /// <summary>The race view clones this material for every colour, so the URP Lit shader is always in the build.</summary>
         public const string LookBasePath = "Assets/GreenFlag/Resources/GreenFlag/LookBase.mat";
 
@@ -29,7 +30,7 @@ namespace GreenFlag.EditorTools
             if (Application.isBatchMode) return; // CI calls Run() itself
             EditorApplication.delayCall += () =>
             {
-                if (!File.Exists(BootScenePath) || !File.Exists(RaceScenePath) || GraphicsSettings.defaultRenderPipeline == null) Run();
+                if (!File.Exists(BootScenePath) || !File.Exists(RaceScenePath) || !File.Exists(CareerScenePath) || GraphicsSettings.defaultRenderPipeline == null) Run();
             };
         }
 
@@ -41,10 +42,11 @@ namespace GreenFlag.EditorTools
             EnsureLookBase();
             EnsureBootScene();
             EnsureRaceScene();
-            // the race view opens first; the boot scene (sim fingerprint) stays in the build for checks
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(RaceScenePath, true), new EditorBuildSettingsScene(BootScenePath, true) };
+            EnsureCareerScene();
+            // the career (step 34) opens first; the single-race view and the boot scene (sim fingerprint) stay in the build
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(CareerScenePath, true), new EditorBuildSettingsScene(RaceScenePath, true), new EditorBuildSettingsScene(BootScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("[GreenFlag] Project setup checked: URP, player settings, boot and race scenes.");
+            Debug.Log("[GreenFlag] Project setup checked: URP, player settings, boot, race and career scenes.");
         }
 
         static void EnsurePlayerSettings()
@@ -133,6 +135,16 @@ namespace GreenFlag.EditorTools
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             new GameObject("RaceView").AddComponent<RaceView>();
             EditorSceneManager.SaveScene(scene, RaceScenePath);
+        }
+
+        /// <summary>Step 34: the career scene, a camera and the CareerFlow script (menus between races, and the race view for each race).</summary>
+        static void EnsureCareerScene()
+        {
+            if (File.Exists(CareerScenePath)) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(CareerScenePath));
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+            new GameObject("CareerFlow").AddComponent<CareerFlow>();
+            EditorSceneManager.SaveScene(scene, CareerScenePath);
         }
     }
 }
