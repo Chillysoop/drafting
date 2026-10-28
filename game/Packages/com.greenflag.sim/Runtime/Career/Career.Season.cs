@@ -49,15 +49,21 @@ namespace GreenFlag.Sim
             var me = MeEntrant;
             if (keep != null) { me.Starts = keep.Starts; me.Wins = keep.Wins; me.Top5 = keep.Top5; me.Best = keep.Best; }
             Seat(Contract.Team);
+            SeatClass();
         }
 
-        /// <summary>Puts your car in team ti's first seat; that team's driver takes your old seat.</summary>
+        /// <summary>Puts your car in team ti's first seat; that team's driver takes your old seat (a field driver before a class
+        /// driver, so a class driver on your new team becomes your teammate).</summary>
         void Seat(int ti)
         {
             var me = MeEntrant;
             var t = SeriesTeams;
-            var o = Field.FirstOrDefault(e => !e.IsMe && e.Team == ti);
-            if (o != null && me.Team != ti) { o.Team = me.Team; o.TeamRating = t[me.Team].Rating; }
+            var o = Field.FirstOrDefault(e => !e.IsMe && e.Team == ti && e.Rival == null) ?? Field.FirstOrDefault(e => !e.IsMe && e.Team == ti);
+            if (o != null && me.Team != ti)
+            {
+                o.Team = me.Team; o.TeamRating = t[me.Team].Rating;
+                var d = ClassOf(o); if (d != null) d.Team = o.Team;
+            }
             me.Team = ti; me.TeamRating = t[ti].Rating;
             Contract.Team = ti;
         }
@@ -122,23 +128,25 @@ namespace GreenFlag.Sim
             SimMath.StableSort(exp, (a, b) => b.Stats.Rating.CompareTo(a.Stats.Rating));
             int e = exp.FindIndex(x => x.IsMe) + 1;
             var cands = exp.Skip(Math.Max(0, e - 5)).Take(Math.Max(0, e - 1 - Math.Max(0, e - 5))).Where(x => !x.IsMe).ToList();
-            RivalId = cands.Count > 0 ? Rng.Pick(cands).Id : exp[0].Id;
+            // step 43: a class driver in the field is always the rival (biggest Grudge, else the closest)
+            int cr = ClassRivalPick();
+            RivalId = cr >= 0 ? cr : cands.Count > 0 ? Rng.Pick(cands).Id : exp[0].Id;
 
             var sp = Sponsor != null ? SeasonRules.Sponsor(Sponsor.Id) : null;
             var o = new List<RaceObjective>();
             if (sp == null)
             {
-                var pool = SeasonRules.Objectives.Where(x => x.Id != "combo3").ToList();
+                var pool = SeasonRules.Objectives.Where(x => x.Id != "combo3" && x.Drawn).ToList();
                 Rng.Shuffle(pool);
-                o.AddRange(pool.Take(2).Select(x => new RaceObjective { Id = x.Id }));
+                o.AddRange(pool.Take(2).Select(x => new RaceObjective { Id = RivalObjective(x.Id) }));
             }
             else
             {
                 string ask = Rng.Pick(sp.Asks);
-                var pool = SeasonRules.Objectives.Where(x => x.Id != ask).ToList();
+                var pool = SeasonRules.Objectives.Where(x => x.Id != ask && x.Drawn).ToList();
                 Rng.Shuffle(pool);
-                o.AddRange(pool.Take(2).Select(x => new RaceObjective { Id = x.Id }));
-                o.Add(new RaceObjective { Id = ask, Ask = true });
+                o.AddRange(pool.Take(2).Select(x => new RaceObjective { Id = RivalObjective(x.Id) }));
+                o.Add(new RaceObjective { Id = RivalObjective(ask), Ask = true });
             }
             Objectives = o;
         }
@@ -148,7 +156,7 @@ namespace GreenFlag.Sim
         {
             var d = SeasonRules.Objective(o.Id);
             var s = d.Name(expected ?? ExpectedFinish(), Kart);
-            if (o.Id == "rival" && RivalId >= 0) { var r = Field.FirstOrDefault(x => x.Id == RivalId); if (r != null) s += $" ({r.Name})"; }
+            if (SeasonRules.Objective(o.Id).Rival && RivalId >= 0) { var r = Field.FirstOrDefault(x => x.Id == RivalId); if (r != null) s += $" ({r.Name})"; }
             return s;
         }
 
@@ -234,6 +242,8 @@ namespace GreenFlag.Sim
                 }
             }
             Past.Add(new PastSeason { Season = Season, Series = Series, Rank = rk, Pts = MyPoints, Sponsor = sp?.Id, Met = rv.Met });
+            // silly season (step 43): the class's careers move and your field reshuffles before the offers
+            SillySeason(Standings());
             var offers = new List<SponsorDeal>();
             if (rv.Met) offers.Add(new SponsorDeal { Id = sp.Id, Per = rv.RenewPer, Bonus = rv.RenewBonus, Renew = true });
             offers.AddRange(SeasonRules.RollSponsorOffers(Rng, rk, sp?.Id, CareerRules.Econ(Series)));
@@ -259,6 +269,8 @@ namespace GreenFlag.Sim
             if (Offers == null || i < 0 || i >= Offers.Count) return false;
             var o = Offers[i];
             var from = Series;
+            var seated = new HashSet<string>(InField.Select(d => d.Id));
+            var mateWas = Mate?.Rival;
             double econWas = CareerRules.Econ(from);
             Money += o.Sign;
             var notes = new List<string>();
@@ -304,6 +316,7 @@ namespace GreenFlag.Sim
             }
             Contract = new Contract { Per = o.Per, Team = o.Team, Series = o.Series, Since = Season };
             Offers = null;
+            if (o.Kind != OfferKind.Stay) Greet(o.Kind == OfferKind.Promote ? new HashSet<string>() : seated, o.Kind == OfferKind.Promote ? null : mateWas);
             // sponsor money follows the series
             double k = CareerRules.Econ(Series) / econWas;
             if (k != 1 && SponsorOffers != null)
@@ -325,6 +338,7 @@ namespace GreenFlag.Sim
             var f = Field.Select(e => e.Clone()).ToList();
             var me = f.First(e => e.IsMe);
             me.Stats = mine; me.Name = Name;
+            FieldGrudge(f);
             return f;
         }
 

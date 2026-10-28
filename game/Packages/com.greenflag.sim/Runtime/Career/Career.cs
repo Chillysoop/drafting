@@ -60,6 +60,15 @@ namespace GreenFlag.Sim
         public int Wages;
         public Dictionary<CrewRole, int> CrewXp = new Dictionary<CrewRole, int>();
         public List<CrewRole> CrewUp = new List<CrewRole>();
+
+        // rivals (step 43)
+        /// <summary>This week's rival wrecked you, you wrecked them, or they paid you back; they paid you back; paybacks you took.</summary>
+        public bool RvWreck, RvPaid;
+        /// <summary>The class driver who was this week's rival (null = none from the class).</summary>
+        public string RvWeek;
+        public int Paybacks, InboxNew;
+        /// <summary>How each class driver's Grudge moved this race (only the ones it moved for, and this week's rival).</summary>
+        public List<RivalLine> Rivals = new List<RivalLine>();
     }
 
     /// <summary>The reward screen's choices: a card for the collection (or $1,000), and a part after a strong run. Both reroll for money.</summary>
@@ -85,7 +94,8 @@ namespace GreenFlag.Sim
     /// pay out and roll rewards, so race, rewards, shop and the next race loop. Every roll comes from the career's own
     /// generator, so a career replays the same from its seed.
     /// The season around it (field, points, sponsors, objectives, qualifying, the season wrap) is in Career.Season.cs (step 37).
-    /// The driver sheet and off-track events are in Career.Driver.cs (step 38), Crew HQ in Crew.cs (step 39).
+    /// The driver sheet and off-track events are in Career.Driver.cs (step 38), Crew HQ in Crew.cs (step 39), the class of
+    /// rivals and silly season in Career.Rivals.cs (step 43).
     /// </summary>
     public sealed partial class Career
     {
@@ -156,6 +166,7 @@ namespace GreenFlag.Sim
             c.NewStaff();
             c.Contract.Series = c.Series;
             c.Ladder.Add(c.Series);
+            c.NewClass(c.Series);
             c.BuildField();
             return c;
         }
@@ -337,6 +348,7 @@ namespace GreenFlag.Sim
                 h.Plays += kv.Value[5];
                 h.Succ += kv.Value[(int)Tier.Success] + kv.Value[(int)Tier.CritSuccess];
             }
+            RivalAfterRace(race, res);
             ScoreSeason(race, res);
             DriverAfterRace(race, res);
             CrewAfterRace(race, res);
@@ -496,6 +508,7 @@ namespace GreenFlag.Sim
             c.Staff = Staff.ToDictionary(kv => kv.Key, kv => kv.Value.Clone());
             c.Hire = Hire.Select(h => h.Clone()).ToList();
             c.Poach = Poach?.Clone();
+            CloneRivals(c);
             return c;
         }
 

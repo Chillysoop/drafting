@@ -152,7 +152,7 @@ namespace GreenFlag.Sim
         };
 
         /// <summary>Free information: tires, the best card in hand, the car ahead burning its tires, a car on your bumper, a tip
-        /// for the track. (The slice's rival line waits for rivals in the engine career.)</summary>
+        /// for the track, and (step 43) the spotter's word on a class driver beside you with a Grudge.</summary>
         (string who, string line)? AdviceLine(CardCtx c)
         {
             var o = new List<(string, string)>();
@@ -168,6 +168,7 @@ namespace GreenFlag.Sim
             if (c.Ahead != null && c.Ahead.Tires < c.Tires - 12) o.Add(("Spotter", $"\"{LastName(c.Ahead)} is burning the tires up. You’ll get there.\""));
             if (c.Behind != null && c.GapB < 0.5) o.Add(("Spotter", $"\"{LastName(c.Behind)} is right on your bumper.\""));
             if (Track.Type != null && TrackTips.TryGetValue(Track.Type, out var tip)) o.Add(("Crew chief", tip));
+            var rv = RivalAdvice(c); if (rv != null) o.Add(rv.Value);
             return o.Count > 0 ? RadioRng.Pick(o) : ((string, string)?)null;
         }
 

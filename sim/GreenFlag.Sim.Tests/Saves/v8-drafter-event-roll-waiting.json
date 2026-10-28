@@ -1,0 +1,827 @@
+{
+  "format": "green-flag-deck-career",
+  "v": 8,
+  "build": "sample save (format 8)",
+  "savedAt": "2026-10-28T12:00:00Z",
+  "screen": "event",
+  "summary": {
+    "name": "Rookie",
+    "persona": "drafter",
+    "series": "Stock",
+    "season": 1,
+    "race": 2,
+    "of": 10,
+    "track": "Carver Motor Speedway",
+    "money": 7980,
+    "races": 1,
+    "diff": "Normal",
+    "stakes": "Standard",
+    "over": false
+  },
+  "career": {
+    "name": "Rookie",
+    "persona": "drafter",
+    "series": "Stock",
+    "diff": "Normal",
+    "info": "Full",
+    "stakes": "Standard",
+    "survive": 0,
+    "money": 7980,
+    "season": 1,
+    "raceIdx": 1,
+    "over": false,
+    "seed": 18,
+    "rng": 3758204664,
+    "base": {
+      "car": {
+        "power": 3,
+        "handling": 3,
+        "aero": 4,
+        "durability": 4,
+        "racecraft": 4,
+        "defense": 4,
+        "consistency": 5,
+        "tireMgmt": 4
+      },
+      "crewChief": 3,
+      "spotter": 3,
+      "engineer": 3,
+      "pitCrew": 3,
+      "pitDeck": ["quick_jack", "quick_jack", "air_gun", "air_gun", "lug_gamble", "fast_fill", "catch_can", "utility", "fix", "adj_wedge", "adj_wedge", "adj_trackbar", "adj_air", "adj_spring", "adj_spring", "adj_tape"],
+      "grit": 12,
+      "wits": 15,
+      "radio": true,
+      "crew": {
+        "laneCut": 0,
+        "chance": 0,
+        "tireOdds": 0,
+        "fuelOdds": 0,
+        "pitHand": 0,
+        "prep": 0,
+        "releaseWindow": 0,
+        "bodyMen": false,
+        "chief": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "spotter": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "engineer": {
+          "chance": 0,
+          "late": 0,
+          "pay": 0,
+          "soft": 1,
+          "weight": 1,
+          "again": 0,
+          "net": 0,
+          "fixOnS": 0
+        },
+        "chanceAll": 0,
+        "momAll": 0,
+        "softAll": 1,
+        "rate": 1,
+        "reroll": false,
+        "xp": 0
+      }
+    },
+    "collection": ["tuck_in", "side_draft", "dive_bomb", "block", "save_tires", "spotter_focus", "bump_draft", "slingshot", "tuck_in", "side_draft", "push_limit", "dive_bomb", "slingshot"],
+    "deck": ["slingshot", "bump_draft", "side_draft", "side_draft", "tuck_in", "tuck_in", "block", "push_limit", "spotter_focus", "save_tires", "dive_bomb", "dive_bomb", "slingshot"],
+    "partsOwned": ["slick_nose", "pit_monitor"],
+    "equipped": {
+      "Aero": "slick_nose",
+      "Crew": "pit_monitor"
+    },
+    "tune": {
+      "hand": 0,
+      "aero": 1,
+      "focus": "Draft"
+    },
+    "hist": {
+      "bump_draft": [8, 5],
+      "push_limit": [4, 2],
+      "reel_in": [3, 1],
+      "save_tires": [3, 2],
+      "side_draft": [13, 11],
+      "slingshot": [6, 6],
+      "tuck_in": [16, 15]
+    },
+    "trackDecks": {
+      "talon": ["slingshot", "bump_draft", "side_draft", "side_draft", "tuck_in", "tuck_in", "block", "push_limit", "spotter_focus", "save_tires", "dive_bomb", "dive_bomb"]
+    },
+    "results": [
+      {
+        "season": 1,
+        "raceNo": 1,
+        "track": "talon",
+        "trackName": "Talon Ridge Superspeedway",
+        "start": 19,
+        "finish": 15,
+        "expected": 19,
+        "dnf": false,
+        "tier": "Strong",
+        "mul": 0.4,
+        "purse": 1440,
+        "bonus": 640,
+        "total": 4980,
+        "plays": 53,
+        "succ": 42,
+        "crits": 0,
+        "bestChain": 6,
+        "calls": 8,
+        "callsWon": 4,
+        "penalty": null,
+        "lostPart": null,
+        "objE": 19,
+        "bestPos": 6,
+        "beatMate": true,
+        "beatRival": false,
+        "rival": "Cole Mercer",
+        "objMet": 2,
+        "tierFrom": null,
+        "sponsor": "hitide",
+        "retainer": 900,
+        "salary": 0,
+        "pts": 22,
+        "ptsTotal": 22,
+        "rank": 15,
+        "rankBefore": 19,
+        "dmg": 16,
+        "drvMom": 0,
+        "hype": 1,
+        "hypeWhy": ["×4 combo"],
+        "xp": 25,
+        "lvlUp": 0,
+        "wages": 0,
+        "crewXp": {
+          "CrewChief": 6,
+          "Spotter": 18,
+          "Engineer": 12,
+          "PitCrew": 16
+        },
+        "crewUp": [],
+        "rvWreck": false,
+        "rvPaid": false,
+        "paybacks": 0,
+        "inboxNew": 1,
+        "rvWeek": "enforcer",
+        "objectives": [
+          {
+            "id": "land4",
+            "name": "Land 12 successful cards",
+            "ask": false,
+            "ok": true,
+            "pay": 800
+          },
+          {
+            "id": "gain5",
+            "name": "Finish 5+ spots ahead of where you started",
+            "ask": false,
+            "ok": false,
+            "pay": 1000
+          },
+          {
+            "id": "top10",
+            "name": "Run in the top 11 at any point",
+            "ask": true,
+            "ok": true,
+            "pay": 1200
+          }
+        ]
+      }
+    ],
+    "shop": {
+      "rolled": true,
+      "part": "tight_setup",
+      "rerolls": 0
+    },
+    "deckFor": 1001,
+    "deckNote": null,
+    "reward": null,
+    "field": [
+      {
+        "id": 0,
+        "team": 0,
+        "rating": 9,
+        "num": 39,
+        "me": false,
+        "name": "Erik Lindqvist",
+        "trait": "Drafter",
+        "stats": [10, 10, 10, 5, 7, 9, 9, 8],
+        "rec": [1, 1, 1, 1, 1],
+        "rv": null
+      },
+      {
+        "id": 1,
+        "team": 0,
+        "rating": 9,
+        "num": 76,
+        "me": false,
+        "name": "Diego Reyes",
+        "trait": "Restarter",
+        "stats": [8, 10, 10, 5, 7, 7, 7, 8],
+        "rec": [1, 0, 0, 1, 3],
+        "rv": null
+      },
+      {
+        "id": 2,
+        "team": 1,
+        "rating": 8,
+        "num": 66,
+        "me": false,
+        "name": "Rory McAllister",
+        "trait": "Closer",
+        "stats": [9, 9, 7, 4, 7, 7, 7, 8],
+        "rec": [1, 0, 0, 1, 2],
+        "rv": null
+      },
+      {
+        "id": 3,
+        "team": 1,
+        "rating": 8,
+        "num": 9,
+        "me": false,
+        "name": "Mika Sorensen",
+        "trait": "Smooth",
+        "stats": [8, 8, 7, 5, 7, 7, 7, 9],
+        "rec": [1, 0, 0, 1, 4],
+        "rv": "ice"
+      },
+      {
+        "id": 4,
+        "team": 2,
+        "rating": 8,
+        "num": 78,
+        "me": false,
+        "name": "Ren Nakamura",
+        "trait": "Restarter",
+        "stats": [9, 7, 8, 4, 8, 8, 7, 7],
+        "rec": [1, 0, 0, 0, 14],
+        "rv": null
+      },
+      {
+        "id": 5,
+        "team": 2,
+        "rating": 8,
+        "num": 98,
+        "me": false,
+        "name": "Bruno Ferreira",
+        "trait": "Wall",
+        "stats": [8, 9, 8, 6, 10, 10, 9, 8],
+        "rec": [1, 0, 0, 0, 16],
+        "rv": null
+      },
+      {
+        "id": 6,
+        "team": 3,
+        "rating": 7,
+        "num": 60,
+        "me": false,
+        "name": "Ivan Petrov",
+        "trait": "Closer",
+        "stats": [6, 8, 6, 4, 6, 6, 5, 5],
+        "rec": [1, 0, 0, 0, 8],
+        "rv": null
+      },
+      {
+        "id": 7,
+        "team": 3,
+        "rating": 7,
+        "num": 31,
+        "me": false,
+        "name": "Marty Krause",
+        "trait": "Wall",
+        "stats": [6, 8, 7, 4, 8, 7, 6, 7],
+        "rec": [1, 0, 0, 0, 12],
+        "rv": "wall"
+      },
+      {
+        "id": 8,
+        "team": 4,
+        "rating": 6,
+        "num": 65,
+        "me": false,
+        "name": "Femi Adeyemi",
+        "trait": "Aggressive",
+        "stats": [7, 5, 5, 5, 7, 7, 6, 8],
+        "rec": [1, 0, 0, 0, 7],
+        "rv": null
+      },
+      {
+        "id": 9,
+        "team": 4,
+        "rating": 6,
+        "num": 24,
+        "me": false,
+        "name": "Dakota Lane",
+        "trait": "Closer",
+        "stats": [5, 6, 5, 6, 5, 4, 4, 6],
+        "rec": [1, 0, 0, 0, 17],
+        "rv": "local"
+      },
+      {
+        "id": 10,
+        "team": 5,
+        "rating": 6,
+        "num": 84,
+        "me": false,
+        "name": "Kasey Kowalski",
+        "trait": "Aggressive",
+        "stats": [7, 6, 5, 6, 7, 6, 6, 8],
+        "rec": [1, 0, 0, 0, 6],
+        "rv": null
+      },
+      {
+        "id": 11,
+        "team": 5,
+        "rating": 6,
+        "num": 6,
+        "me": false,
+        "name": "Hank Doyle",
+        "trait": "Veteran",
+        "stats": [7, 5, 7, 4, 8, 7, 8, 9],
+        "rec": [1, 0, 0, 1, 5],
+        "rv": "pro"
+      },
+      {
+        "id": 12,
+        "team": 6,
+        "rating": 5,
+        "num": 16,
+        "me": false,
+        "name": "Ana Ruiz",
+        "trait": "Closer",
+        "stats": [6, 4, 5, 5, 6, 7, 7, 7],
+        "rec": [1, 0, 0, 0, 10],
+        "rv": null
+      },
+      {
+        "id": 13,
+        "team": 6,
+        "rating": 5,
+        "num": 13,
+        "me": false,
+        "name": "Vance Pruitt",
+        "trait": "Closer",
+        "stats": [5, 7, 6, 5, 7, 5, 6, 7],
+        "rec": [1, 0, 0, 0, 9],
+        "rv": "grudge"
+      },
+      {
+        "id": 14,
+        "team": 7,
+        "rating": 4,
+        "num": 80,
+        "me": false,
+        "name": "Tobi Okafor",
+        "trait": "Rookie",
+        "stats": [4, 4, 5, 4, 5, 4, 6, 6],
+        "rec": [1, 0, 0, 0, 13],
+        "rv": null
+      },
+      {
+        "id": 15,
+        "team": 7,
+        "rating": 4,
+        "num": 3,
+        "me": false,
+        "name": "Cole Mercer",
+        "trait": "Restarter",
+        "stats": [5, 4, 3, 5, 7, 7, 5, 5],
+        "rec": [1, 0, 0, 0, 11],
+        "rv": "enforcer"
+      },
+      {
+        "id": 16,
+        "team": 8,
+        "rating": 3,
+        "num": 53,
+        "me": false,
+        "name": "Jace Whitaker",
+        "trait": "Wall",
+        "stats": [2, 3, 4, 4, 2, 3, 2, 3],
+        "rec": [1, 0, 0, 0, 19],
+        "rv": null
+      },
+      {
+        "id": 17,
+        "team": 8,
+        "rating": 3,
+        "num": 92,
+        "me": false,
+        "name": "Liam Brennan",
+        "trait": "Closer",
+        "stats": [3, 4, 2, 5, 6, 7, 5, 5],
+        "rec": [1, 0, 0, 0, 18],
+        "rv": null
+      },
+      {
+        "id": 18,
+        "team": 9,
+        "rating": 3,
+        "num": 77,
+        "me": true,
+        "name": null,
+        "trait": "None",
+        "stats": null,
+        "rec": [1, 0, 0, 0, 15],
+        "rv": null
+      },
+      {
+        "id": 19,
+        "team": 9,
+        "rating": 3,
+        "num": 73,
+        "me": false,
+        "name": "Wade Haskins",
+        "trait": "Rookie",
+        "stats": [4, 5, 4, 6, 6, 4, 4, 6],
+        "rec": [1, 0, 0, 0, 20],
+        "rv": null
+      }
+    ],
+    "pts": {
+      "0": 40,
+      "1": 34,
+      "2": 35,
+      "3": 33,
+      "4": 23,
+      "5": 21,
+      "6": 29,
+      "7": 25,
+      "8": 30,
+      "9": 20,
+      "10": 31,
+      "11": 32,
+      "12": 27,
+      "13": 28,
+      "14": 24,
+      "15": 26,
+      "16": 18,
+      "17": 19,
+      "18": 22,
+      "19": 17
+    },
+    "contract": {
+      "per": 0,
+      "team": 9,
+      "series": "Stock",
+      "since": 1,
+      "clauses": []
+    },
+    "sponsor": {
+      "id": "hitide",
+      "per": 900,
+      "bonus": 4800,
+      "renew": false,
+      "since": 1,
+      "trust": 0
+    },
+    "sponsorOffers": null,
+    "objectives": [
+      {
+        "id": "combo3",
+        "ask": false
+      },
+      {
+        "id": "mate",
+        "ask": false
+      },
+      {
+        "id": "top10",
+        "ask": true
+      }
+    ],
+    "rival": 9,
+    "past": [],
+    "review": null,
+    "offers": null,
+    "ladder": ["Stock"],
+    "calendar": ["talon", "carver", "mill", "ridge", "harbor", "iron", "talon", "copper", "mill", "harbor"],
+    "qual": null,
+    "qualRunning": false,
+    "driver": {
+      "bg": "sim",
+      "attr": {
+        "Presence": 9,
+        "Wits": 15,
+        "Composure": 13,
+        "Savvy": 14,
+        "Rapport": 10,
+        "Grit": 12
+      },
+      "prof": ["Read", "Deflect"],
+      "lvl": 1,
+      "xp": 25,
+      "pts": 0,
+      "hype": 1,
+      "fans": 35,
+      "respect": 35,
+      "img": [-1, 1],
+      "trail": [
+        [-1, 1]
+      ],
+      "log": [],
+      "nextMom": 0
+    },
+    "event": {
+      "id": "press",
+      "ri": 0,
+      "season": 1,
+      "after": 1,
+      "ctx": {
+        "ev": "press",
+        "track": "Talon Ridge Superspeedway",
+        "trackId": "talon",
+        "rival": "Cole Mercer",
+        "fin": 15,
+        "start": 19,
+        "exp": 19,
+        "dmg": 16,
+        "dnf": false,
+        "top3": false,
+        "big": true,
+        "beatRival": false
+      },
+      "ceil": 2400,
+      "revealed": false,
+      "advFor": -1,
+      "hist": [],
+      "done": false,
+      "walked": false,
+      "cur": {
+        "opt": "thank",
+        "n": "Thank the fans",
+        "say": "\"Y'all were loud in turn 3. I heard you.\"",
+        "hit": "The stands go nuts on the replay.",
+        "miss": "Nobody heard it over the generator.",
+        "tone": [-1, 1],
+        "hype": false,
+        "rerolled": false,
+        "b": {
+          "skill": "Fans",
+          "l": [
+            [1, "Grit 12", "attr"]
+          ],
+          "dcl": [],
+          "adv": [],
+          "dis": [],
+          "dc": 12
+        },
+        "r": [16, 3],
+        "r0": null,
+        "tiers": [
+          {
+            "fans": 12,
+            "hype": 1
+          },
+          {
+            "fans": 6
+          },
+          {
+            "fans": 6,
+            "respect": -2
+          },
+          {
+            "fans": -1
+          },
+          {
+            "fans": -1,
+            "respect": -2,
+            "money": -1500
+          }
+        ],
+        "info": "Full"
+      }
+    },
+    "eventsHeld": ["press"],
+    "staff": [
+      {
+        "role": "CrewChief",
+        "name": "Hank Lowery",
+        "lvl": 3,
+        "xp": 6,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Spotter",
+        "name": "Nia Foster",
+        "lvl": 3,
+        "xp": 18,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "Engineer",
+        "name": "Wes Calloway",
+        "lvl": 3,
+        "xp": 12,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      },
+      {
+        "role": "PitCrew",
+        "name": "Rita Okafor",
+        "lvl": 3,
+        "xp": 16,
+        "trait": null,
+        "wage": 0,
+        "perks": [0, 0, 0],
+        "since": 1,
+        "kept": 0
+      }
+    ],
+    "hire": [],
+    "hireFor": -1,
+    "poach": null,
+    "poached": 0,
+    "class": {
+      "rng": 2763622225,
+      "drivers": [
+        {
+          "id": "prodigy",
+          "series": "Late",
+          "team": 4,
+          "skill": 6,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "hothead",
+          "series": "Late",
+          "team": 7,
+          "skill": 5,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "talker",
+          "series": "Late",
+          "team": 6,
+          "skill": 5,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "heir",
+          "series": "Late",
+          "team": 3,
+          "skill": 3,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "grinder",
+          "series": "Late",
+          "team": 8,
+          "skill": 4,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "enforcer",
+          "series": "Stock",
+          "team": 7,
+          "skill": 6,
+          "g": 0,
+          "rec": [0, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "grudge",
+          "series": "Stock",
+          "team": 6,
+          "skill": 6,
+          "g": 0,
+          "rec": [0, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "local",
+          "series": "Stock",
+          "team": 4,
+          "skill": 5,
+          "g": 0,
+          "rec": [1, 0, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [
+            {
+              "season": 1,
+              "race": 1,
+              "lap": 6,
+              "kind": "hit",
+              "track": "Talon Ridge Superspeedway"
+            }
+          ],
+          "path": []
+        },
+        {
+          "id": "journey",
+          "series": "Late",
+          "team": 9,
+          "skill": 5,
+          "g": 0,
+          "rec": [0, 0, 0, 0, 0, 0, 0, 0],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "pro",
+          "series": "Stock",
+          "team": 5,
+          "skill": 8,
+          "g": 0,
+          "rec": [0, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "wall",
+          "series": "Stock",
+          "team": 3,
+          "skill": 7,
+          "g": -0.5,
+          "rec": [0, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        },
+        {
+          "id": "ice",
+          "series": "Stock",
+          "team": 1,
+          "skill": 8,
+          "g": 0,
+          "rec": [0, 1, 0, 0, 0, 0, 0, 1],
+          "retired": false,
+          "hist": [],
+          "path": []
+        }
+      ],
+      "inbox": [
+        {
+          "id": "m1",
+          "rid": "local",
+          "kind": "hit",
+          "track": "Talon Ridge Superspeedway",
+          "subj": "Rubbin's racing",
+          "body": "\"Rubbin's racing. Don't take it personal.\"",
+          "season": 1,
+          "race": 0,
+          "g": 0,
+          "reply": null,
+          "replyText": null,
+          "tier": null,
+          "roll": null
+        }
+      ],
+      "msgN": 1,
+      "news": []
+    }
+  },
+  "retry": null
+}

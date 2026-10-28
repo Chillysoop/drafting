@@ -23,7 +23,7 @@ namespace GreenFlag.Sim
             foreach (var e in field)
                 a.Add(JsonValue.Obj().Set("id", e.Id).Set("team", e.Team).Set("rating", e.TeamRating).Set("num", e.Number).Set("me", e.IsMe)
                     .Set("name", e.IsMe ? null : e.Name).Set("trait", e.Trait.ToString()).Set("stats", e.IsMe ? JsonValue.Null : StatsJson(e.Stats))
-                    .Set("rec", Ints(new[] { e.Starts, e.Wins, e.SeasonWins, e.Top5, e.Best })));
+                    .Set("rec", Ints(new[] { e.Starts, e.Wins, e.SeasonWins, e.Top5, e.Best })).Set("rv", e.Rival));
             return a;
         }
 
@@ -87,8 +87,9 @@ namespace GreenFlag.Sim
                 {
                     Id = e["id"].Int(), Team = e["team"].Int(), TeamRating = e["rating"].Int(), Number = e["num"].Int(), IsMe = me,
                     Name = me ? Name : e["name"].Str(""), Trait = e["trait"].Enum(Trait.None), Stats = me ? Base.Car : StatsFrom(e["stats"]),
-                    Starts = rec[0], Wins = rec[1], SeasonWins = rec[2], Top5 = rec[3], Best = rec[4],
+                    Starts = rec[0], Wins = rec[1], SeasonWins = rec[2], Top5 = rec[3], Best = rec[4], Rival = e["rv"].Str(),
                 });
+                if (Field[Field.Count - 1].Rival != null) RivalBook.Get(Field[Field.Count - 1].Rival);
             }
             Pts = new Dictionary<int, int>();
             foreach (var kv in j["pts"].Fields) Pts[int.Parse(kv.Key, System.Globalization.CultureInfo.InvariantCulture)] = kv.Value.Int();

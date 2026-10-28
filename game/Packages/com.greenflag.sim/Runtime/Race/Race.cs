@@ -223,6 +223,7 @@ namespace GreenFlag.Sim
             Emit(RaceEventKind.Wreck, car, cars.Count > 1 ? cars[1] : null, why + (cars.Count > 2 ? $" ({cars.Count} cars)" : ""));
             if (Phase == RacePhase.Green && Rng.NextDouble() < 0.85 && pendingCautionAt < 0) { pendingCautionAt = T + 0.9; pendingCautionReason = "Wreck"; }
             if (Bal.Hazard && !car.IsMe) MaybeHazard(cars);
+            RivalWreck(car, cars, big);
         }
 
         // ---------------------------------------------------------------- pace

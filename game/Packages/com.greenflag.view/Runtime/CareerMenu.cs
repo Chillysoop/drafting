@@ -9,7 +9,7 @@ namespace GreenFlag.View
     /// <summary>The career's screens. Qualifying (step 37) is three: pick a card, the timed run, the grid. Season is the
     /// season-end review with its contract offers. Event is tonight's off-track event and Driver the driver sheet (step 38).
     /// Crew is Crew HQ (step 39).</summary>
-    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season, Event, Driver, Crew }
+    public enum CareerScreen { Title, Garage, DeckBuilder, Reward, Over, Quali, QualiRun, QualiDone, Season, Event, Driver, Crew, Rivals }
 
     /// <summary>What a menu line is: plain text, a label and value row, a button, a small toggle chip, a card or part tile.</summary>
     public enum MenuKind { Text, Row, Button, Chip, Card, Part }
@@ -216,7 +216,7 @@ namespace GreenFlag.View
             if (Career == null || Screen == CareerScreen.Title || id.StartsWith("title.", StringComparison.Ordinal)) return;
             bool now = id == "go" || id == "quit" || id == "deck.done" || before == CareerScreen.Reward || id.StartsWith("quali.", StringComparison.Ordinal)
                 || id.StartsWith("offer:", StringComparison.Ordinal) || id.StartsWith("sponsor:", StringComparison.Ordinal)
-                || id.StartsWith("ev.", StringComparison.Ordinal) || id.StartsWith("neg:", StringComparison.Ordinal) || id.StartsWith("drv.up:", StringComparison.Ordinal)
+                || id.StartsWith("ev.", StringComparison.Ordinal) || id.StartsWith("rv.reply:", StringComparison.Ordinal) || id.StartsWith("neg:", StringComparison.Ordinal) || id.StartsWith("drv.up:", StringComparison.Ordinal)
                 || (id.StartsWith("crew.", StringComparison.Ordinal) && id != "crew.back" && !id.StartsWith("crew.pitbuy:", StringComparison.Ordinal) && id != "crew.pitcancel");
             if (now) SaveNow();
             else Dirty = true;
@@ -335,6 +335,7 @@ namespace GreenFlag.View
                 case "over.new": Career = null; Slot = 0; snap = null; Screen = CareerScreen.Title; RefreshSlots(); return true;
             }
             if (key == "crew" || key.StartsWith("crew.", StringComparison.Ordinal)) return DoCrew(key, arg, again, id);
+            if (key == "rivals" || key.StartsWith("rv.", StringComparison.Ordinal)) return DoRivals(key, arg);
             return DoDriver(key, arg);
         }
 
@@ -380,6 +381,7 @@ namespace GreenFlag.View
                 case CareerScreen.Event: return EventPage();
                 case CareerScreen.Driver: return DriverPage();
                 case CareerScreen.Crew: return CrewPage();
+                case CareerScreen.Rivals: return RivalsPage();
                 default: return TitlePage();
             }
         }
@@ -523,6 +525,7 @@ namespace GreenFlag.View
             if (why != null) nx.Text(why + (c.Sponsor == null ? ": pick one below." : c.DeckOk() ? "." : ". Fix it in the deck builder."), Red);
             EventPanel(p);
             PoachPanel(p);
+            RivalPanel(p);
             SponsorSection(p);
             ObjectivesSection(p);
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "go", Label = "Go racing", Enabled = why == null, Primary = true, Note = why });
@@ -530,6 +533,7 @@ namespace GreenFlag.View
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "deck", Label = "Build race deck" });
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "drv", Label = "Driver sheet" + (c.Driver.Pts > 0 ? $" · {c.Driver.Pts} point{(c.Driver.Pts > 1 ? "s" : "")} to spend" : ""), Note = "Attributes, skills, image, Hype and recent checks" });
             p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "crew", Label = CrewButtonLabel(), Note = "Hire and train staff, pick perks, upgrade pit cards" });
+            if (c.Class.Count > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "rivals", Label = RivalsButtonLabel(), Note = "The class of rivals, their Grudges and your inbox" });
             if (Saves != null && Slot > 0) p.Actions.Add(new MenuItem { Kind = MenuKind.Button, Id = "quit", Label = "Save and quit", Note = $"Saves to slot {Slot} and goes back to the title screen" });
 
             TuneSection(p, t, 0);
@@ -673,6 +677,7 @@ namespace GreenFlag.View
                 var ob = p.Section($"Objectives · {res.ObjMet} of {res.Objectives.Count}", 0, res.TierFrom != null ? $"All met: rewards moved up from {CareerRules.TierName(res.TierFrom.Value)} to {CareerRules.TierName(res.Tier)}." : "Meet them all and finish, and the rewards move up a tier.", res.TierFrom != null ? Green : (Rgb?)null);
                 foreach (var o in res.Objectives) ob.Row((o.Ok ? "✓ " : "✗ ") + (o.Ask ? "Sponsor ask: " : "") + o.Name, o.Ok ? "+" + Money(o.Pay) : Money(o.Pay), o.Ok ? Green : Dim);
             }
+            RivalRewardRows(p, res);
             var top = p.Section("Top 10 this race", 1);
             foreach (var o in res.Order) top.Row($"{o.Pos}. {(o.IsMe ? o.Name + " (you)" : o.Name)}", (o.Dnf ? "DNF · " : "") + o.Team, o.IsMe ? Green : (Rgb?)null);
 
@@ -854,6 +859,7 @@ namespace GreenFlag.View
                 Sub = rv.Rank == 1 ? $"You win the title with {rv.Pts} points." : $"{champ.Name} ({champ.Team}) wins the title with {champ.Pts} points, {champ.Pts - rv.Pts} ahead of you.",
             };
             StandingsSection(p, 0, "Final standings", rv.Table);
+            SillyRows(p);
             if (rv.Sponsor != null)
             {
                 var sp = SeasonRules.Sponsor(rv.Sponsor);
@@ -932,8 +938,8 @@ namespace GreenFlag.View
         }
 
         /// <summary>B / Esc: leave the deck builder if the deck is legal, the driver sheet, the event (it waits in the garage),
-        /// or qualifying's card pick for the garage.</summary>
+        /// the Rivals page, or qualifying's card pick for the garage.</summary>
         public bool Back(CareerMenu m) => m.Screen == CareerScreen.DeckBuilder ? m.Press("deck.done") : m.Screen == CareerScreen.Driver ? m.Press("drv.back")
-            : m.Screen == CareerScreen.Event ? m.Press("ev.back") : m.Screen == CareerScreen.Quali && m.Press("quali.back");
+            : m.Screen == CareerScreen.Event ? m.Press("ev.back") : m.Screen == CareerScreen.Rivals ? m.Press("rv.back") : m.Screen == CareerScreen.Quali && m.Press("quali.back");
     }
 }
